@@ -3,7 +3,7 @@ import { MoreHorizontal } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const data = [
-  { month: "Jan", thisYear: 32000, prevYear: 28000 },
+  { month: "Jan", thisYear: 32000, prevYear: 28000 }, 
   { month: "Feb", thisYear: 28000, prevYear: 32000 },
   { month: "Mar", thisYear: 45000, prevYear: 38000 },
   { month: "Apr", thisYear: 38000, prevYear: 42000 },
