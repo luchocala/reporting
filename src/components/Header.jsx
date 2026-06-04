@@ -1,0 +1,64 @@
+import { useState, useEffect } from "react";
+import { Search, Bell, Sun, Moon, PanelLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+
+export default function Header({ title = "Ecommerce App", onMenuClick }) {
+  const [dark, setDark] = useState(() =>
+    document.documentElement.classList.contains("dark")
+  );
+
+  const toggleTheme = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
+
+  return (
+    <header className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b border-border bg-background px-3">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden size-7"
+        onClick={onMenuClick}
+      >
+        <PanelLeft className="size-4" />
+      </Button>
+      <Separator orientation="vertical" className="h-4 hidden md:block" />
+      <span className="text-sm font-medium text-foreground">{title}</span>
+
+      <div className="ml-auto flex items-center gap-0.5">
+        <Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-foreground">
+          <Search className="size-4" />
+        </Button>
+
+        <div className="relative">
+          <Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-foreground">
+            <Bell className="size-4" />
+          </Button>
+          <span className="absolute top-1 right-1 flex size-2 rounded-full bg-red-500" />
+        </div>
+
+        <Button
+          variant="outline"
+          size="icon"
+          className="size-8"
+          onClick={toggleTheme}
+          title={dark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </Button>
+
+        <Separator orientation="vertical" className="h-4 mx-1" />
+
+        <div className="flex items-center gap-2 pr-1">
+          <div className="size-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold">
+            A
+          </div>
+          <span className="hidden sm:block text-xs text-muted-foreground">Admin</span>
+        </div>
+      </div>
+    </header>
+  );
+}
