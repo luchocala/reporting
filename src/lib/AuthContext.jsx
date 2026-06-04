@@ -4,6 +4,7 @@ import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 
 const AuthContext = createContext();
+const disableAuth = import.meta.env.VITE_DISABLE_AUTH === 'true';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -19,6 +20,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAppState = async () => {
+    if (disableAuth) {
+      setIsLoadingPublicSettings(false);
+      setIsLoadingAuth(false);
+      setIsAuthenticated(true);
+      setAuthChecked(true);
+      return;
+    }
+
     try {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
@@ -128,6 +137,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
+    if (disableAuth) {
+      return;
+    }
     // Use the SDK's redirectToLogin method
     base44.auth.redirectToLogin(window.location.href);
   };
