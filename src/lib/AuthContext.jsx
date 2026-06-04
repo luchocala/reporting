@@ -24,6 +24,8 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingPublicSettings(false);
       setIsLoadingAuth(false);
       setIsAuthenticated(true);
+      setUser({ name: 'Guest', role: 'admin' });
+      setAuthError(null);
       setAuthChecked(true);
       return;
     }
@@ -99,6 +101,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkUserAuth = async () => {
+    if (disableAuth) {
+      setIsAuthenticated(true);
+      setIsLoadingAuth(false);
+      setUser({ name: 'Guest', role: 'admin' });
+      setAuthError(null);
+      setAuthChecked(true);
+      return;
+    }
+
     try {
       // Now check if the user is authenticated
       setIsLoadingAuth(true);
