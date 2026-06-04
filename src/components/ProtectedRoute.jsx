@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
-const disableAuth = import.meta.env.VITE_DISABLE_AUTH === 'true';
+const disableAuth = true;
 
 const DefaultFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">
