@@ -1,10 +1,13 @@
-import { Toaster } from "@/components/ui/toaster"
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Toaster } from "@/components/ui/toaster";
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClientInstance } from '@/lib/query-client';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+
 import PageNotFound from './lib/PageNotFound';
 import ScrollToTop from './components/ScrollToTop';
 import Layout from './components/Layout';
+import { LocalAuthProvider, useLocalAuth } from '@/lib/LocalAuthContext';
+
 import Dashboard from './pages/ecommerce/dashboard/Dashboard';
 import Users from './pages/original/Users';
 import Tasks from './pages/original/Tasks';
@@ -73,14 +76,25 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
-const AuthenticatedApp = () => {
+const LoadingScreen = () => (
+  <div className="fixed inset-0 flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+  </div>
+);
+
+const ProtectedApp = () => {
+  const { user, loading } = useLocalAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <Routes>
-      <Route path="/login" element={<Dashboard />} />
-      <Route path="/register" element={<Dashboard />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/dashboard-2" element={<Dashboard2 />} />
@@ -152,23 +166,49 @@ const AuthenticatedApp = () => {
         <Route path="/errors/404" element={<Error404 />} />
         <Route path="/errors/500" element={<Error500 />} />
         <Route path="/errors/503" element={<Error503 />} />
-      </Route>
 
-      <Route path="*" element={<PageNotFound />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Route>
+    </Routes>
+  );
+};
+
+const PublicRoutes = () => {
+  const { user, loading } = useLocalAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={user ? <Navigate to="/" replace /> : <Login />}
+      />
+      <Route
+        path="/register"
+        element={user ? <Navigate to="/" replace /> : <Register />}
+      />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/*" element={<ProtectedApp />} />
     </Routes>
   );
 };
 
 function App() {
   return (
-    <QueryClientProvider client={queryClientInstance}>
-      <Router>
-        <ScrollToTop />
-        <AuthenticatedApp />
-      </Router>
-      <Toaster />
-    </QueryClientProvider>
-  )
+    <LocalAuthProvider>
+      <QueryClientProvider client={queryClientInstance}>
+        <Router>
+          <ScrollToTop />
+          <PublicRoutes />
+        </Router>
+        <Toaster />
+      </QueryClientProvider>
+    </LocalAuthProvider>
+  );
 }
 
-export default App
+export default App;

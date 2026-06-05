@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Truck,
   ChevronRight, ChevronsUpDown, Settings, Code,
@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLocalAuth } from "@/lib/LocalAuthContext";
 
 const teams = [
   { name: "Acme Inc.", plan: "Enterprise" },
@@ -143,6 +144,22 @@ const navSections = [
   },
 ];
 
+function getUserInitials(user) {
+  const first = user?.firstName?.trim()?.[0] || "";
+  const last = user?.lastName?.trim()?.[0] || "";
+
+  if (first || last) {
+    return `${first}${last}`.toUpperCase();
+  }
+
+  return (user?.username?.trim()?.slice(0, 2) || "U").toUpperCase();
+}
+
+function getDisplayName(user) {
+  const fullName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
+  return fullName || user?.username || "Usuario";
+}
+
 function NavItem({ item }) {
   const location = useLocation();
   const hasChildren = item.children && item.children.length > 0;
@@ -208,6 +225,13 @@ function NavItem({ item }) {
 
 export default function Sidebar() {
   const [activeTeam, setActiveTeam] = useState(teams[0]);
+  const { user, logout } = useLocalAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <aside className="hidden md:flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar h-screen sticky top-0 overflow-y-auto">
@@ -275,20 +299,30 @@ export default function Sidebar() {
           <DropdownMenuTrigger asChild>
             <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 hover:bg-sidebar-accent transition-colors">
               <div className="size-7 rounded-full bg-sidebar-primary flex items-center justify-center text-xs font-semibold text-sidebar-primary-foreground shrink-0">
-                AD
+                {getUserInitials(user)}
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs font-medium leading-tight truncate text-sidebar-foreground">Admin User</p>
-                <p className="text-[11px] text-sidebar-foreground/50 leading-tight truncate">admin@dashboard.com</p>
+                <p className="text-xs font-medium leading-tight truncate text-sidebar-foreground">
+                  {getDisplayName(user)}
+                </p>
+                <p className="text-[11px] text-sidebar-foreground/50 leading-tight truncate">
+                  {user?.email || user?.username || ""}
+                </p>
               </div>
               <ChevronsUpDown className="size-3.5 text-sidebar-foreground/40 shrink-0" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-48" align="start" side="top">
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/settings/profile")}>
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/settings/general")}>
+              Settings
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
