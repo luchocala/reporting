@@ -97,7 +97,7 @@ const defaultEstadoStyle =
 function EstadoBadge({ estado }) {
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-medium leading-none sm:text-xs ${
+      className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium leading-none ${
         estadoStyles[estado] || defaultEstadoStyle
       }`}
     >
