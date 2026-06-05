@@ -158,83 +158,118 @@ export default function Comprobantes() {
       </div>
 
       <Card className="shadow-none overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1900px] text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Order ID ↕</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Fecha ↕</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Estado</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">T/C</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Provincia</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Documento</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Razón Social ↕</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Tipo</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Leyenda</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Importe Neto</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">%</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Iva</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Importe Total</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Moneda</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Emisora</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">Emails</th>
-                <th className="w-8" />
-              </tr>
-            </thead>
+  <div className="overflow-x-auto">
+    <table className="w-full table-fixed text-[11px] leading-tight">
+      <colgroup>
+        <col className="w-[58px]" />
+        <col className="w-[74px]" />
+        <col className="w-[88px]" />
+        <col className="w-[36px]" />
+        <col className="w-[70px]" />
+        <col className="w-[86px]" />
+        <col className="w-[120px]" />
+        <col className="w-[92px]" />
+        <col className="w-[150px]" />
+        <col className="w-[76px]" />
+        <col className="w-[42px]" />
+        <col className="w-[64px]" />
+        <col className="w-[76px]" />
+        <col className="w-[50px]" />
+        <col className="w-[112px]" />
+        <col className="w-[130px]" />
+        <col className="w-[32px]" />
+      </colgroup>
 
-            <tbody>
-              {filtered.map((item) => (
-                <tr
-                  key={item.orderId}
-                  className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
-                >
-                  <td className="px-4 py-3 font-medium whitespace-nowrap">{item.orderId}</td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">{item.fecha}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
-                      estadoStyles[item.estado] || "text-gray-600 bg-gray-50 border-gray-200"
-                    }`}>
-                      {item.estado}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 font-medium whitespace-nowrap">{item.tc}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{item.provincia}</td>
-                  <td className="px-4 py-3 tabular-nums whitespace-nowrap">{item.documento}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{item.razonSocial}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{item.tipo}</td>
-                  <td className="px-4 py-3 min-w-[260px]">{item.leyenda}</td>
-                  <td className="px-4 py-3 text-right font-medium tabular-nums whitespace-nowrap">{formatAmount(item.importeNeto)}</td>
-                  <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">{formatAmount(item.porcentajeIva)}</td>
-                  <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">{formatAmount(item.iva)}</td>
-                  <td className="px-4 py-3 text-right font-medium tabular-nums whitespace-nowrap">{formatAmount(item.importeTotal)}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{item.moneda}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{item.emisora}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{item.emails}</td>
-                  <td className="px-4 py-3">
-                    <button className="p-1 hover:bg-muted rounded">
-                      <MoreHorizontal className="size-4 text-muted-foreground" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <thead>
+        <tr className="border-b border-border bg-muted/30">
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Order ID</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Fecha</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Estado</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">T/C</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Provincia</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Documento</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Razón Social</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Tipo</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Leyenda</th>
+          <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">Importe Neto</th>
+          <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">%</th>
+          <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">Iva</th>
+          <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">Importe Total</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Moneda</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emisora</th>
+          <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emails</th>
+          <th className="w-8" />
+        </tr>
+      </thead>
 
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-          <span className="text-xs text-muted-foreground">
-            1–{filtered.length} of {comprobantes.length}
-          </span>
-          <div className="flex items-center gap-1">
-            <button className="p-1 hover:bg-muted rounded">
-              <ChevronLeft className="size-4 text-muted-foreground" />
-            </button>
-            <button className="p-1 hover:bg-muted rounded">
-              <ChevronRight className="size-4 text-muted-foreground" />
-            </button>
-          </div>
-        </div>
-      </Card>
+      <tbody>
+        {filtered.map((item) => (
+          <tr
+            key={item.orderId}
+            className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
+          >
+            <td className="px-2 py-2 align-top font-medium break-words">{item.orderId}</td>
+            <td className="px-2 py-2 align-top text-muted-foreground tabular-nums whitespace-nowrap">{item.fecha}</td>
+
+            <td className="px-2 py-2 align-top">
+              <span
+                className={`inline-flex max-w-full items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-tight whitespace-normal break-words ${
+                  estadoStyles[item.estado] || "text-gray-600 bg-gray-50 border-gray-200"
+                }`}
+              >
+                {item.estado}
+              </span>
+            </td>
+
+            <td className="px-2 py-2 align-top font-medium">{item.tc}</td>
+            <td className="px-2 py-2 align-top break-words">{item.provincia}</td>
+            <td className="px-2 py-2 align-top tabular-nums break-words">{item.documento}</td>
+            <td className="px-2 py-2 align-top break-words">{item.razonSocial}</td>
+            <td className="px-2 py-2 align-top break-words">{item.tipo}</td>
+            <td className="px-2 py-2 align-top break-words">{item.leyenda}</td>
+
+            <td className="px-2 py-2 align-top text-right font-medium tabular-nums whitespace-nowrap">
+              {formatAmount(item.importeNeto)}
+            </td>
+            <td className="px-2 py-2 align-top text-right tabular-nums whitespace-nowrap">
+              {formatAmount(item.porcentajeIva)}
+            </td>
+            <td className="px-2 py-2 align-top text-right tabular-nums whitespace-nowrap">
+              {formatAmount(item.iva)}
+            </td>
+            <td className="px-2 py-2 align-top text-right font-medium tabular-nums whitespace-nowrap">
+              {formatAmount(item.importeTotal)}
+            </td>
+
+            <td className="px-2 py-2 align-top break-words">{item.moneda}</td>
+            <td className="px-2 py-2 align-top break-words">{item.emisora}</td>
+            <td className="px-2 py-2 align-top break-words">{item.emails}</td>
+
+            <td className="px-1 py-2 align-top">
+              <button className="p-1 hover:bg-muted rounded">
+                <MoreHorizontal className="size-3.5 text-muted-foreground" />
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+    <span className="text-xs text-muted-foreground">
+      1–{filtered.length} of {comprobantes.length}
+    </span>
+    <div className="flex items-center gap-1">
+      <button className="p-1 hover:bg-muted rounded">
+        <ChevronLeft className="size-4 text-muted-foreground" />
+      </button>
+      <button className="p-1 hover:bg-muted rounded">
+        <ChevronRight className="size-4 text-muted-foreground" />
+      </button>
+    </div>
+  </div>
+</Card>
     </div>
   );
 }
