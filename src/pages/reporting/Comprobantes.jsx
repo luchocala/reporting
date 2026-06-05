@@ -163,20 +163,20 @@ export default function Comprobantes() {
       <colgroup>
         <col className="w-[40px]" />
         <col className="w-[75px]" />
-        <col className="w-[100px]" />
+        <col className="w-[110px]" />
         <col className="w-[25px]" />
         <col className="w-[65px]" />
-        <col className="w-[90px]" />
+        <col className="w-[95px]" />
         <col className="w-[120px]" />
         <col className="w-[95px]" />
-        <col className="w-[150px]" />
-        <col className="w-[60px]" />
+        <col className="w-[120px]" />
+        <col className="w-[75px]" />
         <col className="w-[40px]" />
         <col className="w-[65px]" />
         <col className="w-[80px]" />
         <col className="w-[40px]" />
-        <col className="w-[110px]" />
-        <col className="w-[130px]" />
+        <col className="w-[105px]" />
+        <col className="w-[135px]" />
         <col className="w-[35px]" />
       </colgroup>
 
