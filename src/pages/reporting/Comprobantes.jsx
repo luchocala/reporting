@@ -161,9 +161,9 @@ export default function Comprobantes() {
   <div className="overflow-x-auto">
     <table className="w-full table-fixed text-[11px] leading-tight">
       <colgroup>
-        <col className="w-[35px]" />
+        <col className="w-[40px]" />
         <col className="w-[75px]" />
-        <col className="w-[90px]" />
+        <col className="w-[85px]" />
         <col className="w-[20px]" />
         <col className="w-[65px]" />
         <col className="w-[95px]" />
@@ -174,7 +174,7 @@ export default function Comprobantes() {
         <col className="w-[35px]" />
         <col className="w-[65px]" />
         <col className="w-[80px]" />
-        <col className="w-[40px]" />
+        <col className="w-[45px]" />
         <col className="w-[80px]" />
         <col className="w-[170px]" />
         <col className="w-[35px]" />
