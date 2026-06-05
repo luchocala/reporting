@@ -169,14 +169,14 @@ export default function Comprobantes() {
         <col className="w-[95px]" />
         <col className="w-[120px]" />
         <col className="w-[95px]" />
-        <col className="w-[120px]" />
+        <col className="w-[100px]" />
         <col className="w-[75px]" />
         <col className="w-[35px]" />
         <col className="w-[65px]" />
         <col className="w-[80px]" />
         <col className="w-[35px]" />
         <col className="w-[105px]" />
-        <col className="w-[135px]" />
+        <col className="w-[160px]" />
         <col className="w-[35px]" />
       </colgroup>
 
