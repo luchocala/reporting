@@ -29,6 +29,7 @@ const navSections = [
         icon: LayoutDashboard,
         label: "Dashboard",
         children: [
+          { label: "Comprobantes", path: "/comprobantes" },
           { label: "Dashboard 1", path: "/" },
           { label: "Dashboard 2", path: "/dashboard-2" },
           { label: "Dashboard 3", path: "/dashboard-3" },

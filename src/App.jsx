@@ -30,6 +30,7 @@ import Dashboard6 from './pages/ecommerce/dashboard/Dashboard6';
 import Dashboard7 from './pages/ecommerce/dashboard/Dashboard7';
 import Dashboard8 from './pages/ecommerce/dashboard/Dashboard8';
 import Dashboard9 from './pages/ecommerce/dashboard/Dashboard9';
+import Comprobantes from './pages/reporting/Comprobantes';
 
 // Ecommerce - Products
 import AddProduct from './pages/ecommerce/products/AddProduct';
@@ -105,6 +106,7 @@ const ProtectedApp = () => {
         <Route path="/dashboard-7" element={<Dashboard7 />} />
         <Route path="/dashboard-8" element={<Dashboard8 />} />
         <Route path="/dashboard-9" element={<Dashboard9 />} />
+        <Route path="/comprobantes" element={<Comprobantes />} />
 
         {/* Original - Users & Tasks */}
         <Route path="/users" element={<Users />} />
