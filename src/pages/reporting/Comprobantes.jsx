@@ -161,13 +161,13 @@ export default function Comprobantes() {
   <div className="overflow-x-auto">
     <table className="w-full table-fixed text-[11px] leading-tight">
       <colgroup>
-        <col className="w-[40px]" />
+        <col className="w-[35px]" />
         <col className="w-[75px]" />
         <col className="w-[90px]" />
         <col className="w-[20px]" />
         <col className="w-[65px]" />
         <col className="w-[95px]" />
-        <col className="w-[120px]" />
+        <col className="w-[110px]" />
         <col className="w-[95px]" />
         <col className="w-[100px]" />
         <col className="w-[75px]" />
