@@ -97,7 +97,7 @@ const defaultEstadoStyle =
 function EstadoBadge({ estado }) {
   return (
     <span
-      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-none ${
+      className={`inline-block max-w-full rounded-md px-2 py-1 text-[10px] font-medium leading-tight whitespace-normal break-words text-center ${
         estadoStyles[estado] || defaultEstadoStyle
       }`}
     >
@@ -251,7 +251,7 @@ export default function Comprobantes() {
                   <td className="px-2 py-2 align-top font-medium break-words">{item.orderId}</td>
                   <td className="px-2 py-2 align-top text-muted-foreground tabular-nums whitespace-nowrap">{item.fecha}</td>
 
-                  <td className="px-2 py-2 align-top whitespace-nowrap">
+                  <td className="px-2 py-2 align-top whitespace-normal break-words">
                     <EstadoBadge estado={item.estado} />
                   </td>
 
