@@ -135,6 +135,12 @@ const tableColumns = [
 
 const defaultVisibleColumns = tableColumns.map((column) => column.key);
 
+function getInitialView() {
+  if (typeof window === "undefined") return "table";
+
+  return window.innerWidth >= 1280 ? "table" : "lanes";
+}
+
 function EstadoBadge({ estado }) {
   return (
     <span
@@ -309,7 +315,7 @@ function ViewSwitcher({ value, onChange }) {
   ];
 
   return (
-    <div className="hidden xl:inline-flex rounded-md border border-input bg-background p-0.5">
+    <div className="inline-flex rounded-md border border-input bg-background p-0.5">
       {views.map((view) => (
         <button
           key={view.value}
@@ -324,6 +330,14 @@ function ViewSwitcher({ value, onChange }) {
           {view.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+function ResponsiveViewController({ value, onChange }) {
+  return (
+    <div className="hidden sm:flex items-center justify-end">
+      <ViewSwitcher value={value} onChange={onChange} />
     </div>
   );
 }
@@ -496,7 +510,6 @@ function FiltersToolbar({
   setEmisoraFilter,
   estadoFilter,
   setEstadoFilter,
-  setTab,
   emisoras,
   estados,
   showColumnSelector = false,
@@ -504,25 +517,25 @@ function FiltersToolbar({
   onToggleColumn,
 }) {
   return (
-    <div className="hidden sm:flex w-full flex-col gap-2">
-      <div className="relative w-full lg:max-w-sm xl:max-w-xs">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <input
-          placeholder="Buscar comprobantes"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          className="h-10 w-full rounded-xl border border-input bg-background pl-11 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/30"
-        />
-      </div>
+    <div className="hidden sm:flex w-full flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+      <div className="flex w-full flex-col gap-2 xl:flex-row xl:items-center">
+        <div className="relative w-full xl:w-64">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <input
+            placeholder="Buscar comprobantes"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="h-10 w-full rounded-xl border border-input bg-background pl-11 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/30"
+          />
+        </div>
 
-      <div className="flex w-full flex-wrap items-center justify-between gap-2">
-        <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-3 xl:flex xl:w-auto xl:flex-wrap xl:items-center">
+        <div className="grid w-full grid-cols-3 gap-2 xl:flex xl:w-auto xl:items-center">
           <MultiFilterSelect
             value={periodFilter}
             onChange={setPeriodFilter}
             icon={Calendar}
             placeholder="Período"
-            className="w-full xl:w-auto"
+            className="min-w-0"
             options={[
               { value: "lastMonth", label: "Último mes" },
               { value: "previousMonth", label: "Mes anterior" },
@@ -536,7 +549,7 @@ function FiltersToolbar({
             value={emisoraFilter}
             onChange={setEmisoraFilter}
             placeholder="Emisora"
-            className="w-full xl:w-auto"
+            className="min-w-0"
             options={emisoras.map((emisora) => ({
               value: emisora,
               label: emisora,
@@ -544,34 +557,26 @@ function FiltersToolbar({
           />
 
           <MultiFilterSelect
-  value={estadoFilter}
-  onChange={(nextValue) => {
-    setEstadoFilter(nextValue);
-
-    if (nextValue.length === 1) {
-      setTab(nextValue[0]);
-    } else {
-      setTab("Todos");
-    }
-  }}
-  placeholder="Estado"
-  className="w-full xl:w-auto"
-  options={estados.map((estado) => ({
-    value: estado,
-    label: estado,
-  }))}
-/>
+            value={estadoFilter}
+            onChange={setEstadoFilter}
+            placeholder="Estado"
+            className="min-w-0"
+            options={estados.map((estado) => ({
+              value: estado,
+              label: estado,
+            }))}
+          />
         </div>
-
-        {showColumnSelector && (
-          <div className="w-full xl:w-auto">
-            <ColumnSelector
-              visibleColumns={visibleColumns}
-              onToggleColumn={onToggleColumn}
-            />
-          </div>
-        )}
       </div>
+
+      {showColumnSelector && (
+        <div className="w-full xl:w-auto">
+          <ColumnSelector
+            visibleColumns={visibleColumns}
+            onToggleColumn={onToggleColumn}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -1077,7 +1082,7 @@ function MobileCards({ items, onView, onMarkPaid, onDelete, forceVisible = false
 export default function Comprobantes() {
   const [tab, setTab] = useState("Todos");
   const [search, setSearch] = useState("");
-  const [desktopView, setDesktopView] = useState("table");
+  const [desktopView, setDesktopView] = useState(getInitialView);
   const [periodFilter, setPeriodFilter] = useState([]);
   const [emisoraFilter, setEmisoraFilter] = useState([]);
   const [estadoFilter, setEstadoFilter] = useState([]);
@@ -1208,9 +1213,9 @@ export default function Comprobantes() {
           </div>
         </div>
 
-        <div className="hidden xl:flex items-center gap-2 ml-auto">
-          <ViewSwitcher value={desktopView} onChange={setDesktopView} />
-        </div>
+<div className="hidden sm:flex items-center gap-2 ml-auto">
+  <ViewSwitcher value={desktopView} onChange={setDesktopView} />
+</div>
       </div>
 
       <div className="flex sm:hidden flex-wrap gap-0 border-b border-border overflow-visible">
@@ -1259,48 +1264,38 @@ export default function Comprobantes() {
 />
       )}
 
-      <div className="hidden xl:block">
-        {desktopView === "table" && (
-          <DesktopTable
-            items={filtered}
-            forceVisible
-            visibleColumns={visibleColumns}
-            onView={handleView}
-            onMarkPaid={handleMarkPaid}
-            onDelete={handleDelete}
-          />
-        )}
+      <div className="hidden sm:block">
+  {desktopView === "table" && (
+    <DesktopTable
+      items={filtered}
+      forceVisible
+      visibleColumns={visibleColumns}
+      onView={handleView}
+      onMarkPaid={handleMarkPaid}
+      onDelete={handleDelete}
+    />
+  )}
 
-        {desktopView === "lanes" && (
-          <LanesView
-            items={filtered}
-            forceVisible
-            onView={handleView}
-            onMarkPaid={handleMarkPaid}
-            onDelete={handleDelete}
-          />
-        )}
+  {desktopView === "lanes" && (
+    <LanesView
+      items={filtered}
+      forceVisible
+      onView={handleView}
+      onMarkPaid={handleMarkPaid}
+      onDelete={handleDelete}
+    />
+  )}
 
-        {desktopView === "cards" && (
-          <MobileCards
-            items={filtered}
-            forceVisible
-            onView={handleView}
-            onMarkPaid={handleMarkPaid}
-            onDelete={handleDelete}
-          />
-        )}
-      </div>
-
-      <div className="hidden sm:block xl:hidden">
-        <LanesView
-          items={filtered}
-          forceVisible
-          onView={handleView}
-          onMarkPaid={handleMarkPaid}
-          onDelete={handleDelete}
-        />
-      </div>
+  {desktopView === "cards" && (
+    <MobileCards
+      items={filtered}
+      forceVisible
+      onView={handleView}
+      onMarkPaid={handleMarkPaid}
+      onDelete={handleDelete}
+    />
+  )}
+</div>
 
       <div className="sm:hidden">
         <MobileCards
