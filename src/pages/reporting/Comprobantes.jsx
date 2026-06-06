@@ -172,7 +172,7 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
         <button
           type="button"
           onClick={() => onView(item)}
-          className="p-1 hover:bg-muted rounded"
+          className="hover:bg-muted rounded"
           title="Ver detalle"
         >
           <Eye className="size-3.5 text-muted-foreground" />
@@ -182,7 +182,7 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
           <button
             type="button"
             onClick={() => onMarkPaid(item)}
-            className="p-1 hover:bg-muted rounded"
+            className="hover:bg-muted rounded"
             title="Marcar como pagada"
           >
             <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -192,7 +192,7 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
         <button
           type="button"
           onClick={() => onDelete(item)}
-          className="p-1 hover:bg-muted rounded"
+          className="hover:bg-muted rounded"
           title="Eliminar"
         >
           <Trash2 className="size-3.5 text-red-600 dark:text-red-400" />
