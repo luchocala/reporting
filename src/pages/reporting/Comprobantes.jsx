@@ -163,6 +163,13 @@ function parseDate(dateString) {
   return new Date(year, month - 1, day);
 }
 
+function parseInputDate(dateString) {
+  if (!dateString) return null;
+
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function getCurrentMonthRange() {
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -321,19 +328,52 @@ function ViewSwitcher({ value, onChange }) {
   );
 }
 
-function FilterSelect({
+function MultiFilterSelect({
   value,
   onChange,
   options,
+  placeholder,
   icon: Icon = null,
+  customDateRange,
+  onCustomDateRangeChange,
   className = "",
 }) {
   const [open, setOpen] = useState(false);
-  const selected = options.find((option) => option.value === value) || options[0];
 
-  const handleSelect = (nextValue) => {
-    onChange(nextValue);
-    setOpen(false);
+  const selectedValues = Array.isArray(value) ? value : [];
+  const allOptionValues = options.map((option) => option.value);
+  const allSelected =
+    allOptionValues.length > 0 &&
+    allOptionValues.every((optionValue) => selectedValues.includes(optionValue));
+
+  const selectedLabels = options
+    .filter((option) => selectedValues.includes(option.value))
+    .map((option) => option.label);
+
+  const label =
+    selectedLabels.length === 0 || allSelected
+      ? placeholder
+      : selectedLabels.length === 1
+        ? selectedLabels[0]
+        : `${selectedLabels.length} seleccionados`;
+
+  const toggleOption = (optionValue) => {
+    if (optionValue === "all") {
+      onChange(allOptionValues);
+      return;
+    }
+
+    if (selectedValues.includes(optionValue)) {
+      onChange(selectedValues.filter((item) => item !== optionValue));
+      return;
+    }
+
+    onChange([...selectedValues, optionValue]);
+  };
+
+  const isActive = (optionValue) => {
+    if (optionValue === "all") return allSelected;
+    return selectedValues.includes(optionValue);
   };
 
   return (
@@ -345,7 +385,7 @@ function FilterSelect({
       >
         <span className="flex min-w-0 items-center gap-2">
           {Icon && <Icon className="size-4 shrink-0 text-foreground" />}
-          <span className="truncate">{selected.label}</span>
+          <span className="truncate">{label}</span>
         </span>
 
         <ChevronRight
@@ -365,27 +405,70 @@ function FilterSelect({
             aria-label="Cerrar menú"
           />
 
-          <div className="absolute left-0 top-full z-30 mt-1.5 w-full min-w-[190px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-lg">
+          <div className="absolute left-0 top-full z-30 mt-1.5 w-full min-w-[230px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-lg">
+            <button
+              type="button"
+              onClick={() => toggleOption("all")}
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted/70"
+            >
+              <span className="truncate">Todos</span>
+              <span className="flex size-4 items-center justify-center">
+                {allSelected && <Check className="size-4 stroke-[2]" />}
+              </span>
+            </button>
+
             {options.map((option) => {
-              const active = option.value === value;
+              const active = isActive(option.value);
 
               return (
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => handleSelect(option.value)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 ${
-                    active ? "bg-transparent text-foreground" : "text-foreground"
-                  }`}
+                  onClick={() => toggleOption(option.value)}
+                  className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted/70"
                 >
                   <span className="truncate">{option.label}</span>
 
                   <span className="flex size-4 items-center justify-center">
-                    {active && <Check className="size-4" />}
+                    {active && <Check className="size-4 stroke-[2]" />}
                   </span>
                 </button>
               );
             })}
+
+            {selectedValues.includes("custom") && onCustomDateRangeChange && (
+              <div className="mt-1 border-t border-border p-3 space-y-2">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Desde</label>
+                  <input
+                    type="date"
+                    value={customDateRange?.from || ""}
+                    onChange={(event) =>
+                      onCustomDateRangeChange({
+                        ...customDateRange,
+                        from: event.target.value,
+                      })
+                    }
+                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring/30"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Hasta</label>
+                  <input
+                    type="date"
+                    value={customDateRange?.to || ""}
+                    onChange={(event) =>
+                      onCustomDateRangeChange({
+                        ...customDateRange,
+                        to: event.target.value,
+                      })
+                    }
+                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring/30"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
@@ -398,6 +481,8 @@ function FiltersToolbar({
   setSearch,
   periodFilter,
   setPeriodFilter,
+  customDateRange,
+  setCustomDateRange,
   emisoraFilter,
   setEmisoraFilter,
   estadoFilter,
@@ -412,49 +497,48 @@ function FiltersToolbar({
     <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap">
       <div className="flex items-center gap-2 flex-wrap">
         <div className="relative">
-  <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-  <input
-    placeholder="Buscar comprobantes"
-    value={search}
-    onChange={(event) => setSearch(event.target.value)}
-    className="h-10 w-64 rounded-xl border border-input bg-background pl-11 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
-  />
-</div>
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <input
+            placeholder="Buscar comprobantes"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="h-10 w-64 rounded-xl border border-input bg-background pl-11 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/30"
+          />
+        </div>
 
-<FilterSelect
-  value={periodFilter}
-  onChange={setPeriodFilter}
-  icon={Calendar}
-  options={[
-    { value: "all", label: "Todo" },
-    { value: "lastMonth", label: "Último mes" },
-    { value: "previousMonth", label: "Mes anterior" },
-  ]}
-/>
+        <MultiFilterSelect
+          value={periodFilter}
+          onChange={setPeriodFilter}
+          icon={Calendar}
+          placeholder="Período"
+          options={[
+            { value: "lastMonth", label: "Último mes" },
+            { value: "previousMonth", label: "Mes anterior" },
+            { value: "custom", label: "Personalizado" },
+          ]}
+          customDateRange={customDateRange}
+          onCustomDateRangeChange={setCustomDateRange}
+        />
 
-<FilterSelect
-  value={emisoraFilter}
-  onChange={setEmisoraFilter}
-  options={[
-    { value: "all", label: "Emisora" },
-    ...emisoras.map((emisora) => ({
-      value: emisora,
-      label: emisora,
-    })),
-  ]}
-/>
+        <MultiFilterSelect
+          value={emisoraFilter}
+          onChange={setEmisoraFilter}
+          placeholder="Emisora"
+          options={emisoras.map((emisora) => ({
+            value: emisora,
+            label: emisora,
+          }))}
+        />
 
-<FilterSelect
-  value={estadoFilter}
-  onChange={setEstadoFilter}
-  options={[
-    { value: "all", label: "Estado" },
-    ...estados.map((estado) => ({
-      value: estado,
-      label: estado,
-    })),
-  ]}
-/>
+        <MultiFilterSelect
+          value={estadoFilter}
+          onChange={setEstadoFilter}
+          placeholder="Estado"
+          options={estados.map((estado) => ({
+            value: estado,
+            label: estado,
+          }))}
+        />
       </div>
 
       {showColumnSelector && (
@@ -475,11 +559,11 @@ function ColumnSelector({ visibleColumns, onToggleColumn }) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 min-w-[180px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
+        className="inline-flex h-10 min-w-[160px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
       >
         <span className="flex items-center gap-2">
           <Columns3 className="size-4 text-foreground" />
-          Manage Table
+          Columnas
         </span>
       </button>
 
@@ -510,7 +594,7 @@ function ColumnSelector({ visibleColumns, onToggleColumn }) {
                   }`}
                 >
                   <span className="flex size-4 items-center justify-center">
-                    {active && <Check className="size-4" />}
+                    {active && <Check className="size-4 stroke-[2]" />}
                   </span>
                   <span className="truncate">{column.label}</span>
                 </button>
@@ -969,9 +1053,13 @@ export default function Comprobantes() {
   const [tab, setTab] = useState("Todos");
   const [search, setSearch] = useState("");
   const [desktopView, setDesktopView] = useState("table");
-  const [periodFilter, setPeriodFilter] = useState("all");
-  const [emisoraFilter, setEmisoraFilter] = useState("all");
-  const [estadoFilter, setEstadoFilter] = useState("all");
+  const [periodFilter, setPeriodFilter] = useState([]);
+  const [emisoraFilter, setEmisoraFilter] = useState([]);
+  const [estadoFilter, setEstadoFilter] = useState([]);
+  const [customDateRange, setCustomDateRange] = useState({
+    from: "",
+    to: "",
+  });
   const [visibleColumns, setVisibleColumns] = useState(defaultVisibleColumns);
 
   const emisoras = useMemo(() => getUniqueValues(comprobantes, "emisora"), []);
@@ -998,14 +1086,21 @@ export default function Comprobantes() {
   const filtered = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
-    let selectedPeriodRange = null;
+    const selectedPeriodRanges = [];
 
-    if (periodFilter === "lastMonth") {
-      selectedPeriodRange = getCurrentMonthRange();
+    if (periodFilter.includes("lastMonth")) {
+      selectedPeriodRanges.push(getCurrentMonthRange());
     }
 
-    if (periodFilter === "previousMonth") {
-      selectedPeriodRange = getPreviousMonthRange();
+    if (periodFilter.includes("previousMonth")) {
+      selectedPeriodRanges.push(getPreviousMonthRange());
+    }
+
+    if (periodFilter.includes("custom") && customDateRange.from && customDateRange.to) {
+      selectedPeriodRanges.push({
+        start: parseInputDate(customDateRange.from),
+        end: parseInputDate(customDateRange.to),
+      });
     }
 
     return comprobantes.filter((item) => {
@@ -1024,13 +1119,15 @@ export default function Comprobantes() {
         item.emails.toLowerCase().includes(normalizedSearch);
 
       const matchesPeriod =
-        periodFilter === "all" || isDateInRange(itemDate, selectedPeriodRange);
+        periodFilter.length === 0 ||
+        selectedPeriodRanges.length === 0 ||
+        selectedPeriodRanges.some((range) => isDateInRange(itemDate, range));
 
       const matchesEmisora =
-        emisoraFilter === "all" || item.emisora === emisoraFilter;
+        emisoraFilter.length === 0 || emisoraFilter.includes(item.emisora);
 
       const matchesEstado =
-        estadoFilter === "all" || item.estado === estadoFilter;
+        estadoFilter.length === 0 || estadoFilter.includes(item.estado);
 
       return (
         matchesTab &&
@@ -1040,7 +1137,7 @@ export default function Comprobantes() {
         matchesEstado
       );
     });
-  }, [tab, search, periodFilter, emisoraFilter, estadoFilter]);
+  }, [tab, search, periodFilter, emisoraFilter, estadoFilter, customDateRange]);
 
   const handleView = (item) => {
     console.log("Ver detalle", item);
@@ -1114,6 +1211,8 @@ export default function Comprobantes() {
           setSearch={setSearch}
           periodFilter={periodFilter}
           setPeriodFilter={setPeriodFilter}
+          customDateRange={customDateRange}
+          setCustomDateRange={setCustomDateRange}
           emisoraFilter={emisoraFilter}
           setEmisoraFilter={setEmisoraFilter}
           estadoFilter={estadoFilter}
