@@ -214,16 +214,6 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
         </button>
       )}      
 
-      <button
-        type="button"
-        onClick={() => onView(item)}
-        className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted"
-      >
-        <Eye className="size-3.5" />
-        Ver
-      </button>
-
-
     </div>
   );
 }
@@ -298,7 +288,7 @@ function DesktopTable({ items, onView, onMarkPaid, onDelete, forceVisible = fals
               <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Moneda</th>
               <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emisora</th>
               <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emails</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Acciones</th>
+              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">.</th>
             </tr>
           </thead>
 
