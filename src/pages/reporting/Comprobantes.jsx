@@ -390,7 +390,7 @@ const toggleOption = (optionValue) => {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 min-w-[180px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
+        className="inline-flex h-10 w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 xl:w-[180px]"
       >
         <span className="flex min-w-0 items-center gap-2">
           {Icon && <Icon className="size-4 shrink-0 text-foreground" />}
@@ -496,6 +496,7 @@ function FiltersToolbar({
   setEmisoraFilter,
   estadoFilter,
   setEstadoFilter,
+  setTab,
   emisoras,
   estados,
   showColumnSelector = false,
@@ -503,59 +504,74 @@ function FiltersToolbar({
   onToggleColumn,
 }) {
   return (
-    <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap">
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <input
-            placeholder="Buscar comprobantes"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="h-10 w-64 rounded-xl border border-input bg-background pl-11 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/30"
-          />
-        </div>
-
-        <MultiFilterSelect
-          value={periodFilter}
-          onChange={setPeriodFilter}
-          icon={Calendar}
-          placeholder="Período"
-          options={[
-            { value: "lastMonth", label: "Último mes" },
-            { value: "previousMonth", label: "Mes anterior" },
-            { value: "custom", label: "Personalizado" },
-          ]}
-          customDateRange={customDateRange}
-          onCustomDateRangeChange={setCustomDateRange}
-        />
-
-        <MultiFilterSelect
-          value={emisoraFilter}
-          onChange={setEmisoraFilter}
-          placeholder="Emisora"
-          options={emisoras.map((emisora) => ({
-            value: emisora,
-            label: emisora,
-          }))}
-        />
-
-        <MultiFilterSelect
-          value={estadoFilter}
-          onChange={setEstadoFilter}
-          placeholder="Estado"
-          options={estados.map((estado) => ({
-            value: estado,
-            label: estado,
-          }))}
+    <div className="hidden sm:flex w-full flex-col gap-2">
+      <div className="relative w-full lg:max-w-sm xl:max-w-xs">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <input
+          placeholder="Buscar comprobantes"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          className="h-10 w-full rounded-xl border border-input bg-background pl-11 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/30"
         />
       </div>
 
-      {showColumnSelector && (
-        <ColumnSelector
-          visibleColumns={visibleColumns}
-          onToggleColumn={onToggleColumn}
-        />
-      )}
+      <div className="flex w-full flex-wrap items-center justify-between gap-2">
+        <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-3 xl:flex xl:w-auto xl:flex-wrap xl:items-center">
+          <MultiFilterSelect
+            value={periodFilter}
+            onChange={setPeriodFilter}
+            icon={Calendar}
+            placeholder="Período"
+            className="w-full xl:w-auto"
+            options={[
+              { value: "lastMonth", label: "Último mes" },
+              { value: "previousMonth", label: "Mes anterior" },
+              { value: "custom", label: "Personalizado" },
+            ]}
+            customDateRange={customDateRange}
+            onCustomDateRangeChange={setCustomDateRange}
+          />
+
+          <MultiFilterSelect
+            value={emisoraFilter}
+            onChange={setEmisoraFilter}
+            placeholder="Emisora"
+            className="w-full xl:w-auto"
+            options={emisoras.map((emisora) => ({
+              value: emisora,
+              label: emisora,
+            }))}
+          />
+
+          <MultiFilterSelect
+  value={estadoFilter}
+  onChange={(nextValue) => {
+    setEstadoFilter(nextValue);
+
+    if (nextValue.length === 1) {
+      setTab(nextValue[0]);
+    } else {
+      setTab("Todos");
+    }
+  }}
+  placeholder="Estado"
+  className="w-full xl:w-auto"
+  options={estados.map((estado) => ({
+    value: estado,
+    label: estado,
+  }))}
+/>
+        </div>
+
+        {showColumnSelector && (
+          <div className="w-full xl:w-auto">
+            <ColumnSelector
+              visibleColumns={visibleColumns}
+              onToggleColumn={onToggleColumn}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -568,7 +584,7 @@ function ColumnSelector({ visibleColumns, onToggleColumn }) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 min-w-[160px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
+        className="inline-flex h-10 w-full items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 xl:w-[160px]"
       >
         <span className="flex items-center gap-2">
           <Columns3 className="size-4 text-foreground" />
@@ -646,7 +662,7 @@ function DesktopTable({
             {isVisible("importeTotal") && <col className="w-[90px]" />}
             {isVisible("moneda") && <col className="w-[40px]" />}
             {isVisible("emisora") && <col className="w-[80px]" />}
-            {isVisible("emails") && <col className="w-[100px]" />}
+            {isVisible("emails") && <col className="w-[90px]" />}
             {isVisible("acciones") && <col className="w-[40px]" />}
           </colgroup>
 
@@ -1197,41 +1213,50 @@ export default function Comprobantes() {
         </div>
       </div>
 
-      <div className="hidden sm:flex flex-wrap gap-0 border-b border-border overflow-visible">
-        {["Todos", "ESPERANDO PAGO", "PAGADO", "BORRADOR", "ANULADO"].map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => setTab(item)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
-              tab === item
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
+      <div className="flex sm:hidden flex-wrap gap-0 border-b border-border overflow-visible">
+  {["Todos", "ESPERANDO PAGO", "PAGADO", "BORRADOR", "ANULADO"].map((item) => (
+    <button
+      key={item}
+      type="button"
+      onClick={() => {
+        setTab(item);
+
+        if (item === "Todos") {
+          setEstadoFilter([]);
+        } else {
+          setEstadoFilter([item]);
+        }
+      }}
+      className={`px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
+        tab === item
+          ? "border-foreground text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {item}
+    </button>
+  ))}
+</div>
 
       {shouldShowSharedFilters && (
-        <FiltersToolbar
-          search={search}
-          setSearch={setSearch}
-          periodFilter={periodFilter}
-          setPeriodFilter={setPeriodFilter}
-          customDateRange={customDateRange}
-          setCustomDateRange={setCustomDateRange}
-          emisoraFilter={emisoraFilter}
-          setEmisoraFilter={setEmisoraFilter}
-          estadoFilter={estadoFilter}
-          setEstadoFilter={setEstadoFilter}
-          emisoras={emisoras}
-          estados={estados}
-          showColumnSelector={desktopView === "table"}
-          visibleColumns={visibleColumns}
-          onToggleColumn={toggleColumn}
-        />
+     <FiltersToolbar
+  search={search}
+  setSearch={setSearch}
+  periodFilter={periodFilter}
+  setPeriodFilter={setPeriodFilter}
+  customDateRange={customDateRange}
+  setCustomDateRange={setCustomDateRange}
+  emisoraFilter={emisoraFilter}
+  setEmisoraFilter={setEmisoraFilter}
+  estadoFilter={estadoFilter}
+  setEstadoFilter={setEstadoFilter}
+  setTab={setTab}
+  emisoras={emisoras}
+  estados={estados}
+  showColumnSelector={desktopView === "table"}
+  visibleColumns={visibleColumns}
+  onToggleColumn={toggleColumn}
+/>
       )}
 
       <div className="hidden xl:block">
