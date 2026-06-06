@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   Plus,
@@ -334,14 +334,6 @@ function ViewSwitcher({ value, onChange }) {
   );
 }
 
-function ResponsiveViewController({ value, onChange }) {
-  return (
-    <div className="hidden sm:flex items-center justify-end">
-      <ViewSwitcher value={value} onChange={onChange} />
-    </div>
-  );
-}
-
 function MultiFilterSelect({
   value,
   onChange,
@@ -371,28 +363,26 @@ function MultiFilterSelect({
         ? selectedLabels[0]
         : `${selectedLabels.length} seleccionados`;
 
-const toggleOption = (optionValue) => {
-  if (optionValue === "all") {
-    onChange(allOptionValues);
-    return;
-  }
+  const toggleOption = (optionValue) => {
+    if (optionValue === "all") {
+      onChange(allOptionValues);
+      return;
+    }
 
-  // Si el usuario elige "Personalizado", se desactivan las demás opciones.
-  if (optionValue === "custom") {
-    onChange(selectedValues.includes("custom") ? [] : ["custom"]);
-    return;
-  }
+    if (optionValue === "custom") {
+      onChange(selectedValues.includes("custom") ? [] : ["custom"]);
+      return;
+    }
 
-  // Si estaba activo "Personalizado" y elige otra opción, se desactiva "Personalizado".
-  const valuesWithoutCustom = selectedValues.filter((item) => item !== "custom");
+    const valuesWithoutCustom = selectedValues.filter((item) => item !== "custom");
 
-  if (valuesWithoutCustom.includes(optionValue)) {
-    onChange(valuesWithoutCustom.filter((item) => item !== optionValue));
-    return;
-  }
+    if (valuesWithoutCustom.includes(optionValue)) {
+      onChange(valuesWithoutCustom.filter((item) => item !== optionValue));
+      return;
+    }
 
-  onChange([...valuesWithoutCustom, optionValue]);
-};
+    onChange([...valuesWithoutCustom, optionValue]);
+  };
 
   const isActive = (optionValue) => {
     if (optionValue === "all") return allSelected;
@@ -1083,6 +1073,11 @@ export default function Comprobantes() {
   const [tab, setTab] = useState("Todos");
   const [search, setSearch] = useState("");
   const [desktopView, setDesktopView] = useState(getInitialView);
+  const previousIsDesktopRef = useRef(
+    typeof window !== "undefined" ? window.innerWidth >= 1280 : true
+  );
+  const userSelectedViewRef = useRef(false);
+
   const [periodFilter, setPeriodFilter] = useState([]);
   const [emisoraFilter, setEmisoraFilter] = useState([]);
   const [estadoFilter, setEstadoFilter] = useState([]);
@@ -1091,6 +1086,31 @@ export default function Comprobantes() {
     to: "",
   });
   const [visibleColumns, setVisibleColumns] = useState(defaultVisibleColumns);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const isDesktop = window.innerWidth >= 1280;
+      const wasDesktop = previousIsDesktopRef.current;
+
+      if (wasDesktop && !isDesktop) {
+        setDesktopView("lanes");
+        userSelectedViewRef.current = false;
+      }
+
+      if (!wasDesktop && isDesktop && !userSelectedViewRef.current) {
+        setDesktopView("table");
+      }
+
+      previousIsDesktopRef.current = isDesktop;
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   const emisoras = useMemo(() => getUniqueValues(comprobantes, "emisora"), []);
   const estados = useMemo(() => getUniqueValues(comprobantes, "estado"), []);
@@ -1181,6 +1201,11 @@ export default function Comprobantes() {
     console.log("Eliminar", item);
   };
 
+  const handleViewChange = (nextView) => {
+    userSelectedViewRef.current = true;
+    setDesktopView(nextView);
+  };
+
   const shouldShowSharedFilters =
     desktopView === "table" || desktopView === "lanes";
 
@@ -1201,6 +1226,10 @@ export default function Comprobantes() {
       </div>
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="hidden sm:flex items-center gap-2">
+          <ViewSwitcher value={desktopView} onChange={handleViewChange} />
+        </div>
+
         <div className="flex sm:hidden items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
@@ -1212,90 +1241,85 @@ export default function Comprobantes() {
             />
           </div>
         </div>
-
-<div className="hidden sm:flex items-center gap-2 ml-auto">
-  <ViewSwitcher value={desktopView} onChange={setDesktopView} />
-</div>
       </div>
 
       <div className="flex sm:hidden flex-wrap gap-0 border-b border-border overflow-visible">
-  {["Todos", "ESPERANDO PAGO", "PAGADO", "BORRADOR", "ANULADO"].map((item) => (
-    <button
-      key={item}
-      type="button"
-      onClick={() => {
-        setTab(item);
+        {["Todos", "ESPERANDO PAGO", "PAGADO", "BORRADOR", "ANULADO"].map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => {
+              setTab(item);
 
-        if (item === "Todos") {
-          setEstadoFilter([]);
-        } else {
-          setEstadoFilter([item]);
-        }
-      }}
-      className={`px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
-        tab === item
-          ? "border-foreground text-foreground"
-          : "border-transparent text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {item}
-    </button>
-  ))}
-</div>
+              if (item === "Todos") {
+                setEstadoFilter([]);
+              } else {
+                setEstadoFilter([item]);
+              }
+            }}
+            className={`px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
+              tab === item
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
 
       {shouldShowSharedFilters && (
-     <FiltersToolbar
-  search={search}
-  setSearch={setSearch}
-  periodFilter={periodFilter}
-  setPeriodFilter={setPeriodFilter}
-  customDateRange={customDateRange}
-  setCustomDateRange={setCustomDateRange}
-  emisoraFilter={emisoraFilter}
-  setEmisoraFilter={setEmisoraFilter}
-  estadoFilter={estadoFilter}
-  setEstadoFilter={setEstadoFilter}
-  setTab={setTab}
-  emisoras={emisoras}
-  estados={estados}
-  showColumnSelector={desktopView === "table"}
-  visibleColumns={visibleColumns}
-  onToggleColumn={toggleColumn}
-/>
+        <FiltersToolbar
+          search={search}
+          setSearch={setSearch}
+          periodFilter={periodFilter}
+          setPeriodFilter={setPeriodFilter}
+          customDateRange={customDateRange}
+          setCustomDateRange={setCustomDateRange}
+          emisoraFilter={emisoraFilter}
+          setEmisoraFilter={setEmisoraFilter}
+          estadoFilter={estadoFilter}
+          setEstadoFilter={setEstadoFilter}
+          emisoras={emisoras}
+          estados={estados}
+          showColumnSelector={desktopView === "table"}
+          visibleColumns={visibleColumns}
+          onToggleColumn={toggleColumn}
+        />
       )}
 
       <div className="hidden sm:block">
-  {desktopView === "table" && (
-    <DesktopTable
-      items={filtered}
-      forceVisible
-      visibleColumns={visibleColumns}
-      onView={handleView}
-      onMarkPaid={handleMarkPaid}
-      onDelete={handleDelete}
-    />
-  )}
+        {desktopView === "table" && (
+          <DesktopTable
+            items={filtered}
+            forceVisible
+            visibleColumns={visibleColumns}
+            onView={handleView}
+            onMarkPaid={handleMarkPaid}
+            onDelete={handleDelete}
+          />
+        )}
 
-  {desktopView === "lanes" && (
-    <LanesView
-      items={filtered}
-      forceVisible
-      onView={handleView}
-      onMarkPaid={handleMarkPaid}
-      onDelete={handleDelete}
-    />
-  )}
+        {desktopView === "lanes" && (
+          <LanesView
+            items={filtered}
+            forceVisible
+            onView={handleView}
+            onMarkPaid={handleMarkPaid}
+            onDelete={handleDelete}
+          />
+        )}
 
-  {desktopView === "cards" && (
-    <MobileCards
-      items={filtered}
-      forceVisible
-      onView={handleView}
-      onMarkPaid={handleMarkPaid}
-      onDelete={handleDelete}
-    />
-  )}
-</div>
+        {desktopView === "cards" && (
+          <MobileCards
+            items={filtered}
+            forceVisible
+            onView={handleView}
+            onMarkPaid={handleMarkPaid}
+            onDelete={handleDelete}
+          />
+        )}
+      </div>
 
       <div className="sm:hidden">
         <MobileCards
