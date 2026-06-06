@@ -169,15 +169,6 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
   if (compact) {
     return (
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => onView(item)}
-          className="hover:bg-muted rounded"
-          title="Ver detalle"
-        >
-          <Eye className="size-3.5 text-muted-foreground" />
-        </button>
-
         {!isPaid && (
           <button
             type="button"
@@ -188,15 +179,6 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
             <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
           </button>
         )}
-
-        <button
-          type="button"
-          onClick={() => onDelete(item)}
-          className="hover:bg-muted rounded"
-          title="Eliminar"
-        >
-          <Trash2 className="size-3.5 text-red-600 dark:text-red-400" />
-        </button>
       </div>
     );
   }
