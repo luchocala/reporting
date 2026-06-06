@@ -169,6 +169,15 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
   if (compact) {
     return (
       <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onView(item)}
+          className="hover:bg-muted rounded"
+          title="Ver detalle"
+        >
+          <Eye className="size-3.5 text-muted-foreground" />
+        </button>
+
         {!isPaid && (
           <button
             type="button"
@@ -179,12 +188,30 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
             <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
           </button>
         )}
+
+        <button
+          type="button"
+          onClick={() => onDelete(item)}
+          className="hover:bg-muted rounded"
+          title="Eliminar"
+        >
+          <Trash2 className="size-3.5 text-red-600 dark:text-red-400" />
+        </button>
       </div>
     );
   }
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => onView(item)}
+        className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted"
+      >
+        <Eye className="size-3.5" />
+        Ver
+      </button>
+
       {!isPaid && (
         <button
           type="button"
@@ -194,8 +221,16 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
           <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
           Marcar pagada
         </button>
-      )}      
+      )}
 
+      <button
+        type="button"
+        onClick={() => onDelete(item)}
+        className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted text-destructive"
+      >
+        <Trash2 className="size-3.5" />
+        Eliminar
+      </button>
     </div>
   );
 }
@@ -270,7 +305,7 @@ function DesktopTable({ items, onView, onMarkPaid, onDelete, forceVisible = fals
               <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Moneda</th>
               <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emisora</th>
               <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emails</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">.</th>
+              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Acciones</th>
             </tr>
           </thead>
 
