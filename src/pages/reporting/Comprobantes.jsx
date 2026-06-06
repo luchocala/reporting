@@ -268,22 +268,22 @@ function DesktopTable({ items, onView, onMarkPaid, onDelete, forceVisible = fals
       <div className="overflow-x-auto">
         <table className="w-full table-fixed text-[11px] leading-tight">
           <colgroup>
-            <col className="w-[35px]" />
+            <col className="w-[40px]" />
             <col className="w-[75px]" />
-            <col className="w-[100px]" />
+            <col className="w-[90px]" />
             <col className="w-[20px]" />
             <col className="w-[60px]" />
-            <col className="w-[90px]" />
-            <col className="w-[90px]" />
-            <col className="w-[90px]" />
-            <col className="w-[90px]" />
+            <col className="w-[95px]" />
+            <col className="w-[85px]" />
+            <col className="w-[95px]" />
+            <col className="w-[80px]" />
             <col className="w-[90px]" />
             <col className="w-[30px]" />
             <col className="w-[90px]" />
             <col className="w-[85px]" />
-            <col className="w-[40px]" />
+            <col className="w-[30px]" />
             <col className="w-[80px]" />
-            <col className="w-[165px]" />
+            <col className="w-[170px]" />
             <col className="w-[60px]" />
           </colgroup>
 
@@ -317,7 +317,7 @@ function DesktopTable({ items, onView, onMarkPaid, onDelete, forceVisible = fals
               >
                 <td className="px-2 py-2 align-top font-medium break-words">{item.orderId}</td>
                 <td className="px-2 py-2 align-top text-muted-foreground tabular-nums whitespace-nowrap">{item.fecha}</td>
-                <td className="px-2 py-2 align-top whitespace-normal break-words">
+                <td className="px-1 py-1 align-top whitespace-normal break-words">
                   <EstadoBadge estado={item.estado} />
                 </td>
                 <td className="px-2 py-2 align-top font-medium">{item.tc}</td>
