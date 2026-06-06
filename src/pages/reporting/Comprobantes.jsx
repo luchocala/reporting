@@ -637,7 +637,7 @@ function DesktopTable({
             {isVisible("importeTotal") && <col className="w-[90px]" />}
             {isVisible("moneda") && <col className="w-[40px]" />}
             {isVisible("emisora") && <col className="w-[80px]" />}
-            {isVisible("emails") && <col className="w-[120px]" />}
+            {isVisible("emails") && <col className="w-[100px]" />}
             {isVisible("acciones") && <col className="w-[40px]" />}
           </colgroup>
 
