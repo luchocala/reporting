@@ -5,11 +5,12 @@ import {
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
-  Filter,
+  Calendar,
   Eye,
   CheckCircle2,
   Trash2,
   Columns3,
+  Check,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -320,7 +321,13 @@ function ViewSwitcher({ value, onChange }) {
   );
 }
 
-function FilterSelect({ value, onChange, options, icon: Icon = Filter, className = "" }) {
+function FilterSelect({
+  value,
+  onChange,
+  options,
+  icon: Icon = null,
+  className = "",
+}) {
   const [open, setOpen] = useState(false);
   const selected = options.find((option) => option.value === value) || options[0];
 
@@ -334,12 +341,13 @@ function FilterSelect({ value, onChange, options, icon: Icon = Filter, className
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 min-w-[180px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring/30"
+        className="inline-flex h-10 min-w-[180px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
       >
         <span className="flex min-w-0 items-center gap-2">
-          <Icon className="size-4 shrink-0 text-foreground" />
+          {Icon && <Icon className="size-4 shrink-0 text-foreground" />}
           <span className="truncate">{selected.label}</span>
         </span>
+
         <ChevronRight
           className={`size-4 shrink-0 text-muted-foreground transition-transform ${
             open ? "rotate-90" : ""
@@ -366,14 +374,15 @@ function FilterSelect({ value, onChange, options, icon: Icon = Filter, className
                   key={option.value}
                   type="button"
                   onClick={() => handleSelect(option.value)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                    active
-                      ? "bg-muted text-foreground"
-                      : "text-foreground hover:bg-muted/70"
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 ${
+                    active ? "bg-transparent text-foreground" : "text-foreground"
                   }`}
                 >
                   <span className="truncate">{option.label}</span>
-                  {active && <span className="text-base leading-none">✓</span>}
+
+                  <span className="flex size-4 items-center justify-center">
+                    {active && <Check className="size-4" />}
+                  </span>
                 </button>
               );
             })}
@@ -412,9 +421,10 @@ function FiltersToolbar({
   />
 </div>
 
-        <FilterSelect
+<FilterSelect
   value={periodFilter}
   onChange={setPeriodFilter}
+  icon={Calendar}
   options={[
     { value: "all", label: "Todo" },
     { value: "lastMonth", label: "Último mes" },
@@ -465,7 +475,7 @@ function ColumnSelector({ visibleColumns, onToggleColumn }) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 min-w-[180px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring/30"
+        className="inline-flex h-10 min-w-[180px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
       >
         <span className="flex items-center gap-2">
           <Columns3 className="size-4 text-foreground" />
@@ -493,14 +503,14 @@ function ColumnSelector({ visibleColumns, onToggleColumn }) {
                   type="button"
                   disabled={column.locked}
                   onClick={() => onToggleColumn(column.key)}
-                  className={`flex w-full items-center justify-start gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                  className={`flex w-full items-center justify-start gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 ${
                     column.locked
                       ? "cursor-not-allowed text-foreground"
-                      : "text-foreground hover:bg-muted/70"
+                      : "text-foreground"
                   }`}
                 >
-                  <span className="w-4 text-base leading-none">
-                    {active ? "✓" : ""}
+                  <span className="flex size-4 items-center justify-center">
+                    {active && <Check className="size-4" />}
                   </span>
                   <span className="truncate">{column.label}</span>
                 </button>
