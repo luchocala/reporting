@@ -270,20 +270,20 @@ function DesktopTable({ items, onView, onMarkPaid, onDelete, forceVisible = fals
           <colgroup>
             <col className="w-[35px]" />
             <col className="w-[75px]" />
-            <col className="w-[90px]" />
+            <col className="w-[100px]" />
             <col className="w-[20px]" />
-            <col className="w-[65px]" />
-            <col className="w-[95px]" />
-            <col className="w-[100px]" />
-            <col className="w-[100px]" />
-            <col className="w-[100px]" />
-            <col className="w-[80px]" />
+            <col className="w-[60px]" />
+            <col className="w-[90px]" />
+            <col className="w-[90px]" />
+            <col className="w-[90px]" />
+            <col className="w-[90px]" />
+            <col className="w-[90px]" />
             <col className="w-[30px]" />
-            <col className="w-[70px]" />
+            <col className="w-[90px]" />
             <col className="w-[85px]" />
             <col className="w-[40px]" />
             <col className="w-[80px]" />
-            <col className="w-[160px]" />
+            <col className="w-[165px]" />
             <col className="w-[60px]" />
           </colgroup>
 
