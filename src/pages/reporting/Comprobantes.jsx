@@ -11,6 +11,7 @@ import {
   Trash2,
   Columns3,
   Check,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -133,6 +134,10 @@ const tableColumns = [
   { key: "acciones", label: "Acciones", locked: true },
 ];
 
+const advancedFilterColumns = tableColumns.filter(
+  (column) => !["acciones"].includes(column.key)
+);
+
 const defaultVisibleColumns = tableColumns.map((column) => column.key);
 
 function getInitialView() {
@@ -204,6 +209,27 @@ function isDateInRange(date, range) {
 
 function getUniqueValues(items, key) {
   return Array.from(new Set(items.map((item) => item[key]).filter(Boolean)));
+}
+
+function getOptionsForColumn(items, columnKey) {
+  return Array.from(
+    new Set(
+      items
+        .map((item) => {
+          const value = item[columnKey];
+
+          if (value === null || value === undefined || value === "") {
+            return null;
+          }
+
+          return String(value);
+        })
+        .filter(Boolean)
+    )
+  ).map((value) => ({
+    value,
+    label: value,
+  }));
 }
 
 function getInitials(name) {
@@ -346,14 +372,14 @@ function MultiFilterSelect({
 }) {
   const [open, setOpen] = useState(false);
 
-  const selectedValues = Array.isArray(value) ? value : [];
-  const allOptionValues = options.map((option) => option.value);
+  const selectedValues = Array.isArray(value) ? value.map(String) : [];
+  const allOptionValues = options.map((option) => String(option.value));
   const allSelected =
     allOptionValues.length > 0 &&
     allOptionValues.every((optionValue) => selectedValues.includes(optionValue));
 
   const selectedLabels = options
-    .filter((option) => selectedValues.includes(option.value))
+    .filter((option) => selectedValues.includes(String(option.value)))
     .map((option) => option.label);
 
   const label =
@@ -364,29 +390,33 @@ function MultiFilterSelect({
         : `${selectedLabels.length} seleccionados`;
 
   const toggleOption = (optionValue) => {
-    if (optionValue === "all") {
+    const normalizedOptionValue = String(optionValue);
+
+    if (normalizedOptionValue === "all") {
       onChange(allOptionValues);
       return;
     }
 
-    if (optionValue === "custom") {
+    if (normalizedOptionValue === "custom") {
       onChange(selectedValues.includes("custom") ? [] : ["custom"]);
       return;
     }
 
     const valuesWithoutCustom = selectedValues.filter((item) => item !== "custom");
 
-    if (valuesWithoutCustom.includes(optionValue)) {
-      onChange(valuesWithoutCustom.filter((item) => item !== optionValue));
+    if (valuesWithoutCustom.includes(normalizedOptionValue)) {
+      onChange(valuesWithoutCustom.filter((item) => item !== normalizedOptionValue));
       return;
     }
 
-    onChange([...valuesWithoutCustom, optionValue]);
+    onChange([...valuesWithoutCustom, normalizedOptionValue]);
   };
 
   const isActive = (optionValue) => {
-    if (optionValue === "all") return allSelected;
-    return selectedValues.includes(optionValue);
+    const normalizedOptionValue = String(optionValue);
+
+    if (normalizedOptionValue === "all") return allSelected;
+    return selectedValues.includes(normalizedOptionValue);
   };
 
   return (
@@ -435,7 +465,7 @@ function MultiFilterSelect({
 
               return (
                 <button
-                  key={option.value}
+                  key={String(option.value)}
                   type="button"
                   onClick={() => toggleOption(option.value)}
                   className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted/70"
@@ -489,6 +519,32 @@ function MultiFilterSelect({
   );
 }
 
+function AdvancedFiltersButton({ onClick, mobile = false }) {
+  if (mobile) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
+      >
+        <SlidersHorizontal className="size-4" />
+        Filtros avanzados
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-input bg-background shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
+      title="Filtros avanzados"
+    >
+      <SlidersHorizontal className="size-4" />
+    </button>
+  );
+}
+
 function FiltersToolbar({
   search,
   setSearch,
@@ -505,6 +561,7 @@ function FiltersToolbar({
   showColumnSelector = false,
   visibleColumns,
   onToggleColumn,
+  onOpenAdvancedFilters,
 }) {
   return (
     <div className="hidden sm:flex w-full flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
@@ -519,7 +576,7 @@ function FiltersToolbar({
           />
         </div>
 
-        <div className="grid w-full grid-cols-3 gap-2 xl:flex xl:w-auto xl:items-center">
+        <div className="grid w-full grid-cols-[1fr_1fr_1fr_40px] gap-2 xl:flex xl:w-auto xl:items-center">
           <MultiFilterSelect
             value={periodFilter}
             onChange={setPeriodFilter}
@@ -556,6 +613,8 @@ function FiltersToolbar({
               label: estado,
             }))}
           />
+
+          <AdvancedFiltersButton onClick={onOpenAdvancedFilters} />
         </div>
       </div>
 
@@ -568,6 +627,68 @@ function FiltersToolbar({
         </div>
       )}
     </div>
+  );
+}
+
+function AdvancedFiltersPanel({
+  items,
+  advancedFilters,
+  setAdvancedFilters,
+  onClose,
+}) {
+  const updateFilter = (columnKey, nextValue) => {
+    setAdvancedFilters((current) => ({
+      ...current,
+      [columnKey]: nextValue,
+    }));
+  };
+
+  return (
+    <Card className="shadow-none p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h2 className="text-lg font-semibold">Filtros avanzados</h2>
+          <p className="text-sm text-muted-foreground">
+            Ajustá los filtros por columna y guardá los cambios para volver a la vista normal.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3">
+        {advancedFilterColumns.map((column) => {
+          const options = getOptionsForColumn(items, column.key);
+
+          return (
+            <div
+              key={column.key}
+              className="grid grid-cols-1 gap-1.5 sm:grid-cols-[180px_1fr] sm:items-center"
+            >
+              <span className="text-sm font-medium text-muted-foreground">
+                {column.label}
+              </span>
+
+              <MultiFilterSelect
+                value={advancedFilters[column.key] || []}
+                onChange={(nextValue) => updateFilter(column.key, nextValue)}
+                placeholder={column.label}
+                className="min-w-0"
+                options={options}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 flex justify-end">
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90"
+        >
+          Guardar cambios
+        </button>
+      </div>
+    </Card>
   );
 }
 
@@ -929,142 +1050,72 @@ function LanesView({ items, onView, onMarkPaid, onDelete, forceVisible = false }
 }
 
 function MobileCards({ items, onView, onMarkPaid, onDelete, forceVisible = false }) {
-  const [statusFilter, setStatusFilter] = useState("All");
-
-  const filteredByStatus = items.filter(
-    (item) => statusFilter === "All" || item.estado === statusFilter
-  );
-
-  const total = filteredByStatus.reduce((sum, item) => sum + item.importeTotal, 0);
-
   return (
-    <div className={forceVisible ? "space-y-4" : "space-y-4 sm:hidden"}>
-      <div className="grid grid-cols-1 gap-4">
-        <div className="space-y-4">
-          <Card className="shadow-none p-4 space-y-4">
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                Estado
-              </p>
-              {[
-                ["All", items.length],
-                ["ESPERANDO PAGO", items.filter((item) => item.estado === "ESPERANDO PAGO").length],
-                ["PAGADO", items.filter((item) => item.estado === "PAGADO").length],
-                ["BORRADOR", items.filter((item) => item.estado === "BORRADOR").length],
-                ["ANULADO", items.filter((item) => item.estado === "ANULADO").length],
-              ].map(([status, count]) => (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setStatusFilter(status)}
-                  className={`flex items-center justify-between w-full px-2 py-1.5 rounded-md text-sm ${
-                    statusFilter === status
-                      ? "bg-muted font-medium"
-                      : "hover:bg-muted/50 text-muted-foreground"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {statusFilter === status && <span className="size-2 rounded-full bg-foreground" />}
-                    {statusFilter !== status && <span className="size-2 rounded-full border border-muted-foreground" />}
-                    {status === "All" ? "Todos" : status}
-                  </div>
-                  <span className="text-muted-foreground">{count}</span>
-                </button>
-              ))}
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                Período
-              </p>
-              <select className="w-full border border-input rounded-md px-2 py-1.5 text-sm bg-background focus:outline-none">
-                <option>Todos los períodos</option>
-              </select>
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                Moneda
-              </p>
-              <select className="w-full border border-input rounded-md px-2 py-1.5 text-sm bg-background focus:outline-none">
-                <option>Todas las monedas</option>
-              </select>
-            </div>
-          </Card>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              {filteredByStatus.length} comprobantes ·{" "}
-              <span className="font-medium text-foreground">
-                ARS {formatAmount(total)} total
-              </span>
-            </span>
-            <select className="text-sm border border-input rounded-md px-2 py-1 bg-background focus:outline-none">
-              <option>Más recientes</option>
-            </select>
-          </div>
-
-          {filteredByStatus.map((item) => (
-            <Card
-              key={item.orderId}
-              className="shadow-none p-4 hover:shadow-sm transition-shadow cursor-pointer"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold">#{item.orderId}</span>
-                    <EstadoBadge estado={item.estado} />
-                    <span className="text-xs text-muted-foreground border border-border px-1.5 py-0.5 rounded">
-                      Factura {item.tc}
-                    </span>
-                  </div>
-
-                  <p className="text-base font-semibold mt-1 break-words">
-                    {item.razonSocial}
-                  </p>
-
-                  <p className="text-xs text-muted-foreground break-words">
-                    {item.documento} · {item.tipo} · {item.provincia}
-                  </p>
-
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                      <span className="font-medium text-foreground break-words">
-                        {item.leyenda}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground break-all">
-                      {item.emails}
-                    </p>
-                  </div>
-
-                  <div className="mt-3">
-                    <ActionButtons
-                      item={item}
-                      onView={onView}
-                      onMarkPaid={onMarkPaid}
-                      onDelete={onDelete}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-2 shrink-0">
-                  <span className="text-lg font-bold text-right">
-                    {formatMoney(item.importeTotal, item.moneda)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{item.fecha}</span>
-                  <button className="p-1 hover:bg-muted rounded">
-                    <MoreHorizontal className="size-4 text-muted-foreground" />
-                  </button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+    <div className={forceVisible ? "space-y-3" : "space-y-3 sm:hidden"}>
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>{items.length} comprobantes</span>
+        <span className="font-medium text-foreground">
+          ARS {formatAmount(items.reduce((sum, item) => sum + item.importeTotal, 0))} total
+        </span>
       </div>
+
+      {items.map((item) => (
+        <Card
+          key={item.orderId}
+          className="shadow-none p-4 hover:shadow-sm transition-shadow cursor-pointer"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold">#{item.orderId}</span>
+                <EstadoBadge estado={item.estado} />
+                <span className="text-xs text-muted-foreground border border-border px-1.5 py-0.5 rounded">
+                  Factura {item.tc}
+                </span>
+              </div>
+
+              <p className="text-base font-semibold mt-1 break-words">
+                {item.razonSocial}
+              </p>
+
+              <p className="text-xs text-muted-foreground break-words">
+                {item.documento} · {item.tipo} · {item.provincia}
+              </p>
+
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <span className="font-medium text-foreground break-words">
+                    {item.leyenda}
+                  </span>
+                </div>
+
+                <p className="text-xs text-muted-foreground break-all">
+                  {item.emails}
+                </p>
+              </div>
+
+              <div className="mt-3">
+                <ActionButtons
+                  item={item}
+                  onView={onView}
+                  onMarkPaid={onMarkPaid}
+                  onDelete={onDelete}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              <span className="text-lg font-bold text-right">
+                {formatMoney(item.importeTotal, item.moneda)}
+              </span>
+              <span className="text-xs text-muted-foreground">{item.fecha}</span>
+              <button className="p-1 hover:bg-muted rounded">
+                <MoreHorizontal className="size-4 text-muted-foreground" />
+              </button>
+            </div>
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }
@@ -1086,6 +1137,8 @@ export default function Comprobantes() {
     to: "",
   });
   const [visibleColumns, setVisibleColumns] = useState(defaultVisibleColumns);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState({});
 
   useEffect(() => {
     const handleResize = () => {
@@ -1153,6 +1206,12 @@ export default function Comprobantes() {
       });
     }
 
+    const normalizedAdvancedFilters = Object.fromEntries(
+      Object.entries(advancedFilters).filter(
+        ([, values]) => Array.isArray(values) && values.length > 0
+      )
+    );
+
     return comprobantes.filter((item) => {
       const itemDate = parseDate(item.fecha);
 
@@ -1179,15 +1238,28 @@ export default function Comprobantes() {
       const matchesEstado =
         estadoFilter.length === 0 || estadoFilter.includes(item.estado);
 
+      const matchesAdvancedFilters = Object.entries(normalizedAdvancedFilters).every(
+        ([columnKey, selectedValues]) => selectedValues.includes(String(item[columnKey]))
+      );
+
       return (
         matchesTab &&
         matchesSearch &&
         matchesPeriod &&
         matchesEmisora &&
-        matchesEstado
+        matchesEstado &&
+        matchesAdvancedFilters
       );
     });
-  }, [tab, search, periodFilter, emisoraFilter, estadoFilter, customDateRange]);
+  }, [
+    tab,
+    search,
+    periodFilter,
+    emisoraFilter,
+    estadoFilter,
+    customDateRange,
+    advancedFilters,
+  ]);
 
   const handleView = (item) => {
     console.log("Ver detalle", item);
@@ -1225,50 +1297,63 @@ export default function Comprobantes() {
         </button>
       </div>
 
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="hidden sm:flex items-center gap-2">
-          <ViewSwitcher value={desktopView} onChange={handleViewChange} />
-        </div>
+      {!advancedFiltersOpen && (
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="hidden sm:flex items-center gap-2">
+            <ViewSwitcher value={desktopView} onChange={handleViewChange} />
+          </div>
 
-        <div className="flex sm:hidden items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <input
-              placeholder="Buscar comprobantes..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-44"
-            />
+          <div className="flex sm:hidden items-center gap-2 w-full">
+            <div className="relative w-full">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+              <input
+                placeholder="Buscar comprobantes..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-full"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex sm:hidden flex-wrap gap-0 border-b border-border overflow-visible">
-        {["Todos", "ESPERANDO PAGO", "PAGADO", "BORRADOR", "ANULADO"].map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => {
-              setTab(item);
+      {!advancedFiltersOpen && (
+        <div className="flex sm:hidden flex-wrap gap-0 border-b border-border overflow-visible">
+          {["Todos", "ESPERANDO PAGO", "PAGADO", "BORRADOR", "ANULADO"].map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => {
+                setTab(item);
 
-              if (item === "Todos") {
-                setEstadoFilter([]);
-              } else {
-                setEstadoFilter([item]);
-              }
-            }}
-            className={`px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
-              tab === item
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
+                if (item === "Todos") {
+                  setEstadoFilter([]);
+                } else {
+                  setEstadoFilter([item]);
+                }
+              }}
+              className={`px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
+                tab === item
+                  ? "border-foreground text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {shouldShowSharedFilters && (
+      {!advancedFiltersOpen && (
+        <div className="sm:hidden">
+          <AdvancedFiltersButton
+            mobile
+            onClick={() => setAdvancedFiltersOpen(true)}
+          />
+        </div>
+      )}
+
+      {!advancedFiltersOpen && shouldShowSharedFilters && (
         <FiltersToolbar
           search={search}
           setSearch={setSearch}
@@ -1285,51 +1370,65 @@ export default function Comprobantes() {
           showColumnSelector={desktopView === "table"}
           visibleColumns={visibleColumns}
           onToggleColumn={toggleColumn}
+          onOpenAdvancedFilters={() => setAdvancedFiltersOpen(true)}
         />
       )}
 
-      <div className="hidden sm:block">
-        {desktopView === "table" && (
-          <DesktopTable
-            items={filtered}
-            forceVisible
-            visibleColumns={visibleColumns}
-            onView={handleView}
-            onMarkPaid={handleMarkPaid}
-            onDelete={handleDelete}
-          />
-        )}
-
-        {desktopView === "lanes" && (
-          <LanesView
-            items={filtered}
-            forceVisible
-            onView={handleView}
-            onMarkPaid={handleMarkPaid}
-            onDelete={handleDelete}
-          />
-        )}
-
-        {desktopView === "cards" && (
-          <MobileCards
-            items={filtered}
-            forceVisible
-            onView={handleView}
-            onMarkPaid={handleMarkPaid}
-            onDelete={handleDelete}
-          />
-        )}
-      </div>
-
-      <div className="sm:hidden">
-        <MobileCards
-          items={filtered}
-          forceVisible
-          onView={handleView}
-          onMarkPaid={handleMarkPaid}
-          onDelete={handleDelete}
+      {advancedFiltersOpen && (
+        <AdvancedFiltersPanel
+          items={comprobantes}
+          advancedFilters={advancedFilters}
+          setAdvancedFilters={setAdvancedFilters}
+          onClose={() => setAdvancedFiltersOpen(false)}
         />
-      </div>
+      )}
+
+      {!advancedFiltersOpen && (
+        <>
+          <div className="hidden sm:block">
+            {desktopView === "table" && (
+              <DesktopTable
+                items={filtered}
+                forceVisible
+                visibleColumns={visibleColumns}
+                onView={handleView}
+                onMarkPaid={handleMarkPaid}
+                onDelete={handleDelete}
+              />
+            )}
+
+            {desktopView === "lanes" && (
+              <LanesView
+                items={filtered}
+                forceVisible
+                onView={handleView}
+                onMarkPaid={handleMarkPaid}
+                onDelete={handleDelete}
+              />
+            )}
+
+            {desktopView === "cards" && (
+              <MobileCards
+                items={filtered}
+                forceVisible
+                onView={handleView}
+                onMarkPaid={handleMarkPaid}
+                onDelete={handleDelete}
+              />
+            )}
+          </div>
+
+          <div className="sm:hidden">
+            <MobileCards
+              items={filtered}
+              forceVisible
+              onView={handleView}
+              onMarkPaid={handleMarkPaid}
+              onDelete={handleDelete}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
