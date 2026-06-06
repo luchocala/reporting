@@ -914,58 +914,6 @@ export default function Comprobantes() {
       </div>
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="hidden xl:flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <input
-              placeholder="Buscar comprobantes..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-56"
-            />
-          </div>
-
-          {desktopView === "table" && (
-            <>
-              <select
-                value={periodFilter}
-                onChange={(event) => setPeriodFilter(event.target.value)}
-                className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
-              >
-                <option value="all">Todo</option>
-                <option value="lastMonth">Último mes</option>
-                <option value="previousMonth">Mes anterior</option>
-              </select>
-
-              <select
-                value={emisoraFilter}
-                onChange={(event) => setEmisoraFilter(event.target.value)}
-                className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
-              >
-                <option value="all">Emisora</option>
-                {emisoras.map((emisora) => (
-                  <option key={emisora} value={emisora}>
-                    {emisora}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={estadoFilter}
-                onChange={(event) => setEstadoFilter(event.target.value)}
-                className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
-              >
-                <option value="all">Estado</option>
-                {estados.map((estado) => (
-                  <option key={estado} value={estado}>
-                    {estado}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
-        </div>
-
         <div className="flex xl:hidden items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
@@ -978,15 +926,8 @@ export default function Comprobantes() {
           </div>
         </div>
 
-        <div className="hidden xl:flex items-center gap-2">
+        <div className="hidden xl:flex items-center gap-2 ml-auto">
           <ViewSwitcher value={desktopView} onChange={setDesktopView} />
-
-          {desktopView === "table" && (
-            <ColumnSelector
-              visibleColumns={visibleColumns}
-              onToggleColumn={toggleColumn}
-            />
-          )}
         </div>
       </div>
 
@@ -1006,6 +947,63 @@ export default function Comprobantes() {
           </button>
         ))}
       </div>
+
+      {desktopView === "table" && (
+        <div className="hidden xl:flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+              <input
+                placeholder="Buscar comprobantes..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-56"
+              />
+            </div>
+
+            <select
+              value={periodFilter}
+              onChange={(event) => setPeriodFilter(event.target.value)}
+              className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
+            >
+              <option value="all">Todo</option>
+              <option value="lastMonth">Último mes</option>
+              <option value="previousMonth">Mes anterior</option>
+            </select>
+
+            <select
+              value={emisoraFilter}
+              onChange={(event) => setEmisoraFilter(event.target.value)}
+              className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
+            >
+              <option value="all">Emisora</option>
+              {emisoras.map((emisora) => (
+                <option key={emisora} value={emisora}>
+                  {emisora}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={estadoFilter}
+              onChange={(event) => setEstadoFilter(event.target.value)}
+              className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
+            >
+              <option value="all">Estado</option>
+              {estados.map((estado) => (
+                <option key={estado} value={estado}>
+                  {estado}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <ColumnSelector
+            visibleColumns={visibleColumns}
+            onToggleColumn={toggleColumn}
+          />
+        </div>
+      )}
 
       <div className="hidden xl:block">
         {desktopView === "table" && (
