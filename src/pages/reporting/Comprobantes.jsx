@@ -357,19 +357,28 @@ function MultiFilterSelect({
         ? selectedLabels[0]
         : `${selectedLabels.length} seleccionados`;
 
-  const toggleOption = (optionValue) => {
-    if (optionValue === "all") {
-      onChange(allOptionValues);
-      return;
-    }
+const toggleOption = (optionValue) => {
+  if (optionValue === "all") {
+    onChange(allOptionValues);
+    return;
+  }
 
-    if (selectedValues.includes(optionValue)) {
-      onChange(selectedValues.filter((item) => item !== optionValue));
-      return;
-    }
+  // Si el usuario elige "Personalizado", se desactivan las demás opciones.
+  if (optionValue === "custom") {
+    onChange(selectedValues.includes("custom") ? [] : ["custom"]);
+    return;
+  }
 
-    onChange([...selectedValues, optionValue]);
-  };
+  // Si estaba activo "Personalizado" y elige otra opción, se desactiva "Personalizado".
+  const valuesWithoutCustom = selectedValues.filter((item) => item !== "custom");
+
+  if (valuesWithoutCustom.includes(optionValue)) {
+    onChange(valuesWithoutCustom.filter((item) => item !== optionValue));
+    return;
+  }
+
+  onChange([...valuesWithoutCustom, optionValue]);
+};
 
   const isActive = (optionValue) => {
     if (optionValue === "all") return allSelected;
