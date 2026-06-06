@@ -320,6 +320,93 @@ function ViewSwitcher({ value, onChange }) {
   );
 }
 
+function FilterSelect({ value, onChange, children, className = "" }) {
+  return (
+    <div className={`relative ${className}`}>
+      <Filter className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+      <select
+        value={value}
+        onChange={onChange}
+        className="pl-8 pr-8 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
+      >
+        {children}
+      </select>
+    </div>
+  );
+}
+
+function FiltersToolbar({
+  search,
+  setSearch,
+  periodFilter,
+  setPeriodFilter,
+  emisoraFilter,
+  setEmisoraFilter,
+  estadoFilter,
+  setEstadoFilter,
+  emisoras,
+  estados,
+  showColumnSelector = false,
+  visibleColumns,
+  onToggleColumn,
+}) {
+  return (
+    <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+          <input
+            placeholder="Buscar comprobantes..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-44 sm:w-56"
+          />
+        </div>
+
+        <FilterSelect
+          value={periodFilter}
+          onChange={(event) => setPeriodFilter(event.target.value)}
+        >
+          <option value="all">Todo</option>
+          <option value="lastMonth">Último mes</option>
+          <option value="previousMonth">Mes anterior</option>
+        </FilterSelect>
+
+        <FilterSelect
+          value={emisoraFilter}
+          onChange={(event) => setEmisoraFilter(event.target.value)}
+        >
+          <option value="all">Emisora</option>
+          {emisoras.map((emisora) => (
+            <option key={emisora} value={emisora}>
+              {emisora}
+            </option>
+          ))}
+        </FilterSelect>
+
+        <FilterSelect
+          value={estadoFilter}
+          onChange={(event) => setEstadoFilter(event.target.value)}
+        >
+          <option value="all">Estado</option>
+          {estados.map((estado) => (
+            <option key={estado} value={estado}>
+              {estado}
+            </option>
+          ))}
+        </FilterSelect>
+      </div>
+
+      {showColumnSelector && (
+        <ColumnSelector
+          visibleColumns={visibleColumns}
+          onToggleColumn={onToggleColumn}
+        />
+      )}
+    </div>
+  );
+}
+
 function ColumnSelector({ visibleColumns, onToggleColumn }) {
   return (
     <div className="relative group">
@@ -537,12 +624,8 @@ function LanesView({ items, onView, onMarkPaid, onDelete, forceVisible = false }
 
   return (
     <div className={forceVisible ? "block" : "hidden sm:block xl:hidden"}>
-      <div className="flex items-center gap-2 mb-3">
-        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-input rounded-md hover:bg-muted">
-          <Filter className="size-3.5" />
-          Filter
-        </button>
-        <span className="text-xs text-muted-foreground ml-auto">
+      <div className="flex items-center justify-end mb-3">
+        <span className="text-xs text-muted-foreground">
           {items.length} comprobantes
         </span>
       </div>
@@ -897,6 +980,9 @@ export default function Comprobantes() {
     console.log("Eliminar", item);
   };
 
+  const shouldShowSharedFilters =
+    desktopView === "table" || desktopView === "lanes";
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -914,14 +1000,14 @@ export default function Comprobantes() {
       </div>
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex xl:hidden items-center gap-2">
+        <div className="flex sm:hidden items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
             <input
               placeholder="Buscar comprobantes..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-44 sm:w-56"
+              className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-44"
             />
           </div>
         </div>
@@ -931,7 +1017,7 @@ export default function Comprobantes() {
         </div>
       </div>
 
-      <div className="hidden sm:flex gap-0 border-b border-border overflow-x-auto">
+      <div className="hidden sm:flex flex-wrap gap-0 border-b border-border overflow-visible">
         {["Todos", "ESPERANDO PAGO", "PAGADO", "BORRADOR", "ANULADO"].map((item) => (
           <button
             key={item}
@@ -948,61 +1034,22 @@ export default function Comprobantes() {
         ))}
       </div>
 
-      {desktopView === "table" && (
-        <div className="hidden xl:flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-              <input
-                placeholder="Buscar comprobantes..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-56"
-              />
-            </div>
-
-            <select
-              value={periodFilter}
-              onChange={(event) => setPeriodFilter(event.target.value)}
-              className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
-            >
-              <option value="all">Todo</option>
-              <option value="lastMonth">Último mes</option>
-              <option value="previousMonth">Mes anterior</option>
-            </select>
-
-            <select
-              value={emisoraFilter}
-              onChange={(event) => setEmisoraFilter(event.target.value)}
-              className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
-            >
-              <option value="all">Emisora</option>
-              {emisoras.map((emisora) => (
-                <option key={emisora} value={emisora}>
-                  {emisora}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={estadoFilter}
-              onChange={(event) => setEstadoFilter(event.target.value)}
-              className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
-            >
-              <option value="all">Estado</option>
-              {estados.map((estado) => (
-                <option key={estado} value={estado}>
-                  {estado}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <ColumnSelector
-            visibleColumns={visibleColumns}
-            onToggleColumn={toggleColumn}
-          />
-        </div>
+      {shouldShowSharedFilters && (
+        <FiltersToolbar
+          search={search}
+          setSearch={setSearch}
+          periodFilter={periodFilter}
+          setPeriodFilter={setPeriodFilter}
+          emisoraFilter={emisoraFilter}
+          setEmisoraFilter={setEmisoraFilter}
+          estadoFilter={estadoFilter}
+          setEstadoFilter={setEstadoFilter}
+          emisoras={emisoras}
+          estados={estados}
+          showColumnSelector={desktopView === "table"}
+          visibleColumns={visibleColumns}
+          onToggleColumn={toggleColumn}
+        />
       )}
 
       <div className="hidden xl:block">
