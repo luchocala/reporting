@@ -320,17 +320,66 @@ function ViewSwitcher({ value, onChange }) {
   );
 }
 
-function FilterSelect({ value, onChange, children, className = "" }) {
+function FilterSelect({ value, onChange, options, icon: Icon = Filter, className = "" }) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find((option) => option.value === value) || options[0];
+
+  const handleSelect = (nextValue) => {
+    onChange(nextValue);
+    setOpen(false);
+  };
+
   return (
     <div className={`relative ${className}`}>
-      <Filter className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-      <select
-        value={value}
-        onChange={onChange}
-        className="pl-8 pr-8 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex h-10 min-w-[180px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring/30"
       >
-        {children}
-      </select>
+        <span className="flex min-w-0 items-center gap-2">
+          <Icon className="size-4 shrink-0 text-foreground" />
+          <span className="truncate">{selected.label}</span>
+        </span>
+        <ChevronRight
+          className={`size-4 shrink-0 text-muted-foreground transition-transform ${
+            open ? "rotate-90" : ""
+          }`}
+        />
+      </button>
+
+      {open && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-20 cursor-default"
+            onClick={() => setOpen(false)}
+            tabIndex={-1}
+            aria-label="Cerrar menú"
+          />
+
+          <div className="absolute left-0 top-full z-30 mt-1.5 w-full min-w-[190px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-lg">
+            {options.map((option) => {
+              const active = option.value === value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => handleSelect(option.value)}
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                    active
+                      ? "bg-muted text-foreground"
+                      : "text-foreground hover:bg-muted/70"
+                  }`}
+                >
+                  <span className="truncate">{option.label}</span>
+                  {active && <span className="text-base leading-none">✓</span>}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -354,47 +403,48 @@ function FiltersToolbar({
     <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap">
       <div className="flex items-center gap-2 flex-wrap">
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-          <input
-            placeholder="Buscar comprobantes..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-44 sm:w-56"
-          />
-        </div>
+  <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+  <input
+    placeholder="Buscar comprobantes"
+    value={search}
+    onChange={(event) => setSearch(event.target.value)}
+    className="h-10 w-64 rounded-xl border border-input bg-background pl-11 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+  />
+</div>
 
         <FilterSelect
-          value={periodFilter}
-          onChange={(event) => setPeriodFilter(event.target.value)}
-        >
-          <option value="all">Todo</option>
-          <option value="lastMonth">Último mes</option>
-          <option value="previousMonth">Mes anterior</option>
-        </FilterSelect>
+  value={periodFilter}
+  onChange={setPeriodFilter}
+  options={[
+    { value: "all", label: "Todo" },
+    { value: "lastMonth", label: "Último mes" },
+    { value: "previousMonth", label: "Mes anterior" },
+  ]}
+/>
 
-        <FilterSelect
-          value={emisoraFilter}
-          onChange={(event) => setEmisoraFilter(event.target.value)}
-        >
-          <option value="all">Emisora</option>
-          {emisoras.map((emisora) => (
-            <option key={emisora} value={emisora}>
-              {emisora}
-            </option>
-          ))}
-        </FilterSelect>
+<FilterSelect
+  value={emisoraFilter}
+  onChange={setEmisoraFilter}
+  options={[
+    { value: "all", label: "Emisora" },
+    ...emisoras.map((emisora) => ({
+      value: emisora,
+      label: emisora,
+    })),
+  ]}
+/>
 
-        <FilterSelect
-          value={estadoFilter}
-          onChange={(event) => setEstadoFilter(event.target.value)}
-        >
-          <option value="all">Estado</option>
-          {estados.map((estado) => (
-            <option key={estado} value={estado}>
-              {estado}
-            </option>
-          ))}
-        </FilterSelect>
+<FilterSelect
+  value={estadoFilter}
+  onChange={setEstadoFilter}
+  options={[
+    { value: "all", label: "Estado" },
+    ...estados.map((estado) => ({
+      value: estado,
+      label: estado,
+    })),
+  ]}
+/>
       </div>
 
       {showColumnSelector && (
@@ -408,43 +458,57 @@ function FiltersToolbar({
 }
 
 function ColumnSelector({ visibleColumns, onToggleColumn }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="relative group">
+    <div className="relative">
       <button
         type="button"
-        className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-input rounded-md hover:bg-muted"
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex h-10 min-w-[180px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring/30"
       >
-        <Columns3 className="size-3.5" />
-        Manage Table
+        <span className="flex items-center gap-2">
+          <Columns3 className="size-4 text-foreground" />
+          Manage Table
+        </span>
       </button>
 
-      <div className="absolute right-0 top-full z-30 mt-2 hidden w-56 rounded-md border border-border bg-popover p-2 shadow-md group-hover:block">
-        <p className="px-2 pb-2 text-xs font-medium text-muted-foreground">
-          Columnas visibles
-        </p>
+      {open && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-20 cursor-default"
+            onClick={() => setOpen(false)}
+            tabIndex={-1}
+            aria-label="Cerrar menú"
+          />
 
-        <div className="max-h-72 overflow-y-auto space-y-0.5">
-          {tableColumns.map((column) => (
-            <label
-              key={column.key}
-              className={`flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm ${
-                column.locked
-                  ? "cursor-not-allowed text-muted-foreground"
-                  : "cursor-pointer hover:bg-muted"
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={visibleColumns.includes(column.key)}
-                disabled={column.locked}
-                onChange={() => onToggleColumn(column.key)}
-                className="size-3.5"
-              />
-              <span>{column.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+          <div className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-lg">
+            {tableColumns.map((column) => {
+              const active = visibleColumns.includes(column.key);
+
+              return (
+                <button
+                  key={column.key}
+                  type="button"
+                  disabled={column.locked}
+                  onClick={() => onToggleColumn(column.key)}
+                  className={`flex w-full items-center justify-start gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                    column.locked
+                      ? "cursor-not-allowed text-foreground"
+                      : "text-foreground hover:bg-muted/70"
+                  }`}
+                >
+                  <span className="w-4 text-base leading-none">
+                    {active ? "✓" : ""}
+                  </span>
+                  <span className="truncate">{column.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
