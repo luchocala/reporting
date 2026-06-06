@@ -203,15 +203,6 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <button
-        type="button"
-        onClick={() => onView(item)}
-        className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted"
-      >
-        <Eye className="size-3.5" />
-        Ver
-      </button>
-
       {!isPaid && (
         <button
           type="button"
@@ -221,16 +212,18 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
           <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
           Marcar pagada
         </button>
-      )}
+      )}      
 
       <button
         type="button"
-        onClick={() => onDelete(item)}
-        className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted text-destructive"
+        onClick={() => onView(item)}
+        className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted"
       >
-        <Trash2 className="size-3.5" />
-        Eliminar
+        <Eye className="size-3.5" />
+        Ver
       </button>
+
+
     </div>
   );
 }
