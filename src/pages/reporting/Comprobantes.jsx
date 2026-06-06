@@ -1,5 +1,15 @@
 import { useMemo, useState } from "react";
-import { Search, Plus, MoreHorizontal, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import {
+  Search,
+  Plus,
+  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Eye,
+  CheckCircle2,
+  Trash2,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 const comprobantes = [
@@ -153,29 +163,128 @@ function groupByEstado(items) {
     .filter((lane) => lane.orders.length > 0);
 }
 
-function DesktopTable({ items }) {
+function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) {
+  const isPaid = item.estado === "PAGADO";
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onView(item)}
+          className="p-1 hover:bg-muted rounded"
+          title="Ver detalle"
+        >
+          <Eye className="size-3.5 text-muted-foreground" />
+        </button>
+
+        {!isPaid && (
+          <button
+            type="button"
+            onClick={() => onMarkPaid(item)}
+            className="p-1 hover:bg-muted rounded"
+            title="Marcar como pagada"
+          >
+            <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={() => onDelete(item)}
+          className="p-1 hover:bg-muted rounded"
+          title="Eliminar"
+        >
+          <Trash2 className="size-3.5 text-red-600 dark:text-red-400" />
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <Card className="shadow-none overflow-hidden hidden xl:block">
+    <div className="flex flex-wrap items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => onView(item)}
+        className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted"
+      >
+        <Eye className="size-3.5" />
+        Ver
+      </button>
+
+      {!isPaid && (
+        <button
+          type="button"
+          onClick={() => onMarkPaid(item)}
+          className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted"
+        >
+          <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+          Marcar pagada
+        </button>
+      )}
+
+      <button
+        type="button"
+        onClick={() => onDelete(item)}
+        className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted text-destructive"
+      >
+        <Trash2 className="size-3.5" />
+        Eliminar
+      </button>
+    </div>
+  );
+}
+
+function ViewSwitcher({ value, onChange }) {
+  const views = [
+    { value: "table", label: "Tabla" },
+    { value: "lanes", label: "Lanes" },
+    { value: "cards", label: "Cards" },
+  ];
+
+  return (
+    <div className="hidden xl:inline-flex rounded-md border border-input bg-background p-0.5">
+      {views.map((view) => (
+        <button
+          key={view.value}
+          type="button"
+          onClick={() => onChange(view.value)}
+          className={`px-3 py-1.5 text-sm rounded-sm transition-colors ${
+            value === view.value
+              ? "bg-muted text-foreground font-medium"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+          }`}
+        >
+          {view.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function DesktopTable({ items, onView, onMarkPaid, onDelete, forceVisible = false }) {
+  return (
+    <Card className={`shadow-none overflow-hidden ${forceVisible ? "block" : "hidden xl:block"}`}>
       <div className="overflow-x-auto">
         <table className="w-full table-fixed text-[11px] leading-tight">
           <colgroup>
-            <col className="w-[58px]" />
-            <col className="w-[74px]" />
-            <col className="w-[92px]" />
-            <col className="w-[36px]" />
-            <col className="w-[70px]" />
-            <col className="w-[86px]" />
-            <col className="w-[120px]" />
-            <col className="w-[92px]" />
-            <col className="w-[150px]" />
-            <col className="w-[76px]" />
-            <col className="w-[42px]" />
-            <col className="w-[64px]" />
-            <col className="w-[76px]" />
-            <col className="w-[50px]" />
-            <col className="w-[112px]" />
-            <col className="w-[130px]" />
-            <col className="w-[32px]" />
+            <col className="w-[40px]" />
+            <col className="w-[75px]" />
+            <col className="w-[85px]" />
+            <col className="w-[20px]" />
+            <col className="w-[65px]" />
+            <col className="w-[95px]" />
+            <col className="w-[110px]" />
+            <col className="w-[95px]" />
+            <col className="w-[100px]" />
+            <col className="w-[75px]" />
+            <col className="w-[35px]" />
+            <col className="w-[65px]" />
+            <col className="w-[80px]" />
+            <col className="w-[45px]" />
+            <col className="w-[80px]" />
+            <col className="w-[170px]" />
+            <col className="w-[72px]" />
           </colgroup>
 
           <thead>
@@ -196,7 +305,7 @@ function DesktopTable({ items }) {
               <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Moneda</th>
               <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emisora</th>
               <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emails</th>
-              <th className="w-8" />
+              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Acciones</th>
             </tr>
           </thead>
 
@@ -233,12 +342,16 @@ function DesktopTable({ items }) {
 
                 <td className="px-2 py-2 align-top break-words">{item.moneda}</td>
                 <td className="px-2 py-2 align-top break-words">{item.emisora}</td>
-                <td className="px-2 py-2 align-top break-words">{item.emails}</td>
+                <td className="px-2 py-2 align-top break-all">{item.emails}</td>
 
                 <td className="px-1 py-2 align-top">
-                  <button className="p-1 hover:bg-muted rounded">
-                    <MoreHorizontal className="size-3.5 text-muted-foreground" />
-                  </button>
+                  <ActionButtons
+                    item={item}
+                    compact
+                    onView={onView}
+                    onMarkPaid={onMarkPaid}
+                    onDelete={onDelete}
+                  />
                 </td>
               </tr>
             ))}
@@ -248,7 +361,7 @@ function DesktopTable({ items }) {
 
       <div className="flex items-center justify-between px-4 py-3 border-t border-border">
         <span className="text-xs text-muted-foreground">
-          1–{items.length} of {comprobantes.length}
+          1–{items.length} of {items.length}
         </span>
         <div className="flex items-center gap-1">
           <button className="p-1 hover:bg-muted rounded">
@@ -263,11 +376,11 @@ function DesktopTable({ items }) {
   );
 }
 
-function TabletLanes({ items }) {
+function LanesView({ items, onView, onMarkPaid, onDelete, forceVisible = false }) {
   const lanes = groupByEstado(items);
 
   return (
-    <div className="hidden sm:block xl:hidden">
+    <div className={forceVisible ? "block" : "hidden sm:block xl:hidden"}>
       <div className="flex items-center gap-2 mb-3">
         <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-input rounded-md hover:bg-muted">
           <Filter className="size-3.5" />
@@ -278,13 +391,13 @@ function TabletLanes({ items }) {
         </span>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
         {lanes.map((lane) => (
-          <div key={lane.id} className="w-64 shrink-0 space-y-3">
+          <div key={lane.id} className="space-y-3 min-w-0">
             <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-1.5 text-sm font-medium">
+              <div className="flex items-center gap-1.5 text-sm font-medium min-w-0">
                 <span className="text-muted-foreground">{lane.icon}</span>
-                <span>{lane.label}</span>
+                <span className="truncate">{lane.label}</span>
                 <span className="text-muted-foreground font-normal">{lane.count}</span>
               </div>
               <button className="p-1 hover:bg-muted rounded">
@@ -365,8 +478,8 @@ function TabletLanes({ items }) {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="text-[11px] text-muted-foreground break-words pr-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-[11px] text-muted-foreground break-words pr-2 min-w-0">
                       {item.emisora}
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
@@ -376,6 +489,13 @@ function TabletLanes({ items }) {
                       </div>
                     </div>
                   </div>
+
+                  <ActionButtons
+                    item={item}
+                    onView={onView}
+                    onMarkPaid={onMarkPaid}
+                    onDelete={onDelete}
+                  />
                 </Card>
               ))}
 
@@ -391,7 +511,7 @@ function TabletLanes({ items }) {
   );
 }
 
-function MobileCards({ items }) {
+function MobileCards({ items, onView, onMarkPaid, onDelete, forceVisible = false }) {
   const [statusFilter, setStatusFilter] = useState("All");
 
   const filteredByStatus = items.filter(
@@ -401,7 +521,7 @@ function MobileCards({ items }) {
   const total = filteredByStatus.reduce((sum, item) => sum + item.importeTotal, 0);
 
   return (
-    <div className="space-y-4 sm:hidden">
+    <div className={forceVisible ? "space-y-4" : "space-y-4 sm:hidden"}>
       <div className="grid grid-cols-1 gap-4">
         <div className="space-y-4">
           <Card className="shadow-none p-4 space-y-4">
@@ -418,6 +538,7 @@ function MobileCards({ items }) {
               ].map(([status, count]) => (
                 <button
                   key={status}
+                  type="button"
                   onClick={() => setStatusFilter(status)}
                   className={`flex items-center justify-between w-full px-2 py-1.5 rounded-md text-sm ${
                     statusFilter === status
@@ -502,6 +623,15 @@ function MobileCards({ items }) {
                       {item.emails}
                     </p>
                   </div>
+
+                  <div className="mt-3">
+                    <ActionButtons
+                      item={item}
+                      onView={onView}
+                      onMarkPaid={onMarkPaid}
+                      onDelete={onDelete}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex flex-col items-end gap-2 shrink-0">
@@ -509,9 +639,6 @@ function MobileCards({ items }) {
                     {formatMoney(item.importeTotal, item.moneda)}
                   </span>
                   <span className="text-xs text-muted-foreground">{item.fecha}</span>
-                  <button className="text-xs px-2.5 py-1 border border-border rounded-md hover:bg-muted">
-                    Ver
-                  </button>
                   <button className="p-1 hover:bg-muted rounded">
                     <MoreHorizontal className="size-4 text-muted-foreground" />
                   </button>
@@ -528,6 +655,7 @@ function MobileCards({ items }) {
 export default function Comprobantes() {
   const [tab, setTab] = useState("Todos");
   const [search, setSearch] = useState("");
+  const [desktopView, setDesktopView] = useState("table");
 
   const filtered = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -548,6 +676,18 @@ export default function Comprobantes() {
       return matchesTab && matchesSearch;
     });
   }, [tab, search]);
+
+  const handleView = (item) => {
+    console.log("Ver detalle", item);
+  };
+
+  const handleMarkPaid = (item) => {
+    console.log("Marcar como pagada", item);
+  };
+
+  const handleDelete = (item) => {
+    console.log("Eliminar", item);
+  };
 
   return (
     <div className="space-y-4">
@@ -576,15 +716,20 @@ export default function Comprobantes() {
           />
         </div>
 
-        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-input rounded-md hover:bg-muted">
-          Display ▾
-        </button>
+        <div className="flex items-center gap-2">
+          <ViewSwitcher value={desktopView} onChange={setDesktopView} />
+
+          <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-input rounded-md hover:bg-muted">
+            Display ▾
+          </button>
+        </div>
       </div>
 
-      <div className="flex gap-0 border-b border-border overflow-x-auto">
+      <div className="hidden sm:flex gap-0 border-b border-border overflow-x-auto">
         {["Todos", "ESPERANDO PAGO", "PAGADO", "BORRADOR", "ANULADO"].map((item) => (
           <button
             key={item}
+            type="button"
             onClick={() => setTab(item)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
               tab === item
@@ -597,9 +742,57 @@ export default function Comprobantes() {
         ))}
       </div>
 
-      <DesktopTable items={filtered} />
-      <TabletLanes items={filtered} />
-      <MobileCards items={filtered} />
+      <div className="hidden xl:block">
+        {desktopView === "table" && (
+          <DesktopTable
+            items={filtered}
+            forceVisible
+            onView={handleView}
+            onMarkPaid={handleMarkPaid}
+            onDelete={handleDelete}
+          />
+        )}
+
+        {desktopView === "lanes" && (
+          <LanesView
+            items={filtered}
+            forceVisible
+            onView={handleView}
+            onMarkPaid={handleMarkPaid}
+            onDelete={handleDelete}
+          />
+        )}
+
+        {desktopView === "cards" && (
+          <MobileCards
+            items={filtered}
+            forceVisible
+            onView={handleView}
+            onMarkPaid={handleMarkPaid}
+            onDelete={handleDelete}
+          />
+        )}
+      </div>
+
+      <div className="hidden sm:block xl:hidden">
+        <LanesView
+          items={filtered}
+          forceVisible
+          onView={handleView}
+          onMarkPaid={handleMarkPaid}
+          onDelete={handleDelete}
+        />
+      </div>
+
+      <div className="sm:hidden">
+        <MobileCards
+          items={filtered}
+          forceVisible
+          onView={handleView}
+          onMarkPaid={handleMarkPaid}
+          onDelete={handleDelete}
+        />
+      </div>
     </div>
   );
 }
