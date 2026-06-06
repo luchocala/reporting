@@ -12,6 +12,7 @@ import {
   Columns3,
   Check,
   SlidersHorizontal,
+  SquareCheckBig,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -133,6 +134,10 @@ const tableColumns = [
   { key: "emails", label: "Emails" },
   { key: "acciones", label: "Acciones", locked: true },
 ];
+
+const editableColumns = tableColumns.filter(
+  (column) => !["acciones"].includes(column.key)
+);
 
 const advancedFilterColumns = tableColumns.filter(
   (column) => !["acciones"].includes(column.key)
@@ -261,7 +266,33 @@ function groupByEstado(items) {
     .filter((lane) => lane.orders.length > 0);
 }
 
-function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) {
+function SelectionButton({ selected, onClick, compact = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1 text-xs px-2 py-1 border rounded-md transition-colors ${
+        selected
+          ? "border-foreground bg-foreground text-background"
+          : "border-border hover:bg-muted"
+      } ${compact ? "px-1.5" : ""}`}
+    >
+      <SquareCheckBig className="size-3.5" />
+      {!compact && "Seleccionar"}
+    </button>
+  );
+}
+
+function ActionButtons({
+  item,
+  compact = false,
+  onView,
+  onMarkPaid,
+  onDelete,
+  onToggleSelected,
+  selected = false,
+  showSelectionButton = false,
+}) {
   const isPaid = item.estado === "PAGADO";
 
   if (compact) {
@@ -329,6 +360,13 @@ function ActionButtons({ item, compact = false, onView, onMarkPaid, onDelete }) 
         <Trash2 className="size-3.5" />
         Eliminar
       </button>
+
+      {showSelectionButton && (
+        <SelectionButton
+          selected={selected}
+          onClick={() => onToggleSelected(item.orderId)}
+        />
+      )}
     </div>
   );
 }
@@ -519,6 +557,19 @@ function MultiFilterSelect({
   );
 }
 
+function IconButton({ onClick, title, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-input bg-background shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
+      title={title}
+    >
+      {children}
+    </button>
+  );
+}
+
 function AdvancedFiltersButton({ onClick, mobile = false }) {
   if (mobile) {
     return (
@@ -534,13 +585,96 @@ function AdvancedFiltersButton({ onClick, mobile = false }) {
   }
 
   return (
+    <IconButton onClick={onClick} title="Filtros avanzados">
+      <SlidersHorizontal className="size-4" />
+    </IconButton>
+  );
+}
+
+function ColumnSelector({ visibleColumns, onToggleColumn, compact = false }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className={`inline-flex h-10 items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 ${
+          compact ? "w-10 px-0" : "w-full xl:w-[160px]"
+        }`}
+        title="Columnas"
+      >
+        <Columns3 className="size-4 text-foreground" />
+        {!compact && <span>Columnas</span>}
+      </button>
+
+      {open && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-20 cursor-default"
+            onClick={() => setOpen(false)}
+            tabIndex={-1}
+            aria-label="Cerrar menú"
+          />
+
+          <div className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-lg">
+            {tableColumns.map((column) => {
+              const active = visibleColumns.includes(column.key);
+
+              return (
+                <button
+                  key={column.key}
+                  type="button"
+                  disabled={column.locked}
+                  onClick={() => onToggleColumn(column.key)}
+                  className={`flex w-full items-center justify-start gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 ${
+                    column.locked
+                      ? "cursor-not-allowed text-foreground"
+                      : "text-foreground"
+                  }`}
+                >
+                  <span className="flex size-4 items-center justify-center">
+                    {active && <Check className="size-4 stroke-[2]" />}
+                  </span>
+                  <span className="truncate">{column.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function SelectAllButton({ allSelected, onClick }) {
+  return (
+    <IconButton
+      onClick={onClick}
+      title={allSelected ? "Quitar selección" : "Seleccionar todo"}
+    >
+      <SquareCheckBig
+        className={`size-4 ${allSelected ? "text-foreground" : "text-muted-foreground"}`}
+      />
+    </IconButton>
+  );
+}
+
+function BulkChangesButton({ selectedCount, onClick }) {
+  if (selectedCount === 0) return null;
+
+  return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-input bg-background shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
-      title="Filtros avanzados"
+      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90"
     >
-      <SlidersHorizontal className="size-4" />
+      <SquareCheckBig className="size-4" />
+      Cambios masivos
+      <span className="rounded-full bg-background/15 px-2 py-0.5 text-xs">
+        {selectedCount}
+      </span>
     </button>
   );
 }
@@ -558,11 +692,16 @@ function FiltersToolbar({
   setEstadoFilter,
   emisoras,
   estados,
-  showColumnSelector = false,
+  desktopView,
   visibleColumns,
   onToggleColumn,
   onOpenAdvancedFilters,
+  onToggleSelectAll,
+  allVisibleSelected,
 }) {
+  const showColumnSelector = desktopView === "table";
+  const showSelectAllButton = desktopView === "lanes" || desktopView === "cards";
+
   return (
     <div className="hidden sm:flex w-full flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
       <div className="flex w-full flex-col gap-2 xl:flex-row xl:items-center">
@@ -576,7 +715,7 @@ function FiltersToolbar({
           />
         </div>
 
-        <div className="grid w-full grid-cols-[1fr_1fr_1fr_40px] gap-2 xl:flex xl:w-auto xl:items-center">
+        <div className="grid w-full grid-cols-[1fr_1fr_1fr_auto_auto_auto] gap-2 xl:flex xl:w-auto xl:items-center">
           <MultiFilterSelect
             value={periodFilter}
             onChange={setPeriodFilter}
@@ -615,17 +754,23 @@ function FiltersToolbar({
           />
 
           <AdvancedFiltersButton onClick={onOpenAdvancedFilters} />
+
+          {showColumnSelector && (
+            <ColumnSelector
+              compact
+              visibleColumns={visibleColumns}
+              onToggleColumn={onToggleColumn}
+            />
+          )}
+
+          {showSelectAllButton && (
+            <SelectAllButton
+              allSelected={allVisibleSelected}
+              onClick={onToggleSelectAll}
+            />
+          )}
         </div>
       </div>
-
-      {showColumnSelector && (
-        <div className="w-full xl:w-auto">
-          <ColumnSelector
-            visibleColumns={visibleColumns}
-            onToggleColumn={onToggleColumn}
-          />
-        </div>
-      )}
     </div>
   );
 }
@@ -692,59 +837,60 @@ function AdvancedFiltersPanel({
   );
 }
 
-function ColumnSelector({ visibleColumns, onToggleColumn }) {
-  const [open, setOpen] = useState(false);
+function BulkChangesPanel({
+  selectedCount,
+  bulkChanges,
+  setBulkChanges,
+  onClose,
+}) {
+  const updateChange = (columnKey, value) => {
+    setBulkChanges((current) => ({
+      ...current,
+      [columnKey]: value,
+    }));
+  };
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 w-full items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 xl:w-[160px]"
-      >
-        <span className="flex items-center gap-2">
-          <Columns3 className="size-4 text-foreground" />
-          Columnas
-        </span>
-      </button>
+    <Card className="shadow-none p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h2 className="text-lg font-semibold">Cambios masivos</h2>
+          <p className="text-sm text-muted-foreground">
+            Editá campos para aplicar cambios a {selectedCount} comprobante{selectedCount === 1 ? "" : "s"} seleccionado{selectedCount === 1 ? "" : "s"}.
+          </p>
+        </div>
+      </div>
 
-      {open && (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-20 cursor-default"
-            onClick={() => setOpen(false)}
-            tabIndex={-1}
-            aria-label="Cerrar menú"
-          />
+      <div className="grid grid-cols-1 gap-3">
+        {editableColumns.map((column) => (
+          <div
+            key={column.key}
+            className="grid grid-cols-1 gap-1.5 sm:grid-cols-[180px_1fr] sm:items-center"
+          >
+            <span className="text-sm font-medium text-muted-foreground">
+              {column.label}
+            </span>
 
-          <div className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-lg">
-            {tableColumns.map((column) => {
-              const active = visibleColumns.includes(column.key);
-
-              return (
-                <button
-                  key={column.key}
-                  type="button"
-                  disabled={column.locked}
-                  onClick={() => onToggleColumn(column.key)}
-                  className={`flex w-full items-center justify-start gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 ${
-                    column.locked
-                      ? "cursor-not-allowed text-foreground"
-                      : "text-foreground"
-                  }`}
-                >
-                  <span className="flex size-4 items-center justify-center">
-                    {active && <Check className="size-4 stroke-[2]" />}
-                  </span>
-                  <span className="truncate">{column.label}</span>
-                </button>
-              );
-            })}
+            <input
+              value={bulkChanges[column.key] || ""}
+              onChange={(event) => updateChange(column.key, event.target.value)}
+              placeholder={`Nuevo valor para ${column.label}`}
+              className="h-10 w-full rounded-xl border border-input bg-background px-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/30"
+            />
           </div>
-        </>
-      )}
-    </div>
+        ))}
+      </div>
+
+      <div className="mt-5 flex justify-end">
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90"
+        >
+          Guardar cambios
+        </button>
+      </div>
+    </Card>
   );
 }
 
@@ -754,6 +900,10 @@ function DesktopTable({
   onMarkPaid,
   onDelete,
   visibleColumns,
+  selectedIds,
+  onToggleSelected,
+  onToggleSelectAll,
+  allVisibleSelected,
   forceVisible = false,
 }) {
   const isVisible = (columnKey) => visibleColumns.includes(columnKey);
@@ -763,6 +913,7 @@ function DesktopTable({
       <div className="overflow-x-auto">
         <table className="w-full table-fixed text-[11px] leading-tight">
           <colgroup>
+            <col className="w-[32px]" />
             {isVisible("orderId") && <col className="w-[40px]" />}
             {isVisible("fecha") && <col className="w-[80px]" />}
             {isVisible("estado") && <col className="w-[90px]" />}
@@ -784,6 +935,15 @@ function DesktopTable({
 
           <thead>
             <tr className="border-b border-border bg-muted/30">
+              <th className="px-2 py-2 align-top">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={onToggleSelectAll}
+                  className="size-3.5"
+                  aria-label="Seleccionar todos"
+                />
+              </th>
               {isVisible("orderId") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Order ID</th>}
               {isVisible("fecha") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Fecha</th>}
               {isVisible("estado") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Estado</th>}
@@ -805,98 +965,114 @@ function DesktopTable({
           </thead>
 
           <tbody>
-            {items.map((item) => (
-              <tr
-                key={item.orderId}
-                className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
-              >
-                {isVisible("orderId") && (
-                  <td className="px-2 py-2 align-top font-medium break-words">{item.orderId}</td>
-                )}
+            {items.map((item) => {
+              const selected = selectedIds.includes(item.orderId);
 
-                {isVisible("fecha") && (
-                  <td className="px-2 py-2 align-top text-muted-foreground tabular-nums whitespace-nowrap">{item.fecha}</td>
-                )}
-
-                {isVisible("estado") && (
-                  <td className="px-1 py-1 align-top whitespace-normal break-words">
-                    <EstadoBadge estado={item.estado} />
-                  </td>
-                )}
-
-                {isVisible("tc") && (
-                  <td className="px-2 py-2 align-top font-medium">{item.tc}</td>
-                )}
-
-                {isVisible("provincia") && (
-                  <td className="px-2 py-2 align-top break-words">{item.provincia}</td>
-                )}
-
-                {isVisible("documento") && (
-                  <td className="px-2 py-2 align-top tabular-nums break-words">{item.documento}</td>
-                )}
-
-                {isVisible("razonSocial") && (
-                  <td className="px-2 py-2 align-top break-words">{item.razonSocial}</td>
-                )}
-
-                {isVisible("tipo") && (
-                  <td className="px-2 py-2 align-top break-words">{item.tipo}</td>
-                )}
-
-                {isVisible("leyenda") && (
-                  <td className="px-2 py-2 align-top break-words">{item.leyenda}</td>
-                )}
-
-                {isVisible("importeNeto") && (
-                  <td className="px-2 py-2 align-top text-right font-medium tabular-nums whitespace-nowrap">
-                    {formatAmount(item.importeNeto)}
-                  </td>
-                )}
-
-                {isVisible("porcentajeIva") && (
-                  <td className="px-2 py-2 align-top text-right tabular-nums whitespace-nowrap">
-                    {formatAmount(item.porcentajeIva)}
-                  </td>
-                )}
-
-                {isVisible("iva") && (
-                  <td className="px-2 py-2 align-top text-right tabular-nums whitespace-nowrap">
-                    {formatAmount(item.iva)}
-                  </td>
-                )}
-
-                {isVisible("importeTotal") && (
-                  <td className="px-2 py-2 align-top text-right font-medium tabular-nums whitespace-nowrap">
-                    {formatAmount(item.importeTotal)}
-                  </td>
-                )}
-
-                {isVisible("moneda") && (
-                  <td className="px-2 py-2 align-top break-words">{item.moneda}</td>
-                )}
-
-                {isVisible("emisora") && (
-                  <td className="px-2 py-2 align-top break-words">{item.emisora}</td>
-                )}
-
-                {isVisible("emails") && (
-                  <td className="px-2 py-2 align-top break-all">{item.emails}</td>
-                )}
-
-                {isVisible("acciones") && (
-                  <td className="px-1 py-2 align-top">
-                    <ActionButtons
-                      item={item}
-                      compact
-                      onView={onView}
-                      onMarkPaid={onMarkPaid}
-                      onDelete={onDelete}
+              return (
+                <tr
+                  key={item.orderId}
+                  className={`border-b border-border last:border-0 hover:bg-muted/20 transition-colors ${
+                    selected ? "bg-muted/40" : ""
+                  }`}
+                >
+                  <td className="px-2 py-2 align-top">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => onToggleSelected(item.orderId)}
+                      className="size-3.5"
+                      aria-label={`Seleccionar ${item.orderId}`}
                     />
                   </td>
-                )}
-              </tr>
-            ))}
+
+                  {isVisible("orderId") && (
+                    <td className="px-2 py-2 align-top font-medium break-words">{item.orderId}</td>
+                  )}
+
+                  {isVisible("fecha") && (
+                    <td className="px-2 py-2 align-top text-muted-foreground tabular-nums whitespace-nowrap">{item.fecha}</td>
+                  )}
+
+                  {isVisible("estado") && (
+                    <td className="px-1 py-1 align-top whitespace-normal break-words">
+                      <EstadoBadge estado={item.estado} />
+                    </td>
+                  )}
+
+                  {isVisible("tc") && (
+                    <td className="px-2 py-2 align-top font-medium">{item.tc}</td>
+                  )}
+
+                  {isVisible("provincia") && (
+                    <td className="px-2 py-2 align-top break-words">{item.provincia}</td>
+                  )}
+
+                  {isVisible("documento") && (
+                    <td className="px-2 py-2 align-top tabular-nums break-words">{item.documento}</td>
+                  )}
+
+                  {isVisible("razonSocial") && (
+                    <td className="px-2 py-2 align-top break-words">{item.razonSocial}</td>
+                  )}
+
+                  {isVisible("tipo") && (
+                    <td className="px-2 py-2 align-top break-words">{item.tipo}</td>
+                  )}
+
+                  {isVisible("leyenda") && (
+                    <td className="px-2 py-2 align-top break-words">{item.leyenda}</td>
+                  )}
+
+                  {isVisible("importeNeto") && (
+                    <td className="px-2 py-2 align-top text-right font-medium tabular-nums whitespace-nowrap">
+                      {formatAmount(item.importeNeto)}
+                    </td>
+                  )}
+
+                  {isVisible("porcentajeIva") && (
+                    <td className="px-2 py-2 align-top text-right tabular-nums whitespace-nowrap">
+                      {formatAmount(item.porcentajeIva)}
+                    </td>
+                  )}
+
+                  {isVisible("iva") && (
+                    <td className="px-2 py-2 align-top text-right tabular-nums whitespace-nowrap">
+                      {formatAmount(item.iva)}
+                    </td>
+                  )}
+
+                  {isVisible("importeTotal") && (
+                    <td className="px-2 py-2 align-top text-right font-medium tabular-nums whitespace-nowrap">
+                      {formatAmount(item.importeTotal)}
+                    </td>
+                  )}
+
+                  {isVisible("moneda") && (
+                    <td className="px-2 py-2 align-top break-words">{item.moneda}</td>
+                  )}
+
+                  {isVisible("emisora") && (
+                    <td className="px-2 py-2 align-top break-words">{item.emisora}</td>
+                  )}
+
+                  {isVisible("emails") && (
+                    <td className="px-2 py-2 align-top break-all">{item.emails}</td>
+                  )}
+
+                  {isVisible("acciones") && (
+                    <td className="px-1 py-2 align-top">
+                      <ActionButtons
+                        item={item}
+                        compact
+                        onView={onView}
+                        onMarkPaid={onMarkPaid}
+                        onDelete={onDelete}
+                      />
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -918,7 +1094,15 @@ function DesktopTable({
   );
 }
 
-function LanesView({ items, onView, onMarkPaid, onDelete, forceVisible = false }) {
+function LanesView({
+  items,
+  onView,
+  onMarkPaid,
+  onDelete,
+  selectedIds,
+  onToggleSelected,
+  forceVisible = false,
+}) {
   const lanes = groupByEstado(items);
 
   return (
@@ -951,91 +1135,100 @@ function LanesView({ items, onView, onMarkPaid, onDelete, forceVisible = false }
             </div>
 
             <div className="space-y-3">
-              {lane.orders.map((item) => (
-                <Card
-                  key={item.orderId}
-                  className="shadow-none p-3 space-y-2 cursor-pointer hover:shadow-sm transition-shadow"
-                >
-                  <div className="flex items-start justify-between text-xs text-muted-foreground gap-2">
-                    <span>
-                      Order:{" "}
-                      <span className="font-semibold text-foreground text-sm">
-                        #{item.orderId}
+              {lane.orders.map((item) => {
+                const selected = selectedIds.includes(item.orderId);
+
+                return (
+                  <Card
+                    key={item.orderId}
+                    className={`shadow-none p-3 space-y-2 cursor-pointer hover:shadow-sm transition-shadow ${
+                      selected ? "bg-muted/40 ring-1 ring-border" : ""
+                    }`}
+                  >
+                    <div className="flex items-start justify-between text-xs text-muted-foreground gap-2">
+                      <span>
+                        Order:{" "}
+                        <span className="font-semibold text-foreground text-sm">
+                          #{item.orderId}
+                        </span>
                       </span>
-                    </span>
-                    <span className="text-right">
-                      Total{" "}
-                      <span className="font-semibold text-foreground">
-                        {formatMoney(item.importeTotal, item.moneda)}
+                      <span className="text-right">
+                        Total{" "}
+                        <span className="font-semibold text-foreground">
+                          {formatMoney(item.importeTotal, item.moneda)}
+                        </span>
                       </span>
-                    </span>
-                  </div>
+                    </div>
 
-                  <p className="text-xs text-muted-foreground">Detalle:</p>
-                  <p className="text-xs font-medium leading-tight break-words">
-                    {item.leyenda}
-                  </p>
-
-                  <div className="flex flex-wrap gap-1">
-                    <EstadoBadge estado={item.estado} />
-                    <span className="text-[11px] px-1.5 py-0.5 bg-muted rounded">
-                      Factura {item.tc}
-                    </span>
-                    <span className="text-[11px] px-1.5 py-0.5 bg-muted rounded">
-                      {item.tipo}
-                    </span>
-                    <span className="text-[11px] px-1.5 py-0.5 bg-muted rounded">
-                      {item.provincia}
-                    </span>
-                  </div>
-
-                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Detalle:</p>
                     <p className="text-xs font-medium leading-tight break-words">
-                      {item.razonSocial}
+                      {item.leyenda}
                     </p>
-                    <p className="text-[11px] text-muted-foreground break-words">
-                      Doc. {item.documento}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground break-all">
-                      {item.emails}
-                    </p>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
-                    <div>
-                      <p>Neto</p>
-                      <p className="font-medium text-foreground">
-                        {formatMoney(item.importeNeto, item.moneda)}
+                    <div className="flex flex-wrap gap-1">
+                      <EstadoBadge estado={item.estado} />
+                      <span className="text-[11px] px-1.5 py-0.5 bg-muted rounded">
+                        Factura {item.tc}
+                      </span>
+                      <span className="text-[11px] px-1.5 py-0.5 bg-muted rounded">
+                        {item.tipo}
+                      </span>
+                      <span className="text-[11px] px-1.5 py-0.5 bg-muted rounded">
+                        {item.provincia}
+                      </span>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-medium leading-tight break-words">
+                        {item.razonSocial}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground break-words">
+                        Doc. {item.documento}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground break-all">
+                        {item.emails}
                       </p>
                     </div>
-                    <div>
-                      <p>IVA</p>
-                      <p className="font-medium text-foreground">
-                        {formatAmount(item.porcentajeIva)}% · {formatMoney(item.iva, item.moneda)}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="text-[11px] text-muted-foreground break-words pr-2 min-w-0">
-                      {item.emisora}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
-                      <span>{item.fecha}</span>
-                      <div className="size-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium">
-                        {getInitials(item.razonSocial)}
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                      <div>
+                        <p>Neto</p>
+                        <p className="font-medium text-foreground">
+                          {formatMoney(item.importeNeto, item.moneda)}
+                        </p>
+                      </div>
+                      <div>
+                        <p>IVA</p>
+                        <p className="font-medium text-foreground">
+                          {formatAmount(item.porcentajeIva)}% · {formatMoney(item.iva, item.moneda)}
+                        </p>
                       </div>
                     </div>
-                  </div>
 
-                  <ActionButtons
-                    item={item}
-                    onView={onView}
-                    onMarkPaid={onMarkPaid}
-                    onDelete={onDelete}
-                  />
-                </Card>
-              ))}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-[11px] text-muted-foreground break-words pr-2 min-w-0">
+                        {item.emisora}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+                        <span>{item.fecha}</span>
+                        <div className="size-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium">
+                          {getInitials(item.razonSocial)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <ActionButtons
+                      item={item}
+                      onView={onView}
+                      onMarkPaid={onMarkPaid}
+                      onDelete={onDelete}
+                      showSelectionButton
+                      selected={selected}
+                      onToggleSelected={onToggleSelected}
+                    />
+                  </Card>
+                );
+              })}
 
               <button className="w-full text-xs text-muted-foreground flex items-center gap-1.5 hover:text-foreground py-1">
                 <Plus className="size-3.5" />
@@ -1049,7 +1242,15 @@ function LanesView({ items, onView, onMarkPaid, onDelete, forceVisible = false }
   );
 }
 
-function MobileCards({ items, onView, onMarkPaid, onDelete, forceVisible = false }) {
+function MobileCards({
+  items,
+  onView,
+  onMarkPaid,
+  onDelete,
+  selectedIds,
+  onToggleSelected,
+  forceVisible = false,
+}) {
   return (
     <div className={forceVisible ? "space-y-3" : "space-y-3 sm:hidden"}>
       <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -1059,63 +1260,72 @@ function MobileCards({ items, onView, onMarkPaid, onDelete, forceVisible = false
         </span>
       </div>
 
-      {items.map((item) => (
-        <Card
-          key={item.orderId}
-          className="shadow-none p-4 hover:shadow-sm transition-shadow cursor-pointer"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold">#{item.orderId}</span>
-                <EstadoBadge estado={item.estado} />
-                <span className="text-xs text-muted-foreground border border-border px-1.5 py-0.5 rounded">
-                  Factura {item.tc}
-                </span>
-              </div>
+      {items.map((item) => {
+        const selected = selectedIds.includes(item.orderId);
 
-              <p className="text-base font-semibold mt-1 break-words">
-                {item.razonSocial}
-              </p>
-
-              <p className="text-xs text-muted-foreground break-words">
-                {item.documento} · {item.tipo} · {item.provincia}
-              </p>
-
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                  <span className="font-medium text-foreground break-words">
-                    {item.leyenda}
+        return (
+          <Card
+            key={item.orderId}
+            className={`shadow-none p-4 hover:shadow-sm transition-shadow cursor-pointer ${
+              selected ? "bg-muted/40 ring-1 ring-border" : ""
+            }`}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold">#{item.orderId}</span>
+                  <EstadoBadge estado={item.estado} />
+                  <span className="text-xs text-muted-foreground border border-border px-1.5 py-0.5 rounded">
+                    Factura {item.tc}
                   </span>
                 </div>
 
-                <p className="text-xs text-muted-foreground break-all">
-                  {item.emails}
+                <p className="text-base font-semibold mt-1 break-words">
+                  {item.razonSocial}
                 </p>
+
+                <p className="text-xs text-muted-foreground break-words">
+                  {item.documento} · {item.tipo} · {item.provincia}
+                </p>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span className="font-medium text-foreground break-words">
+                      {item.leyenda}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground break-all">
+                    {item.emails}
+                  </p>
+                </div>
+
+                <div className="mt-3">
+                  <ActionButtons
+                    item={item}
+                    onView={onView}
+                    onMarkPaid={onMarkPaid}
+                    onDelete={onDelete}
+                    showSelectionButton
+                    selected={selected}
+                    onToggleSelected={onToggleSelected}
+                  />
+                </div>
               </div>
 
-              <div className="mt-3">
-                <ActionButtons
-                  item={item}
-                  onView={onView}
-                  onMarkPaid={onMarkPaid}
-                  onDelete={onDelete}
-                />
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <span className="text-lg font-bold text-right">
+                  {formatMoney(item.importeTotal, item.moneda)}
+                </span>
+                <span className="text-xs text-muted-foreground">{item.fecha}</span>
+                <button className="p-1 hover:bg-muted rounded">
+                  <MoreHorizontal className="size-4 text-muted-foreground" />
+                </button>
               </div>
             </div>
-
-            <div className="flex flex-col items-end gap-2 shrink-0">
-              <span className="text-lg font-bold text-right">
-                {formatMoney(item.importeTotal, item.moneda)}
-              </span>
-              <span className="text-xs text-muted-foreground">{item.fecha}</span>
-              <button className="p-1 hover:bg-muted rounded">
-                <MoreHorizontal className="size-4 text-muted-foreground" />
-              </button>
-            </div>
-          </div>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }
@@ -1139,6 +1349,9 @@ export default function Comprobantes() {
   const [visibleColumns, setVisibleColumns] = useState(defaultVisibleColumns);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({});
+  const [bulkChangesOpen, setBulkChangesOpen] = useState(false);
+  const [bulkChanges, setBulkChanges] = useState({});
+  const [selectedIds, setSelectedIds] = useState([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1261,6 +1474,36 @@ export default function Comprobantes() {
     advancedFilters,
   ]);
 
+  const visibleIds = useMemo(() => filtered.map((item) => item.orderId), [filtered]);
+
+  const selectedVisibleIds = useMemo(
+    () => selectedIds.filter((id) => visibleIds.includes(id)),
+    [selectedIds, visibleIds]
+  );
+
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+
+  const toggleSelected = (orderId) => {
+    setSelectedIds((current) => {
+      if (current.includes(orderId)) {
+        return current.filter((id) => id !== orderId);
+      }
+
+      return [...current, orderId];
+    });
+  };
+
+  const toggleSelectAllVisible = () => {
+    setSelectedIds((current) => {
+      if (allVisibleSelected) {
+        return current.filter((id) => !visibleIds.includes(id));
+      }
+
+      return Array.from(new Set([...current, ...visibleIds]));
+    });
+  };
+
   const handleView = (item) => {
     console.log("Ver detalle", item);
   };
@@ -1279,7 +1522,9 @@ export default function Comprobantes() {
   };
 
   const shouldShowSharedFilters =
-    desktopView === "table" || desktopView === "lanes";
+    desktopView === "table" || desktopView === "lanes" || desktopView === "cards";
+
+  const selectedCount = selectedIds.length;
 
   return (
     <div className="space-y-4">
@@ -1297,7 +1542,7 @@ export default function Comprobantes() {
         </button>
       </div>
 
-      {!advancedFiltersOpen && (
+      {!advancedFiltersOpen && !bulkChangesOpen && (
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="hidden sm:flex items-center gap-2">
             <ViewSwitcher value={desktopView} onChange={handleViewChange} />
@@ -1317,7 +1562,7 @@ export default function Comprobantes() {
         </div>
       )}
 
-      {!advancedFiltersOpen && (
+      {!advancedFiltersOpen && !bulkChangesOpen && (
         <div className="flex sm:hidden flex-wrap gap-0 border-b border-border overflow-visible">
           {["Todos", "ESPERANDO PAGO", "PAGADO", "BORRADOR", "ANULADO"].map((item) => (
             <button
@@ -1344,16 +1589,21 @@ export default function Comprobantes() {
         </div>
       )}
 
-      {!advancedFiltersOpen && (
-        <div className="sm:hidden">
+      {!advancedFiltersOpen && !bulkChangesOpen && (
+        <div className="sm:hidden space-y-2">
           <AdvancedFiltersButton
             mobile
             onClick={() => setAdvancedFiltersOpen(true)}
           />
+
+          <SelectAllButton
+            allSelected={allVisibleSelected}
+            onClick={toggleSelectAllVisible}
+          />
         </div>
       )}
 
-      {!advancedFiltersOpen && shouldShowSharedFilters && (
+      {!advancedFiltersOpen && !bulkChangesOpen && shouldShowSharedFilters && (
         <FiltersToolbar
           search={search}
           setSearch={setSearch}
@@ -1367,10 +1617,19 @@ export default function Comprobantes() {
           setEstadoFilter={setEstadoFilter}
           emisoras={emisoras}
           estados={estados}
-          showColumnSelector={desktopView === "table"}
+          desktopView={desktopView}
           visibleColumns={visibleColumns}
           onToggleColumn={toggleColumn}
           onOpenAdvancedFilters={() => setAdvancedFiltersOpen(true)}
+          onToggleSelectAll={toggleSelectAllVisible}
+          allVisibleSelected={allVisibleSelected}
+        />
+      )}
+
+      {!advancedFiltersOpen && !bulkChangesOpen && selectedCount > 0 && (
+        <BulkChangesButton
+          selectedCount={selectedCount}
+          onClick={() => setBulkChangesOpen(true)}
         />
       )}
 
@@ -1383,7 +1642,16 @@ export default function Comprobantes() {
         />
       )}
 
-      {!advancedFiltersOpen && (
+      {bulkChangesOpen && (
+        <BulkChangesPanel
+          selectedCount={selectedCount}
+          bulkChanges={bulkChanges}
+          setBulkChanges={setBulkChanges}
+          onClose={() => setBulkChangesOpen(false)}
+        />
+      )}
+
+      {!advancedFiltersOpen && !bulkChangesOpen && (
         <>
           <div className="hidden sm:block">
             {desktopView === "table" && (
@@ -1391,6 +1659,10 @@ export default function Comprobantes() {
                 items={filtered}
                 forceVisible
                 visibleColumns={visibleColumns}
+                selectedIds={selectedIds}
+                onToggleSelected={toggleSelected}
+                onToggleSelectAll={toggleSelectAllVisible}
+                allVisibleSelected={allVisibleSelected}
                 onView={handleView}
                 onMarkPaid={handleMarkPaid}
                 onDelete={handleDelete}
@@ -1401,6 +1673,8 @@ export default function Comprobantes() {
               <LanesView
                 items={filtered}
                 forceVisible
+                selectedIds={selectedIds}
+                onToggleSelected={toggleSelected}
                 onView={handleView}
                 onMarkPaid={handleMarkPaid}
                 onDelete={handleDelete}
@@ -1411,6 +1685,8 @@ export default function Comprobantes() {
               <MobileCards
                 items={filtered}
                 forceVisible
+                selectedIds={selectedIds}
+                onToggleSelected={toggleSelected}
                 onView={handleView}
                 onMarkPaid={handleMarkPaid}
                 onDelete={handleDelete}
@@ -1422,6 +1698,8 @@ export default function Comprobantes() {
             <MobileCards
               items={filtered}
               forceVisible
+              selectedIds={selectedIds}
+              onToggleSelected={toggleSelected}
               onView={handleView}
               onMarkPaid={handleMarkPaid}
               onDelete={handleDelete}
