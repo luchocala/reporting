@@ -9,6 +9,7 @@ import {
   Eye,
   CheckCircle2,
   Trash2,
+  Columns3,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -111,6 +112,28 @@ const laneMeta = {
   ANULADO: { label: "Anulado", icon: "×" },
 };
 
+const tableColumns = [
+  { key: "orderId", label: "Order ID" },
+  { key: "fecha", label: "Fecha" },
+  { key: "estado", label: "Estado" },
+  { key: "tc", label: "T/C" },
+  { key: "provincia", label: "Provincia" },
+  { key: "documento", label: "Documento" },
+  { key: "razonSocial", label: "Razón Social" },
+  { key: "tipo", label: "Tipo" },
+  { key: "leyenda", label: "Leyenda" },
+  { key: "importeNeto", label: "Importe Neto" },
+  { key: "porcentajeIva", label: "%" },
+  { key: "iva", label: "Iva" },
+  { key: "importeTotal", label: "Importe Total" },
+  { key: "moneda", label: "Moneda" },
+  { key: "emisora", label: "Emisora" },
+  { key: "emails", label: "Emails" },
+  { key: "acciones", label: "Acciones", locked: true },
+];
+
+const defaultVisibleColumns = tableColumns.map((column) => column.key);
+
 function EstadoBadge({ estado }) {
   return (
     <span
@@ -132,6 +155,41 @@ function formatAmount(value) {
 
 function formatMoney(value, moneda = "ARS") {
   return `${moneda} ${formatAmount(value)}`;
+}
+
+function parseDate(dateString) {
+  const [day, month, year] = dateString.split("/").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function getCurrentMonthRange() {
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), 1);
+  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  return { start, end };
+}
+
+function getPreviousMonthRange() {
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const end = new Date(today.getFullYear(), today.getMonth(), 0);
+
+  return { start, end };
+}
+
+function isDateInRange(date, range) {
+  if (!range) return true;
+
+  const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const normalizedStart = new Date(range.start.getFullYear(), range.start.getMonth(), range.start.getDate());
+  const normalizedEnd = new Date(range.end.getFullYear(), range.end.getMonth(), range.end.getDate());
+
+  return normalizedDate >= normalizedStart && normalizedDate <= normalizedEnd;
+}
+
+function getUniqueValues(items, key) {
+  return Array.from(new Set(items.map((item) => item[key]).filter(Boolean)));
 }
 
 function getInitials(name) {
@@ -262,50 +320,101 @@ function ViewSwitcher({ value, onChange }) {
   );
 }
 
-function DesktopTable({ items, onView, onMarkPaid, onDelete, forceVisible = false }) {
+function ColumnSelector({ visibleColumns, onToggleColumn }) {
+  return (
+    <div className="relative group">
+      <button
+        type="button"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-input rounded-md hover:bg-muted"
+      >
+        <Columns3 className="size-3.5" />
+        Manage Table
+      </button>
+
+      <div className="absolute right-0 top-full z-30 mt-2 hidden w-56 rounded-md border border-border bg-popover p-2 shadow-md group-hover:block">
+        <p className="px-2 pb-2 text-xs font-medium text-muted-foreground">
+          Columnas visibles
+        </p>
+
+        <div className="max-h-72 overflow-y-auto space-y-0.5">
+          {tableColumns.map((column) => (
+            <label
+              key={column.key}
+              className={`flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm ${
+                column.locked
+                  ? "cursor-not-allowed text-muted-foreground"
+                  : "cursor-pointer hover:bg-muted"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={visibleColumns.includes(column.key)}
+                disabled={column.locked}
+                onChange={() => onToggleColumn(column.key)}
+                className="size-3.5"
+              />
+              <span>{column.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DesktopTable({
+  items,
+  onView,
+  onMarkPaid,
+  onDelete,
+  visibleColumns,
+  forceVisible = false,
+}) {
+  const isVisible = (columnKey) => visibleColumns.includes(columnKey);
+
   return (
     <Card className={`shadow-none overflow-hidden ${forceVisible ? "block" : "hidden xl:block"}`}>
       <div className="overflow-x-auto">
         <table className="w-full table-fixed text-[11px] leading-tight">
           <colgroup>
-            <col className="w-[40px]" />
-            <col className="w-[80px]" />
-            <col className="w-[90px]" />
-            <col className="w-[25px]" />
-            <col className="w-[65px]" />
-            <col className="w-[95px]" />
-            <col className="w-[85px]" />
-            <col className="w-[90px]" />
-            <col className="w-[90px]" />
-            <col className="w-[90px]" />
-            <col className="w-[30px]" />
-            <col className="w-[90px]" />
-            <col className="w-[90px]" />
-            <col className="w-[40px]" />
-            <col className="w-[80px]" />
-            <col className="w-[120px]" />
-            <col className="w-[40px]" />
+            {isVisible("orderId") && <col className="w-[40px]" />}
+            {isVisible("fecha") && <col className="w-[80px]" />}
+            {isVisible("estado") && <col className="w-[90px]" />}
+            {isVisible("tc") && <col className="w-[25px]" />}
+            {isVisible("provincia") && <col className="w-[65px]" />}
+            {isVisible("documento") && <col className="w-[95px]" />}
+            {isVisible("razonSocial") && <col className="w-[85px]" />}
+            {isVisible("tipo") && <col className="w-[90px]" />}
+            {isVisible("leyenda") && <col className="w-[90px]" />}
+            {isVisible("importeNeto") && <col className="w-[90px]" />}
+            {isVisible("porcentajeIva") && <col className="w-[30px]" />}
+            {isVisible("iva") && <col className="w-[90px]" />}
+            {isVisible("importeTotal") && <col className="w-[90px]" />}
+            {isVisible("moneda") && <col className="w-[40px]" />}
+            {isVisible("emisora") && <col className="w-[80px]" />}
+            {isVisible("emails") && <col className="w-[120px]" />}
+            {isVisible("acciones") && <col className="w-[40px]" />}
           </colgroup>
 
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Order ID</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Fecha</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Estado</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">T/C</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Provincia</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Documento</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Razón Social</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Tipo</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Leyenda</th>
-              <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">Importe Neto</th>
-              <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">%</th>
-              <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">Iva</th>
-              <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">Importe Total</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Moneda</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emisora</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emails</th>
-              <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Acciones</th>
+              {isVisible("orderId") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Order ID</th>}
+              {isVisible("fecha") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Fecha</th>}
+              {isVisible("estado") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Estado</th>}
+              {isVisible("tc") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">T/C</th>}
+              {isVisible("provincia") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Provincia</th>}
+              {isVisible("documento") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Documento</th>}
+              {isVisible("razonSocial") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Razón Social</th>}
+              {isVisible("tipo") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Tipo</th>}
+              {isVisible("leyenda") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Leyenda</th>}
+              {isVisible("importeNeto") && <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">Importe Neto</th>}
+              {isVisible("porcentajeIva") && <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">%</th>}
+              {isVisible("iva") && <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">Iva</th>}
+              {isVisible("importeTotal") && <th className="text-right font-medium text-muted-foreground px-2 py-2 align-top">Importe Total</th>}
+              {isVisible("moneda") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Moneda</th>}
+              {isVisible("emisora") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emisora</th>}
+              {isVisible("emails") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Emails</th>}
+              {isVisible("acciones") && <th className="text-left font-medium text-muted-foreground px-2 py-2 align-top">Acciones</th>}
             </tr>
           </thead>
 
@@ -315,44 +424,91 @@ function DesktopTable({ items, onView, onMarkPaid, onDelete, forceVisible = fals
                 key={item.orderId}
                 className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
               >
-                <td className="px-2 py-2 align-top font-medium break-words">{item.orderId}</td>
-                <td className="px-2 py-2 align-top text-muted-foreground tabular-nums whitespace-nowrap">{item.fecha}</td>
-                <td className="px-1 py-1 align-top whitespace-normal break-words">
-                  <EstadoBadge estado={item.estado} />
-                </td>
-                <td className="px-2 py-2 align-top font-medium">{item.tc}</td>
-                <td className="px-2 py-2 align-top break-words">{item.provincia}</td>
-                <td className="px-2 py-2 align-top tabular-nums break-words">{item.documento}</td>
-                <td className="px-2 py-2 align-top break-words">{item.razonSocial}</td>
-                <td className="px-2 py-2 align-top break-words">{item.tipo}</td>
-                <td className="px-2 py-2 align-top break-words">{item.leyenda}</td>
+                {isVisible("orderId") && (
+                  <td className="px-2 py-2 align-top font-medium break-words">{item.orderId}</td>
+                )}
 
-                <td className="px-2 py-2 align-top text-right font-medium tabular-nums whitespace-nowrap">
-                  {formatAmount(item.importeNeto)}
-                </td>
-                <td className="px-2 py-2 align-top text-right tabular-nums whitespace-nowrap">
-                  {formatAmount(item.porcentajeIva)}
-                </td>
-                <td className="px-2 py-2 align-top text-right tabular-nums whitespace-nowrap">
-                  {formatAmount(item.iva)}
-                </td>
-                <td className="px-2 py-2 align-top text-right font-medium tabular-nums whitespace-nowrap">
-                  {formatAmount(item.importeTotal)}
-                </td>
+                {isVisible("fecha") && (
+                  <td className="px-2 py-2 align-top text-muted-foreground tabular-nums whitespace-nowrap">{item.fecha}</td>
+                )}
 
-                <td className="px-2 py-2 align-top break-words">{item.moneda}</td>
-                <td className="px-2 py-2 align-top break-words">{item.emisora}</td>
-                <td className="px-2 py-2 align-top break-all">{item.emails}</td>
+                {isVisible("estado") && (
+                  <td className="px-1 py-1 align-top whitespace-normal break-words">
+                    <EstadoBadge estado={item.estado} />
+                  </td>
+                )}
 
-                <td className="px-1 py-2 align-top">
-                  <ActionButtons
-                    item={item}
-                    compact
-                    onView={onView}
-                    onMarkPaid={onMarkPaid}
-                    onDelete={onDelete}
-                  />
-                </td>
+                {isVisible("tc") && (
+                  <td className="px-2 py-2 align-top font-medium">{item.tc}</td>
+                )}
+
+                {isVisible("provincia") && (
+                  <td className="px-2 py-2 align-top break-words">{item.provincia}</td>
+                )}
+
+                {isVisible("documento") && (
+                  <td className="px-2 py-2 align-top tabular-nums break-words">{item.documento}</td>
+                )}
+
+                {isVisible("razonSocial") && (
+                  <td className="px-2 py-2 align-top break-words">{item.razonSocial}</td>
+                )}
+
+                {isVisible("tipo") && (
+                  <td className="px-2 py-2 align-top break-words">{item.tipo}</td>
+                )}
+
+                {isVisible("leyenda") && (
+                  <td className="px-2 py-2 align-top break-words">{item.leyenda}</td>
+                )}
+
+                {isVisible("importeNeto") && (
+                  <td className="px-2 py-2 align-top text-right font-medium tabular-nums whitespace-nowrap">
+                    {formatAmount(item.importeNeto)}
+                  </td>
+                )}
+
+                {isVisible("porcentajeIva") && (
+                  <td className="px-2 py-2 align-top text-right tabular-nums whitespace-nowrap">
+                    {formatAmount(item.porcentajeIva)}
+                  </td>
+                )}
+
+                {isVisible("iva") && (
+                  <td className="px-2 py-2 align-top text-right tabular-nums whitespace-nowrap">
+                    {formatAmount(item.iva)}
+                  </td>
+                )}
+
+                {isVisible("importeTotal") && (
+                  <td className="px-2 py-2 align-top text-right font-medium tabular-nums whitespace-nowrap">
+                    {formatAmount(item.importeTotal)}
+                  </td>
+                )}
+
+                {isVisible("moneda") && (
+                  <td className="px-2 py-2 align-top break-words">{item.moneda}</td>
+                )}
+
+                {isVisible("emisora") && (
+                  <td className="px-2 py-2 align-top break-words">{item.emisora}</td>
+                )}
+
+                {isVisible("emails") && (
+                  <td className="px-2 py-2 align-top break-all">{item.emails}</td>
+                )}
+
+                {isVisible("acciones") && (
+                  <td className="px-1 py-2 align-top">
+                    <ActionButtons
+                      item={item}
+                      compact
+                      onView={onView}
+                      onMarkPaid={onMarkPaid}
+                      onDelete={onDelete}
+                    />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -656,11 +812,48 @@ export default function Comprobantes() {
   const [tab, setTab] = useState("Todos");
   const [search, setSearch] = useState("");
   const [desktopView, setDesktopView] = useState("table");
+  const [periodFilter, setPeriodFilter] = useState("all");
+  const [emisoraFilter, setEmisoraFilter] = useState("all");
+  const [estadoFilter, setEstadoFilter] = useState("all");
+  const [visibleColumns, setVisibleColumns] = useState(defaultVisibleColumns);
+
+  const emisoras = useMemo(() => getUniqueValues(comprobantes, "emisora"), []);
+  const estados = useMemo(() => getUniqueValues(comprobantes, "estado"), []);
+
+  const toggleColumn = (columnKey) => {
+    const column = tableColumns.find((item) => item.key === columnKey);
+
+    if (column?.locked) return;
+
+    setVisibleColumns((current) => {
+      if (current.includes(columnKey)) {
+        return current.filter((key) => key !== columnKey);
+      }
+
+      const next = [...current, columnKey];
+
+      return tableColumns
+        .map((item) => item.key)
+        .filter((key) => next.includes(key));
+    });
+  };
 
   const filtered = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
+    let selectedPeriodRange = null;
+
+    if (periodFilter === "lastMonth") {
+      selectedPeriodRange = getCurrentMonthRange();
+    }
+
+    if (periodFilter === "previousMonth") {
+      selectedPeriodRange = getPreviousMonthRange();
+    }
+
     return comprobantes.filter((item) => {
+      const itemDate = parseDate(item.fecha);
+
       const matchesTab =
         tab === "Todos" ||
         item.estado.toLowerCase() === tab.toLowerCase();
@@ -673,9 +866,24 @@ export default function Comprobantes() {
         item.leyenda.toLowerCase().includes(normalizedSearch) ||
         item.emails.toLowerCase().includes(normalizedSearch);
 
-      return matchesTab && matchesSearch;
+      const matchesPeriod =
+        periodFilter === "all" || isDateInRange(itemDate, selectedPeriodRange);
+
+      const matchesEmisora =
+        emisoraFilter === "all" || item.emisora === emisoraFilter;
+
+      const matchesEstado =
+        estadoFilter === "all" || item.estado === estadoFilter;
+
+      return (
+        matchesTab &&
+        matchesSearch &&
+        matchesPeriod &&
+        matchesEmisora &&
+        matchesEstado
+      );
     });
-  }, [tab, search]);
+  }, [tab, search, periodFilter, emisoraFilter, estadoFilter]);
 
   const handleView = (item) => {
     console.log("Ver detalle", item);
@@ -706,22 +914,79 @@ export default function Comprobantes() {
       </div>
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-          <input
-            placeholder="Buscar comprobantes..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-44 sm:w-56"
-          />
+        <div className="hidden xl:flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            <input
+              placeholder="Buscar comprobantes..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-56"
+            />
+          </div>
+
+          {desktopView === "table" && (
+            <>
+              <select
+                value={periodFilter}
+                onChange={(event) => setPeriodFilter(event.target.value)}
+                className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
+              >
+                <option value="all">Todo</option>
+                <option value="lastMonth">Último mes</option>
+                <option value="previousMonth">Mes anterior</option>
+              </select>
+
+              <select
+                value={emisoraFilter}
+                onChange={(event) => setEmisoraFilter(event.target.value)}
+                className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
+              >
+                <option value="all">Emisora</option>
+                {emisoras.map((emisora) => (
+                  <option key={emisora} value={emisora}>
+                    {emisora}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={estadoFilter}
+                onChange={(event) => setEstadoFilter(event.target.value)}
+                className="px-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none hover:bg-muted"
+              >
+                <option value="all">Estado</option>
+                {estados.map((estado) => (
+                  <option key={estado} value={estado}>
+                    {estado}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex xl:hidden items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            <input
+              placeholder="Buscar comprobantes..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-44 sm:w-56"
+            />
+          </div>
+        </div>
+
+        <div className="hidden xl:flex items-center gap-2">
           <ViewSwitcher value={desktopView} onChange={setDesktopView} />
 
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-input rounded-md hover:bg-muted">
-            Display ▾
-          </button>
+          {desktopView === "table" && (
+            <ColumnSelector
+              visibleColumns={visibleColumns}
+              onToggleColumn={toggleColumn}
+            />
+          )}
         </div>
       </div>
 
@@ -747,6 +1012,7 @@ export default function Comprobantes() {
           <DesktopTable
             items={filtered}
             forceVisible
+            visibleColumns={visibleColumns}
             onView={handleView}
             onMarkPaid={handleMarkPaid}
             onDelete={handleDelete}
