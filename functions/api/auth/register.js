@@ -34,6 +34,8 @@ export async function onRequestPost({ request, env }) {
     const firstName = normalizeString(body.firstName);
     const lastName = normalizeString(body.lastName);
     const password = normalizeString(body.password);
+    const timezone =
+      normalizeString(body.timezone) || "America/Argentina/Buenos_Aires";
 
     if (!username || !email || !password) {
       return jsonResponse(
@@ -69,7 +71,6 @@ export async function onRequestPost({ request, env }) {
     }
 
     const hashedPassword = await hashPassword(password);
-    const now = new Date().toISOString();
 
     const result = await env.DB
       .prepare(
@@ -84,11 +85,9 @@ export async function onRequestPost({ request, env }) {
           approved,
           role,
           theme,
-          language,
-          createdAt,
-          updatedAt
+          language
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `
       )
       .bind(
@@ -96,14 +95,12 @@ export async function onRequestPost({ request, env }) {
         firstName || null,
         lastName || null,
         email,
-        body.timezone || "America/Argentina/Buenos_Aires",
+        timezone,
         hashedPassword,
         0,
         "user",
         "light",
-        "es",
-        now,
-        now
+        "es"
       )
       .run();
 
@@ -112,7 +109,8 @@ export async function onRequestPost({ request, env }) {
         success: true,
         pendingApproval: true,
         userId: result.meta?.last_row_id,
-        message: "Registro creado correctamente. Tu cuenta queda pendiente de aprobación.",
+        message:
+          "Registro creado correctamente. Tu cuenta queda pendiente de aprobación.",
       },
       201
     );
