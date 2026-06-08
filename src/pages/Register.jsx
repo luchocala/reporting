@@ -1,266 +1,123 @@
-// src/pages/Register.jsx
+// functions/api/auth/register.js
 
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hash = await crypto.subtle.digest("SHA-256", data);
 
-import AuthLayout from "@/components/AuthLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useLocalAuth } from "@/lib/LocalAuthContext";
+  return Array.from(new Uint8Array(hash))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
 
-export default function Register() {
-  const { register } = useLocalAuth();
-
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
   });
+}
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+function normalizeString(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
 
-  const updateField = (field, value) => {
-    setFormData((current) => ({
-      ...current,
-      [field]: value,
-    }));
-
-    setError("");
-    setSuccessMessage("");
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    setError("");
-    setSuccessMessage("");
-
-    const username = formData.username.trim();
-    const email = formData.email.trim();
-    const firstName = formData.firstName.trim();
-    const lastName = formData.lastName.trim();
-
-    if (!username) {
-      setError("Ingresá un nombre de usuario.");
-      return;
+export async function onRequestPost({ request, env }) {
+  try {
+    if (!env.DB) {
+      return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
     }
 
-    if (!email) {
-      setError("Ingresá un email.");
-      return;
-    }
+    const body = await request.json();
 
-    if (!formData.password) {
-      setError("Ingresá una contraseña.");
-      return;
-    }
+    const username = normalizeString(body.username).toLowerCase();
+    const email = normalizeString(body.email).toLowerCase();
+    const firstName = normalizeString(body.firstName);
+    const lastName = normalizeString(body.lastName);
+    const password = normalizeString(body.password);
+    const timezone =
+      normalizeString(body.timezone) || "America/Argentina/Buenos_Aires";
 
-    if (formData.password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Las contraseñas no coinciden.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const timezone =
-        Intl.DateTimeFormat().resolvedOptions().timeZone ||
-        "America/Argentina/Buenos_Aires";
-
-      await register({
-        username,
-        email,
-        firstName,
-        lastName,
-        password: formData.password,
-        timezone,
-      });
-
-      setSuccessMessage(
-        "Tu cuenta fue creada correctamente y queda pendiente de aprobación."
+    if (!username || !email || !password) {
+      return jsonResponse(
+        { error: "Usuario, email y contraseña son requeridos" },
+        400
       );
-
-      setFormData({
-        firstName: "",
-        lastName: "",
-        username: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-      });
-    } catch (err) {
-      setError(err.message || "No se pudo completar el registro.");
-    } finally {
-      setLoading(false);
     }
-  };
 
-  return (
-    <AuthLayout
-      icon={UserPlus}
-      title="Create account"
-      subtitle="Register your user to request access"
-      footer={
-        <>
-          Already have an account?{" "}
-          <Link to="/login" className="text-primary font-medium hover:underline">
-            Log in
-          </Link>
-        </>
-      }
-    >
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          {error}
-        </div>
-      )}
+    if (password.length < 6) {
+      return jsonResponse(
+        { error: "La contraseña debe tener al menos 6 caracteres" },
+        400
+      );
+    }
 
-      {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm">
-          {successMessage}
-        </div>
-      )}
+    const existingUser = await env.DB
+      .prepare(
+        `
+        SELECT id
+        FROM users
+        WHERE username = ? OR email = ?
+        LIMIT 1
+      `
+      )
+      .bind(username, email)
+      .first();
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">First name</Label>
-            <Input
-              id="firstName"
-              type="text"
-              autoComplete="given-name"
-              placeholder="Nombre"
-              value={formData.firstName}
-              onChange={(e) => updateField("firstName", e.target.value)}
-              className="h-12"
-            />
-          </div>
+    if (existingUser) {
+      return jsonResponse(
+        { error: "Ya existe un usuario registrado con ese usuario o email" },
+        409
+      );
+    }
 
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Last name</Label>
-            <Input
-              id="lastName"
-              type="text"
-              autoComplete="family-name"
-              placeholder="Apellido"
-              value={formData.lastName}
-              onChange={(e) => updateField("lastName", e.target.value)}
-              className="h-12"
-            />
-          </div>
-        </div>
+    const hashedPassword = await hashPassword(password);
 
-        <div className="space-y-2">
-          <Label htmlFor="username">Username</Label>
-          <Input
-            id="username"
-            type="text"
-            autoComplete="username"
-            placeholder="usuario"
-            value={formData.username}
-            onChange={(e) => updateField("username", e.target.value)}
-            className="h-12"
-            required
-          />
-        </div>
+    const result = await env.DB
+      .prepare(
+        `
+        INSERT INTO users (
+          username,
+          firstName,
+          lastName,
+          email,
+          timezone,
+          password,
+          approved,
+          role,
+          theme,
+          language
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `
+      )
+      .bind(
+        username,
+        firstName || null,
+        lastName || null,
+        email,
+        timezone,
+        hashedPassword,
+        0,
+        "user",
+        "light",
+        "es"
+      )
+      .run();
 
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            autoComplete="email"
-            placeholder="nombre@empresa.com"
-            value={formData.email}
-            onChange={(e) => updateField("email", e.target.value)}
-            className="h-12"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) => updateField("password", e.target.value)}
-              className="h-12 pr-10"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((current) => !current)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-            >
-              {showPassword ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm password</Label>
-          <div className="relative">
-            <Input
-              id="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={formData.confirmPassword}
-              onChange={(e) => updateField("confirmPassword", e.target.value)}
-              className="h-12 pr-10"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword((current) => !current)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label={
-                showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"
-              }
-            >
-              {showConfirmPassword ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating account...
-            </>
-          ) : (
-            "Create account"
-          )}
-        </Button>
-      </form>
-    </AuthLayout>
-  );
+    return jsonResponse(
+      {
+        success: true,
+        pendingApproval: true,
+        userId: result.meta?.last_row_id,
+        message:
+          "Registro creado correctamente. Tu cuenta queda pendiente de aprobación.",
+      },
+      201
+    );
+  } catch (error) {
+    return jsonResponse(
+      { error: error.message || "Error interno en registro" },
+      500
+    );
+  }
 }

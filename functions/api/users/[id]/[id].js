@@ -1,4 +1,4 @@
-// functions/api/users/[id].js
+// functions/api/users/[id]/reject.js
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -7,7 +7,7 @@ function jsonResponse(body, status = 200) {
   });
 }
 
-export async function onRequestDelete({ params, env }) {
+export async function onRequestPost({ params, env }) {
   try {
     if (!env.DB) {
       return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
@@ -38,7 +38,8 @@ export async function onRequestDelete({ params, env }) {
     await env.DB
       .prepare(
         `
-        DELETE FROM users
+        UPDATE users
+        SET approved = 0
         WHERE id = ?
       `
       )
@@ -47,11 +48,11 @@ export async function onRequestDelete({ params, env }) {
 
     return jsonResponse({
       success: true,
-      message: "Usuario eliminado correctamente",
+      message: "Usuario marcado como no aprobado",
     });
   } catch (error) {
     return jsonResponse(
-      { error: error.message || "Error interno al eliminar usuario" },
+      { error: error.message || "Error interno al rechazar usuario" },
       500
     );
   }
