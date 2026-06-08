@@ -9,10 +9,10 @@ import {
   Eye,
   CheckCircle2,
   Trash2,
-  Columns3,
   Check,
   SlidersHorizontal,
   SquareCheckBig,
+  TableProperties,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -412,9 +412,12 @@ function MultiFilterSelect({
 
   const selectedValues = Array.isArray(value) ? value.map(String) : [];
   const allOptionValues = options.map((option) => String(option.value));
+  const allValuesExceptCustom = allOptionValues.filter((item) => item !== "custom");
   const allSelected =
-    allOptionValues.length > 0 &&
-    allOptionValues.every((optionValue) => selectedValues.includes(optionValue));
+    allValuesExceptCustom.length > 0 &&
+    allValuesExceptCustom.every((optionValue) =>
+      selectedValues.includes(optionValue)
+    );
 
   const selectedLabels = options
     .filter((option) => selectedValues.includes(String(option.value)))
@@ -431,7 +434,12 @@ function MultiFilterSelect({
     const normalizedOptionValue = String(optionValue);
 
     if (normalizedOptionValue === "all") {
-      onChange(allOptionValues);
+      if (allSelected) {
+        onChange([]);
+        return;
+      }
+
+      onChange(allValuesExceptCustom);
       return;
     }
 
@@ -604,7 +612,7 @@ function ColumnSelector({ visibleColumns, onToggleColumn, compact = false }) {
         }`}
         title="Columnas"
       >
-        <Columns3 className="size-4 text-foreground" />
+        <TableProperties className="size-5 text-foreground" />
         {!compact && <span>Columnas</span>}
       </button>
 
@@ -618,29 +626,31 @@ function ColumnSelector({ visibleColumns, onToggleColumn, compact = false }) {
             aria-label="Cerrar menú"
           />
 
-          <div className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-lg">
-            {tableColumns.map((column) => {
-              const active = visibleColumns.includes(column.key);
+          <div className="absolute right-0 top-full z-30 mt-1.5 w-[360px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-popover p-2 shadow-lg">
+            <div className="grid grid-cols-2 gap-1">
+              {tableColumns.map((column) => {
+                const active = visibleColumns.includes(column.key);
 
-              return (
-                <button
-                  key={column.key}
-                  type="button"
-                  disabled={column.locked}
-                  onClick={() => onToggleColumn(column.key)}
-                  className={`flex w-full items-center justify-start gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 ${
-                    column.locked
-                      ? "cursor-not-allowed text-foreground"
-                      : "text-foreground"
-                  }`}
-                >
-                  <span className="flex size-4 items-center justify-center">
-                    {active && <Check className="size-4 stroke-[2]" />}
-                  </span>
-                  <span className="truncate">{column.label}</span>
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={column.key}
+                    type="button"
+                    disabled={column.locked}
+                    onClick={() => onToggleColumn(column.key)}
+                    className={`flex w-full items-center justify-start gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-muted/70 ${
+                      column.locked
+                        ? "cursor-not-allowed text-foreground"
+                        : "text-foreground"
+                    }`}
+                  >
+                    <span className="flex size-4 shrink-0 items-center justify-center">
+                      {active && <Check className="size-4 stroke-[2]" />}
+                    </span>
+                    <span className="truncate">{column.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </>
       )}
@@ -648,7 +658,22 @@ function ColumnSelector({ visibleColumns, onToggleColumn, compact = false }) {
   );
 }
 
-function SelectAllButton({ allSelected, onClick }) {
+function SelectAllButton({ allSelected, onClick, mobile = false }) {
+  if (mobile) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 ${
+          allSelected ? "bg-muted" : ""
+        }`}
+      >
+        <SquareCheckBig className="size-4" />
+        {allSelected ? "Quitar selección" : "Seleccionar todos"}
+      </button>
+    );
+  }
+
   return (
     <IconButton
       onClick={onClick}
@@ -661,14 +686,16 @@ function SelectAllButton({ allSelected, onClick }) {
   );
 }
 
-function BulkChangesButton({ selectedCount, onClick }) {
+function BulkChangesButton({ selectedCount, onClick, mobile = false }) {
   if (selectedCount === 0) return null;
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90"
+      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90 ${
+        mobile ? "w-full" : ""
+      }`}
     >
       <SquareCheckBig className="size-4" />
       Cambios masivos
@@ -1476,11 +1503,6 @@ export default function Comprobantes() {
 
   const visibleIds = useMemo(() => filtered.map((item) => item.orderId), [filtered]);
 
-  const selectedVisibleIds = useMemo(
-    () => selectedIds.filter((id) => visibleIds.includes(id)),
-    [selectedIds, visibleIds]
-  );
-
   const allVisibleSelected =
     visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
@@ -1555,7 +1577,7 @@ export default function Comprobantes() {
                 placeholder="Buscar comprobantes..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-full"
+                className="w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-3 text-base focus:outline-none"
               />
             </div>
           </div>
@@ -1596,10 +1618,25 @@ export default function Comprobantes() {
             onClick={() => setAdvancedFiltersOpen(true)}
           />
 
-          <SelectAllButton
-            allSelected={allVisibleSelected}
-            onClick={toggleSelectAllVisible}
-          />
+          <div
+            className={`grid gap-2 ${
+              selectedCount > 0 ? "grid-cols-2" : "grid-cols-1"
+            }`}
+          >
+            <SelectAllButton
+              mobile
+              allSelected={allVisibleSelected}
+              onClick={toggleSelectAllVisible}
+            />
+
+            {selectedCount > 0 && (
+              <BulkChangesButton
+                mobile
+                selectedCount={selectedCount}
+                onClick={() => setBulkChangesOpen(true)}
+              />
+            )}
+          </div>
         </div>
       )}
 
@@ -1627,10 +1664,12 @@ export default function Comprobantes() {
       )}
 
       {!advancedFiltersOpen && !bulkChangesOpen && selectedCount > 0 && (
-        <BulkChangesButton
-          selectedCount={selectedCount}
-          onClick={() => setBulkChangesOpen(true)}
-        />
+        <div className="hidden sm:block">
+          <BulkChangesButton
+            selectedCount={selectedCount}
+            onClick={() => setBulkChangesOpen(true)}
+          />
+        </div>
       )}
 
       {advancedFiltersOpen && (
