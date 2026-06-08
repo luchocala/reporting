@@ -33,10 +33,10 @@ export async function onRequestPost({ request, env }) {
     const existingUser = await env.DB
       .prepare(
         `
-        SELECT id
-        FROM users
-        WHERE id = ?
-        LIMIT 1
+SELECT COALESCE(id, rowid) AS id
+FROM users
+WHERE COALESCE(id, rowid) = ?
+LIMIT 1
       `
       )
       .bind(userId)
@@ -49,8 +49,8 @@ export async function onRequestPost({ request, env }) {
     await env.DB
       .prepare(
         `
-        DELETE FROM users
-        WHERE id = ?
+DELETE FROM users
+WHERE COALESCE(id, rowid) = ?
       `
       )
       .bind(userId)

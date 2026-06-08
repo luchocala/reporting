@@ -17,7 +17,7 @@ export async function onRequestGet({ env }) {
       .prepare(
         `
         SELECT
-          id AS id,
+          COALESCE(id, rowid) AS id,
           username,
           firstName,
           lastName,
@@ -28,7 +28,7 @@ export async function onRequestGet({ env }) {
           theme,
           language
         FROM users
-        ORDER BY approved ASC, id DESC
+        ORDER BY approved ASC, COALESCE(id, rowid) DESC
       `
       )
       .all();
