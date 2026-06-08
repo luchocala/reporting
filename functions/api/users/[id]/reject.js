@@ -1,73 +1,59 @@
-// src/lib/auth-service.js
+// functions/api/users/[id]/reject.js
 
-async function requestJson(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
   });
+}
 
-  const data = await response.json().catch(() => ({}));
+export async function onRequestPost({ params, env }) {
+  try {
+    if (!env.DB) {
+      return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
+    }
 
-  if (!response.ok) {
-    throw new Error(data.error || data.message || "Ocurrió un error inesperado");
+    const userId = Number(params.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return jsonResponse({ error: "ID de usuario inválido" }, 400);
+    }
+
+    const existingUser = await env.DB
+      .prepare(
+        `
+        SELECT id
+        FROM users
+        WHERE id = ?
+        LIMIT 1
+      `
+      )
+      .bind(userId)
+      .first();
+
+    if (!existingUser) {
+      return jsonResponse({ error: "Usuario no encontrado" }, 404);
+    }
+
+    await env.DB
+      .prepare(
+        `
+        UPDATE users
+        SET approved = 0
+        WHERE id = ?
+      `
+      )
+      .bind(userId)
+      .run();
+
+    return jsonResponse({
+      success: true,
+      message: "Usuario marcado como no aprobado",
+    });
+  } catch (error) {
+    return jsonResponse(
+      { error: error.message || "Error interno al rechazar usuario" },
+      500
+    );
   }
-
-  return data;
-}
-
-export async function validateCredentials(username, password) {
-  const data = await requestJson("/api/auth/login", {
-    method: "POST",
-    body: JSON.stringify({ username, password }),
-  });
-
-  return data.user;
-}
-
-export async function registerUser({
-  username,
-  email,
-  firstName,
-  lastName,
-  password,
-  timezone,
-}) {
-  return requestJson("/api/auth/register", {
-    method: "POST",
-    body: JSON.stringify({
-      username,
-      email,
-      firstName,
-      lastName,
-      password,
-      timezone,
-    }),
-  });
-}
-
-export async function listUsers() {
-  return requestJson("/api/users", {
-    method: "GET",
-  });
-}
-
-export async function approveUser(userId) {
-  return requestJson(`/api/users/${userId}/approve`, {
-    method: "POST",
-  });
-}
-
-export async function rejectUser(userId) {
-  return requestJson(`/api/users/${userId}/reject`, {
-    method: "POST",
-  });
-}
-
-export async function deleteUser(userId) {
-  return requestJson(`/api/users/${userId}`, {
-    method: "DELETE",
-  });
 }
