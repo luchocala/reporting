@@ -378,19 +378,24 @@ export default function Users() {
 
             {!loading &&
               paged.map((listedUser) => {
-                const statusValue = getUserStatusValue(listedUser);
-                const statusLabel = statusLabels[statusValue];
-                const isPending = statusValue === USER_STATUS.PENDING;
-                const isSuspended = statusValue === USER_STATUS.SUSPENDED;
-                const canApprove = isPending || isSuspended;
-                const canSuspend = isPending;
-                const canDelete = !isCurrentLoggedUser(listedUser);
+  const statusValue = getUserStatusValue(listedUser);
+  const statusLabel = statusLabels[statusValue];
+  const isPending = statusValue === USER_STATUS.PENDING;
+  const isSuspended = statusValue === USER_STATUS.SUSPENDED;
+  const isCurrentUser = isCurrentLoggedUser(listedUser);
 
-                return (
-                  <tr
-                    key={listedUser.id}
-                    className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
-                  >
+  const canApprove = !isCurrentUser && (isPending || isSuspended);
+  const canSuspend =
+    !isCurrentUser &&
+    (statusValue === USER_STATUS.PENDING ||
+      statusValue === USER_STATUS.APPROVED);
+  const canDelete = !isCurrentUser;
+
+  return (
+    <tr
+      key={listedUser.id}
+      className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
+    >
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"

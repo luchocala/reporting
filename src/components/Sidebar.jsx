@@ -508,7 +508,7 @@ export default function Sidebar({
     }
   };
 
-  return (
+   return (
     <>
       <aside
         className={`hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar h-screen sticky top-0 overflow-y-auto transition-[width] duration-200 ${
@@ -527,8 +527,8 @@ export default function Sidebar({
       </aside>
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden bg-sidebar text-sidebar-foreground">
-          <aside className="flex h-full w-full flex-col overflow-y-auto">
+        <div className="fixed inset-0 z-[100] md:hidden bg-sidebar text-sidebar-foreground">
+          <aside className="flex h-dvh w-full flex-col overflow-y-auto">
             <SidebarContent
               mobile
               collapsed={false}
