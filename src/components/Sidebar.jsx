@@ -5,10 +5,10 @@ import {
   Package,
   ShoppingCart,
   Users,
+  User,
   Truck,
   ChevronRight,
   ChevronsUpDown,
-  Settings,
   Code,
   ShieldCheck,
   AlertTriangle,
@@ -117,24 +117,13 @@ const navSections = [
     ],
   },
   {
-    label: "Original",
-    items: [
-      { icon: Users, label: "Users", path: "/users" },
-      { icon: CheckSquare, label: "Tasks", path: "/tasks" },
-      {
-        icon: Settings,
-        label: "Settings",
-        children: [
-          { label: "General", path: "/settings/general" },
-          { label: "Profile", path: "/settings/profile" },
-          { label: "Billing", path: "/settings/billing" },
-          { label: "Plans", path: "/settings/plans" },
-          { label: "Connected Apps", path: "/settings/connected-apps" },
-          { label: "Notifications", path: "/settings/notifications" },
-        ],
-      },
-    ],
-  },
+  label: "Original",
+  items: [
+    { icon: Users, label: "Users", path: "/users" },
+    { icon: CheckSquare, label: "Tasks", path: "/tasks" },
+    { icon: User, label: "Profile", path: "/profile" },
+  ],
+},
   {
     label: "Developers",
     items: [

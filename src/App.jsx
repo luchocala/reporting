@@ -13,7 +13,6 @@ import Users from './pages/original/Users';
 import Tasks from './pages/original/Tasks';
 import SettingsLayout from './pages/original/settings/SettingsLayout';
 import SettingsGeneral from './pages/original/settings/General';
-import SettingsProfile from './pages/original/settings/Profile';
 import SettingsBilling from './pages/original/settings/Billing';
 import SettingsPlans from './pages/original/settings/Plans';
 import SettingsConnectedApps from './pages/original/settings/ConnectedApps';
@@ -31,6 +30,8 @@ import Dashboard7 from './pages/ecommerce/dashboard/Dashboard7';
 import Dashboard8 from './pages/ecommerce/dashboard/Dashboard8';
 import Dashboard9 from './pages/ecommerce/dashboard/Dashboard9';
 import Comprobantes from './pages/reporting/Comprobantes';
+import Profile from './pages/profile/Profile';
+
 
 // Ecommerce - Products
 import AddProduct from './pages/ecommerce/products/AddProduct';
@@ -107,16 +108,17 @@ const ProtectedApp = () => {
         <Route path="/dashboard-8" element={<Dashboard8 />} />
         <Route path="/dashboard-9" element={<Dashboard9 />} />
         <Route path="/comprobantes" element={<Comprobantes />} />
+        
 
         {/* Original - Users & Tasks */}
         <Route path="/users" element={<Users />} />
         <Route path="/tasks" element={<Tasks />} />
+        <Route path="/profile" element={<Profile />} />
 
         {/* Original - Settings */}
         <Route path="/settings" element={<SettingsLayout />}>
           <Route index element={<SettingsGeneral />} />
           <Route path="general" element={<SettingsGeneral />} />
-          <Route path="profile" element={<SettingsProfile />} />
           <Route path="billing" element={<SettingsBilling />} />
           <Route path="plans" element={<SettingsPlans />} />
           <Route path="connected-apps" element={<SettingsConnectedApps />} />
