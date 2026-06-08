@@ -17,7 +17,7 @@ export async function onRequestGet({ env }) {
       .prepare(
         `
         SELECT
-          id,
+          id AS id,
           username,
           firstName,
           lastName,
