@@ -607,12 +607,29 @@ function ColumnSelector({ visibleColumns, onToggleColumn, compact = false }) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={`inline-flex h-10 items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 ${
-          compact ? "w-10 px-0" : "w-full xl:w-[160px]"
-        }`}
+        className={
+          compact
+            ? "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-input bg-background shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
+            : "inline-flex h-10 w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 xl:w-[160px]"
+        }
         title="Columnas"
       >
-        <TableProperties className="size-5 text-foreground" />
+        <svg
+          viewBox="0 0 24 24"
+          className="size-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M3 9h18" />
+          <path d="M9 4v16" />
+          <path d="M15 4v16" />
+        </svg>
+
         {!compact && <span>Columnas</span>}
       </button>
 
