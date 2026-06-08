@@ -55,19 +55,22 @@ export async function listUsers() {
 }
 
 export async function approveUser(userId) {
-  return requestJson(`/api/users/${userId}/approve`, {
+  return requestJson("/api/users/approve", {
     method: "POST",
+    body: JSON.stringify({ userId }),
   });
 }
 
-export async function rejectUser(userId) {
-  return requestJson(`/api/users/${userId}/reject`, {
+export async function suspendUser(userId) {
+  return requestJson("/api/users/suspend", {
     method: "POST",
+    body: JSON.stringify({ userId }),
   });
 }
 
 export async function deleteUser(userId) {
-  return requestJson(`/api/users/${userId}`, {
-    method: "DELETE",
+  return requestJson("/api/users/delete", {
+    method: "POST",
+    body: JSON.stringify({ userId }),
   });
 }

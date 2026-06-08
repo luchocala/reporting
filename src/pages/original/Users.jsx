@@ -14,12 +14,27 @@ import {
   approveUser,
   deleteUser,
   listUsers,
-  rejectUser,
+  suspendUser,
 } from "@/lib/auth-service";
+import { useLocalAuth } from "@/lib/LocalAuthContext";
+
+const USER_STATUS = {
+  PENDING: 0,
+  APPROVED: 1,
+  SUSPENDED: 2,
+};
+
+const statusLabels = {
+  [USER_STATUS.PENDING]: "Pending",
+  [USER_STATUS.APPROVED]: "Approved",
+  [USER_STATUS.SUSPENDED]: "Suspended",
+};
 
 const statusStyles = {
-  Active: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  Pending: "bg-amber-50 text-amber-700 border border-amber-200",
+  [USER_STATUS.PENDING]: "bg-amber-50 text-amber-700 border border-amber-200",
+  [USER_STATUS.APPROVED]:
+    "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  [USER_STATUS.SUSPENDED]: "bg-red-50 text-red-700 border border-red-200",
 };
 
 const roleIcons = {
@@ -37,17 +52,26 @@ function getUserDisplayName(user) {
   return fullName || user.username || user.email || "Usuario";
 }
 
-function getUserStatus(user) {
-  return user.approved === 1 ? "Active" : "Pending";
+function getUserStatusValue(user) {
+  const value = Number(user.approved);
+
+  if ([0, 1, 2].includes(value)) {
+    return value;
+  }
+
+  return USER_STATUS.PENDING;
 }
 
 export default function Users() {
+  const { user: currentUser } = useLocalAuth();
+
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(1);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingAction, setProcessingAction] = useState(null);
+  const [deleteModalUser, setDeleteModalUser] = useState(null);
   const [error, setError] = useState("");
 
   const PER_PAGE = 10;
@@ -89,8 +113,17 @@ export default function Users() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const pendingUsers = users.filter((user) => user.approved !== 1).length;
-  const activeUsers = users.filter((user) => user.approved === 1).length;
+  const pendingUsers = users.filter(
+    (user) => getUserStatusValue(user) === USER_STATUS.PENDING
+  ).length;
+
+  const activeUsers = users.filter(
+    (user) => getUserStatusValue(user) === USER_STATUS.APPROVED
+  ).length;
+
+  const suspendedUsers = users.filter(
+    (user) => getUserStatusValue(user) === USER_STATUS.SUSPENDED
+  ).length;
 
   const toggleAll = () => {
     setSelected(
@@ -106,23 +139,26 @@ export default function Users() {
     );
   };
 
+  const updateUserStatusLocally = (userId, approved) => {
+    setUsers((current) =>
+      current.map((user) =>
+        user.id === userId
+          ? {
+              ...user,
+              approved,
+            }
+          : user
+      )
+    );
+  };
+
   const handleApproveUser = async (userId) => {
     setProcessingAction({ userId, type: "approve" });
     setError("");
 
     try {
       await approveUser(userId);
-
-      setUsers((current) =>
-        current.map((user) =>
-          user.id === userId
-            ? {
-                ...user,
-                approved: 1,
-              }
-            : user
-        )
-      );
+      updateUserStatusLocally(userId, USER_STATUS.APPROVED);
     } catch (err) {
       setError(err.message || "No se pudo aprobar el usuario.");
     } finally {
@@ -130,38 +166,26 @@ export default function Users() {
     }
   };
 
-  const handleRejectUser = async (userId) => {
-    setProcessingAction({ userId, type: "reject" });
+  const handleSuspendUser = async (userId) => {
+    setProcessingAction({ userId, type: "suspend" });
     setError("");
 
     try {
-      await rejectUser(userId);
-
-      setUsers((current) =>
-        current.map((user) =>
-          user.id === userId
-            ? {
-                ...user,
-                approved: 0,
-              }
-            : user
-        )
-      );
+      await suspendUser(userId);
+      updateUserStatusLocally(userId, USER_STATUS.SUSPENDED);
     } catch (err) {
-      setError(err.message || "No se pudo marcar el usuario como no aprobado.");
+      setError(err.message || "No se pudo suspender el usuario.");
     } finally {
       setProcessingAction(null);
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    const shouldDelete = window.confirm(
-      "¿Seguro que querés eliminar este usuario?"
-    );
-
-    if (!shouldDelete) {
+  const handleDeleteUser = async () => {
+    if (!deleteModalUser) {
       return;
     }
+
+    const userId = deleteModalUser.id;
 
     setProcessingAction({ userId, type: "delete" });
     setError("");
@@ -171,6 +195,7 @@ export default function Users() {
 
       setUsers((current) => current.filter((user) => user.id !== userId));
       setSelected((current) => current.filter((id) => id !== userId));
+      setDeleteModalUser(null);
     } catch (err) {
       setError(err.message || "No se pudo eliminar el usuario.");
     } finally {
@@ -183,6 +208,9 @@ export default function Users() {
 
   const isAnyActionProcessingForUser = (userId) =>
     processingAction?.userId === userId;
+
+  const isCurrentLoggedUser = (candidateUser) =>
+    String(candidateUser.id) === String(currentUser?.id);
 
   return (
     <div className="space-y-4">
@@ -238,9 +266,9 @@ export default function Users() {
           },
           {
             icon: "◈",
-            label: "Visible Results",
-            value: filtered.length,
-            sub: "Resultado del filtro actual",
+            label: "Suspended Users",
+            value: suspendedUsers,
+            sub: "Usuarios suspendidos",
           },
         ].map((card) => (
           <div
@@ -349,63 +377,68 @@ export default function Users() {
             )}
 
             {!loading &&
-              paged.map((user) => {
-                const status = getUserStatus(user);
-                const isPending = user.approved !== 1;
+              paged.map((listedUser) => {
+                const statusValue = getUserStatusValue(listedUser);
+                const statusLabel = statusLabels[statusValue];
+                const isPending = statusValue === USER_STATUS.PENDING;
+                const isSuspended = statusValue === USER_STATUS.SUSPENDED;
+                const canApprove = isPending || isSuspended;
+                const canSuspend = isPending;
+                const canDelete = !isCurrentLoggedUser(listedUser);
 
                 return (
                   <tr
-                    key={user.id}
+                    key={listedUser.id}
                     className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
                   >
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"
-                        checked={selected.includes(user.id)}
-                        onChange={() => toggleOne(user.id)}
+                        checked={selected.includes(listedUser.id)}
+                        onChange={() => toggleOne(listedUser.id)}
                       />
                     </td>
 
                     <td className="px-4 py-3">
                       <button className="text-sm font-medium underline underline-offset-2 hover:text-muted-foreground">
-                        {getUserDisplayName(user)}
+                        {getUserDisplayName(listedUser)}
                       </button>
                     </td>
 
                     <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {user.email || "-"}
+                      {listedUser.email || "-"}
                     </td>
 
                     <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {user.username || "-"}
+                      {listedUser.username || "-"}
                     </td>
 
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${statusStyles[status]}`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${statusStyles[statusValue]}`}
                       >
-                        {status}
+                        {statusLabel}
                       </span>
                     </td>
 
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <span>{roleIcons[user.role] || "◈"}</span>
-                        <span>{user.role || "user"}</span>
+                        <span>{roleIcons[listedUser.role] || "◈"}</span>
+                        <span>{listedUser.role || "user"}</span>
                       </div>
                     </td>
 
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
-                        {isPending && (
+                        {canApprove && (
                           <button
                             type="button"
-                            onClick={() => handleApproveUser(user.id)}
-                            disabled={isAnyActionProcessingForUser(user.id)}
+                            onClick={() => handleApproveUser(listedUser.id)}
+                            disabled={isAnyActionProcessingForUser(listedUser.id)}
                             title="Aprobar usuario"
                             className="inline-flex size-8 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            {isProcessing(user.id, "approve") ? (
+                            {isProcessing(listedUser.id, "approve") ? (
                               <Loader2 className="size-4 animate-spin" />
                             ) : (
                               <Check className="size-4" />
@@ -413,15 +446,15 @@ export default function Users() {
                           </button>
                         )}
 
-                        {!isPending && (
+                        {canSuspend && (
                           <button
                             type="button"
-                            onClick={() => handleRejectUser(user.id)}
-                            disabled={isAnyActionProcessingForUser(user.id)}
-                            title="No aprobar usuario"
+                            onClick={() => handleSuspendUser(listedUser.id)}
+                            disabled={isAnyActionProcessingForUser(listedUser.id)}
+                            title="No aprobar / suspender usuario"
                             className="inline-flex size-8 items-center justify-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            {isProcessing(user.id, "reject") ? (
+                            {isProcessing(listedUser.id, "suspend") ? (
                               <Loader2 className="size-4 animate-spin" />
                             ) : (
                               <X className="size-4" />
@@ -429,19 +462,21 @@ export default function Users() {
                           </button>
                         )}
 
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteUser(user.id)}
-                          disabled={isAnyActionProcessingForUser(user.id)}
-                          title="Eliminar usuario"
-                          className="inline-flex size-8 items-center justify-center rounded-md border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {isProcessing(user.id, "delete") ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="size-4" />
-                          )}
-                        </button>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteModalUser(listedUser)}
+                            disabled={isAnyActionProcessingForUser(listedUser.id)}
+                            title="Eliminar usuario"
+                            className="inline-flex size-8 items-center justify-center rounded-md border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isProcessing(listedUser.id, "delete") ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="size-4" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -502,6 +537,58 @@ export default function Users() {
           </button>
         </div>
       </div>
+
+      {deleteModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-700">
+                <Trash2 className="size-5" />
+              </div>
+
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Eliminar usuario
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  ¿Seguro que querés eliminar a{" "}
+                  <span className="font-medium text-foreground">
+                    {getUserDisplayName(deleteModalUser)}
+                  </span>
+                  ? Esta acción no se puede deshacer.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModalUser(null)}
+                disabled={isProcessing(deleteModalUser.id, "delete")}
+                className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                disabled={isProcessing(deleteModalUser.id, "delete")}
+                className="inline-flex h-9 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isProcessing(deleteModalUser.id, "delete") ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  "Eliminar"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-// functions/api/users/[id].js
+// functions/api/users/delete.js
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -7,15 +7,26 @@ function jsonResponse(body, status = 200) {
   });
 }
 
-export async function onRequestDelete({ params, env }) {
+async function getUserIdFromRequest(request) {
+  const body = await request.json().catch(() => ({}));
+  const userId = Number(body.userId);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return null;
+  }
+
+  return userId;
+}
+
+export async function onRequestPost({ request, env }) {
   try {
     if (!env.DB) {
       return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
     }
 
-    const userId = Number(params.id);
+    const userId = await getUserIdFromRequest(request);
 
-    if (!Number.isInteger(userId) || userId <= 0) {
+    if (!userId) {
       return jsonResponse({ error: "ID de usuario inválido" }, 400);
     }
 

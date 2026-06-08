@@ -1,4 +1,4 @@
-// functions/api/users/approve.js
+// functions/api/users/suspend.js
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -50,7 +50,7 @@ export async function onRequestPost({ request, env }) {
       .prepare(
         `
         UPDATE users
-        SET approved = 1
+        SET approved = 2
         WHERE id = ?
       `
       )
@@ -59,12 +59,12 @@ export async function onRequestPost({ request, env }) {
 
     return jsonResponse({
       success: true,
-      approved: 1,
-      message: "Usuario aprobado correctamente",
+      approved: 2,
+      message: "Usuario suspendido correctamente",
     });
   } catch (error) {
     return jsonResponse(
-      { error: error.message || "Error interno al aprobar usuario" },
+      { error: error.message || "Error interno al suspender usuario" },
       500
     );
   }
