@@ -68,4 +68,4 @@ WHERE COALESCE(id, rowid) = ?
       500
     );
   }
-}s
+}
