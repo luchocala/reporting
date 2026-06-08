@@ -455,11 +455,6 @@ function SidebarContent({
               Cuenta
             </DropdownMenuLabel>
 
-            <DropdownMenuItem className="gap-2 cursor-pointer">
-              <Settings className="size-4" />
-              <span>Configuración</span>
-            </DropdownMenuItem>
-
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
