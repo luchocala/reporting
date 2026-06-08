@@ -1,7 +1,7 @@
 // src/lib/LocalAuthContext.jsx
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { validateCredentials } from './auth-service';
+import { registerUser, validateCredentials } from './auth-service';
 
 const SESSION_KEY = 'reporting_session';
 
@@ -71,6 +71,29 @@ export function LocalAuthProvider({ children }) {
     return userForSession;
   };
 
+  const register = async ({
+    username,
+    email,
+    firstName,
+    lastName,
+    password,
+    timezone,
+  }) => {
+    const result = await registerUser({
+      username,
+      email,
+      firstName,
+      lastName,
+      password,
+      timezone,
+    });
+
+    // Importante:
+    // No guardamos sesión ni seteamos user acá,
+    // porque el registro queda pendiente de aprobación.
+    return result;
+  };
+
   const logout = () => {
     sessionStorage.removeItem(SESSION_KEY);
     setUser(null);
@@ -84,6 +107,7 @@ export function LocalAuthProvider({ children }) {
     isAuthenticated: Boolean(user),
     userInitials: getInitials(user),
     login,
+    register,
     logout,
     isAdmin,
   }), [user, loading]);

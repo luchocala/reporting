@@ -1,33 +1,61 @@
 // src/lib/auth-service.js
 
+async function requestJson(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.error || data.message || "Ocurrió un error inesperado");
+  }
+
+  return data;
+}
+
 export async function validateCredentials(username, password) {
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const data = await requestJson("/api/auth/login", {
+    method: "POST",
     body: JSON.stringify({ username, password }),
   });
 
-  const data = await res.json().catch(() => ({}));
+  return data.user;
+}
 
-  if (!res.ok) {
-    throw new Error(data.error || 'Error de autenticación');
-  }
+export async function registerUser({
+  username,
+  email,
+  firstName,
+  lastName,
+  password,
+  timezone,
+}) {
+  return requestJson("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({
+      username,
+      email,
+      firstName,
+      lastName,
+      password,
+      timezone,
+    }),
+  });
+}
 
-  if (!data.user) {
-    throw new Error('No se recibió información del usuario');
-  }
+export async function listUsers() {
+  return requestJson("/api/users", {
+    method: "GET",
+  });
+}
 
-  const user = data.user;
-
-  return {
-    id: user.id,
-    username: user.username,
-    firstName: user.firstName || '',
-    lastName: user.lastName || '',
-    email: user.email || '',
-    timezone: user.timezone || 'UTC-3',
-    role: user.role || 'user',
-    theme: user.theme || 'light',
-    language: user.language || 'es',
-  };
+export async function approveUser(userId) {
+  return requestJson(`/api/users/${userId}/approve`, {
+    method: "POST",
+  });
 }

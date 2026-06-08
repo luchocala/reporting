@@ -1,40 +1,80 @@
-// functions/api/auth/login.js
+// functions/api/auth/register.js
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
+  const hash = await crypto.subtle.digest("SHA-256", data);
 
   return Array.from(new Uint8Array(hash))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { "Content-Type": "application/json" },
   });
+}
+
+function normalizeString(value) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 export async function onRequestPost({ request, env }) {
   try {
     if (!env.DB) {
-      return jsonResponse({ error: 'D1 binding DB no configurado' }, 500);
+      return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
     }
 
-    const { username, password } = await request.json();
+    const body = await request.json();
 
-    if (!username || !password) {
-      return jsonResponse({ error: 'Usuario y contraseña requeridos' }, 400);
+    const username = normalizeString(body.username).toLowerCase();
+    const email = normalizeString(body.email).toLowerCase();
+    const firstName = normalizeString(body.firstName);
+    const lastName = normalizeString(body.lastName);
+    const password = normalizeString(body.password);
+
+    if (!username || !email || !password) {
+      return jsonResponse(
+        { error: "Usuario, email y contraseña son requeridos" },
+        400
+      );
+    }
+
+    if (password.length < 6) {
+      return jsonResponse(
+        { error: "La contraseña debe tener al menos 6 caracteres" },
+        400
+      );
+    }
+
+    const existingUser = await env.DB
+      .prepare(
+        `
+        SELECT id
+        FROM users
+        WHERE username = ? OR email = ?
+        LIMIT 1
+      `
+      )
+      .bind(username, email)
+      .first();
+
+    if (existingUser) {
+      return jsonResponse(
+        { error: "Ya existe un usuario registrado con ese usuario o email" },
+        409
+      );
     }
 
     const hashedPassword = await hashPassword(password);
+    const now = new Date().toISOString();
 
-    const user = await env.DB
-      .prepare(`
-        SELECT
-          id,
+    const result = await env.DB
+      .prepare(
+        `
+        INSERT INTO users (
           username,
           firstName,
           lastName,
@@ -44,36 +84,42 @@ export async function onRequestPost({ request, env }) {
           approved,
           role,
           theme,
-          language
-        FROM users
-        WHERE username = ?
-      `)
-      .bind(username)
-      .first();
+          language,
+          createdAt,
+          updatedAt
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `
+      )
+      .bind(
+        username,
+        firstName || null,
+        lastName || null,
+        email,
+        body.timezone || "America/Argentina/Buenos_Aires",
+        hashedPassword,
+        0,
+        "user",
+        "light",
+        "es",
+        now,
+        now
+      )
+      .run();
 
-    if (!user) {
-      return jsonResponse({ error: 'Credenciales inválidas' }, 401);
-    }
-
-    if (user.approved !== 1) {
-      return jsonResponse({ error: 'Tu cuenta está pendiente de aprobación' }, 401);
-    }
-
-    if (user.password !== hashedPassword) {
-      return jsonResponse({ error: 'Credenciales inválidas' }, 401);
-    }
-
-    const { password: _password, approved: _approved, ...safeUser } = user;
-
-    return jsonResponse({
-      success: true,
-      user: {
-        ...safeUser,
-        theme: safeUser.theme || 'light',
-        language: safeUser.language || 'es',
+    return jsonResponse(
+      {
+        success: true,
+        pendingApproval: true,
+        userId: result.meta?.last_row_id,
+        message: "Registro creado correctamente. Tu cuenta queda pendiente de aprobación.",
       },
-    });
+      201
+    );
   } catch (error) {
-    return jsonResponse({ error: error.message || 'Error interno en login' }, 500);
+    return jsonResponse(
+      { error: error.message || "Error interno en registro" },
+      500
+    );
   }
 }
