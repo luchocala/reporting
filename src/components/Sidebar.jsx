@@ -489,9 +489,7 @@ function SidebarContent({
 
 export default function Sidebar({
   collapsed = false,
-  mobileOpen = false,
   onToggleCollapsed,
-  onMobileClose,
 }) {
   const [activeTeam, setActiveTeam] = useState(teams[0]);
   const { user, logout } = useLocalAuth();
@@ -509,39 +507,20 @@ export default function Sidebar({
   };
 
    return (
-    <>
-      <aside
-        className={`hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar h-screen sticky top-0 overflow-y-auto transition-[width] duration-200 ${
-          collapsed ? "w-14" : "w-56"
-        }`}
-      >
-        <SidebarContent
-          collapsed={collapsed}
-          activeTeam={activeTeam}
-          setActiveTeam={setActiveTeam}
-          user={user}
-          onLogout={handleLogout}
-          onNavigate={undefined}
-          onToggleCollapsed={onToggleCollapsed}
-        />
-      </aside>
-
-      {mobileOpen && (
-        <div className="fixed inset-0 z-[100] md:hidden bg-sidebar text-sidebar-foreground">
-          <aside className="flex h-dvh w-full flex-col overflow-y-auto">
-            <SidebarContent
-              mobile
-              collapsed={false}
-              activeTeam={activeTeam}
-              setActiveTeam={setActiveTeam}
-              user={user}
-              onLogout={handleLogout}
-              onNavigate={handleMobileNavigate}
-              onMobileClose={onMobileClose}
-            />
-          </aside>
-        </div>
-      )}
-    </>
-  );
+  <aside
+    className={`hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar h-screen sticky top-0 overflow-y-auto transition-[width] duration-200 ${
+      collapsed ? "w-14" : "w-56"
+    }`}
+  >
+    <SidebarContent
+      collapsed={collapsed}
+      activeTeam={activeTeam}
+      setActiveTeam={setActiveTeam}
+      user={user}
+      onLogout={handleLogout}
+      onNavigate={undefined}
+      onToggleCollapsed={onToggleCollapsed}
+    />
+  </aside>
+);
 }

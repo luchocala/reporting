@@ -32,23 +32,19 @@ export default function Header({ title = "Ecommerce App", onMenuClick }) {
   };
 
   const handleMenuClick = () => {
-    if (typeof onMenuClick === "function") {
-      onMenuClick();
-    }
+    onMenuClick?.();
   };
 
   return (
     <header className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b border-border bg-background px-3">
-      <div className="relative z-50 flex md:hidden h-10 w-10 shrink-0">
-  <button
-    type="button"
-    onClick={handleMenuClick}
-    aria-label="Abrir menú"
-    className="absolute inset-0 flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-  >
-    <Menu className="pointer-events-none size-5" aria-hidden="true" />
-  </button>
-</div>
+      <button
+        type="button"
+        onClick={handleMenuClick}
+        className="md:hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted transition-colors"
+        aria-label="Abrir menú"
+      >
+        <Menu className="pointer-events-none size-5" />
+      </button>
 
       <Separator orientation="vertical" className="h-4 hidden md:block" />
 
