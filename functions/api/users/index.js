@@ -26,13 +26,9 @@ export async function onRequestGet({ env }) {
           approved,
           role,
           theme,
-          language,
-          createdAt,
-          updatedAt
+          language
         FROM users
-        ORDER BY
-          approved ASC,
-          createdAt DESC
+        ORDER BY approved ASC, id DESC
       `
       )
       .all();

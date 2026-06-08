@@ -1,8 +1,13 @@
-import { useState } from "react";
+// src/pages/Register.jsx
+
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
 
 import AuthLayout from "@/components/AuthLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
 
 export default function Register() {
@@ -19,7 +24,7 @@ export default function Register() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -28,6 +33,9 @@ export default function Register() {
       ...current,
       [field]: value,
     }));
+
+    setError("");
+    setSuccessMessage("");
   };
 
   const handleSubmit = async (event) => {
@@ -36,12 +44,17 @@ export default function Register() {
     setError("");
     setSuccessMessage("");
 
-    if (!formData.username.trim()) {
+    const username = formData.username.trim();
+    const email = formData.email.trim();
+    const firstName = formData.firstName.trim();
+    const lastName = formData.lastName.trim();
+
+    if (!username) {
       setError("Ingresá un nombre de usuario.");
       return;
     }
 
-    if (!formData.email.trim()) {
+    if (!email) {
       setError("Ingresá un email.");
       return;
     }
@@ -61,7 +74,7 @@ export default function Register() {
       return;
     }
 
-    setIsSubmitting(true);
+    setLoading(true);
 
     try {
       const timezone =
@@ -69,10 +82,10 @@ export default function Register() {
         "America/Argentina/Buenos_Aires";
 
       await register({
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        username: formData.username.trim(),
-        email: formData.email.trim(),
+        username,
+        email,
+        firstName,
+        lastName,
         password: formData.password,
         timezone,
       });
@@ -92,163 +105,161 @@ export default function Register() {
     } catch (err) {
       setError(err.message || "No se pudo completar el registro.");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
     <AuthLayout
-      title="Crear cuenta"
-      subtitle="Registrá tu usuario para solicitar acceso al panel."
+      icon={UserPlus}
+      title="Create account"
+      subtitle="Register your user to request access"
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link to="/login" className="text-primary font-medium hover:underline">
+            Log in
+          </Link>
+        </>
+      }
     >
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+          {error}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-4 p-3 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm">
+          {successMessage}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-            {successMessage}
-          </div>
-        )}
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Nombre
-            </label>
-            <input
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">First name</Label>
+            <Input
+              id="firstName"
               type="text"
-              value={formData.firstName}
-              onChange={(event) => updateField("firstName", event.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring"
-              placeholder="Nombre"
               autoComplete="given-name"
+              placeholder="Nombre"
+              value={formData.firstName}
+              onChange={(e) => updateField("firstName", e.target.value)}
+              className="h-12"
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Apellido
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last name</Label>
+            <Input
+              id="lastName"
               type="text"
-              value={formData.lastName}
-              onChange={(event) => updateField("lastName", event.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring"
-              placeholder="Apellido"
               autoComplete="family-name"
+              placeholder="Apellido"
+              value={formData.lastName}
+              onChange={(e) => updateField("lastName", e.target.value)}
+              className="h-12"
             />
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            Usuario
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="username">Username</Label>
+          <Input
+            id="username"
             type="text"
-            value={formData.username}
-            onChange={(event) => updateField("username", event.target.value)}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring"
-            placeholder="usuario"
             autoComplete="username"
+            placeholder="usuario"
+            value={formData.username}
+            onChange={(e) => updateField("username", e.target.value)}
+            className="h-12"
+            required
           />
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            Email
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
             type="email"
-            value={formData.email}
-            onChange={(event) => updateField("email", event.target.value)}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring"
-            placeholder="nombre@empresa.com"
             autoComplete="email"
+            placeholder="nombre@empresa.com"
+            value={formData.email}
+            onChange={(e) => updateField("email", e.target.value)}
+            className="h-12"
+            required
           />
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            Contraseña
-          </label>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
           <div className="relative">
-            <input
+            <Input
+              id="password"
               type={showPassword ? "text" : "password"}
-              value={formData.password}
-              onChange={(event) => updateField("password", event.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm outline-none focus:border-ring"
-              placeholder="Mínimo 6 caracteres"
               autoComplete="new-password"
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={(e) => updateField("password", e.target.value)}
+              className="h-12 pr-10"
+              required
             />
             <button
               type="button"
               onClick={() => setShowPassword((current) => !current)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             >
               {showPassword ? (
-                <EyeOff className="size-4" />
+                <EyeOff className="w-4 h-4" />
               ) : (
-                <Eye className="size-4" />
+                <Eye className="w-4 h-4" />
               )}
             </button>
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            Confirmar contraseña
-          </label>
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirm password</Label>
           <div className="relative">
-            <input
+            <Input
+              id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
-              value={formData.confirmPassword}
-              onChange={(event) =>
-                updateField("confirmPassword", event.target.value)
-              }
-              className="h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm outline-none focus:border-ring"
-              placeholder="Repetí la contraseña"
               autoComplete="new-password"
+              placeholder="••••••••"
+              value={formData.confirmPassword}
+              onChange={(e) => updateField("confirmPassword", e.target.value)}
+              className="h-12 pr-10"
+              required
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword((current) => !current)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               aria-label={
                 showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"
               }
             >
               {showConfirmPassword ? (
-                <EyeOff className="size-4" />
+                <EyeOff className="w-4 h-4" />
               ) : (
-                <Eye className="size-4" />
+                <Eye className="w-4 h-4" />
               )}
             </button>
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="h-10 w-full rounded-md bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
-        </button>
-
-        <p className="text-center text-sm text-muted-foreground">
-          ¿Ya tenés cuenta?{" "}
-          <Link
-            to="/login"
-            className="font-medium text-foreground underline underline-offset-4"
-          >
-            Iniciar sesión
-          </Link>
-        </p>
+        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Creating account...
+            </>
+          ) : (
+            "Create account"
+          )}
+        </Button>
       </form>
     </AuthLayout>
   );

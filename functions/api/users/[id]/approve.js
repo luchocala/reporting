@@ -1,4 +1,4 @@
-// functions/api/users/index.js
+// functions/api/users/[id]/approve.js
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -7,43 +7,59 @@ function jsonResponse(body, status = 200) {
   });
 }
 
-export async function onRequestGet({ env }) {
+export async function onRequestPost({ params, env }) {
   try {
     if (!env.DB) {
       return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
     }
 
-    const { results } = await env.DB
+    const userId = Number(params.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return jsonResponse({ error: "ID de usuario inválido" }, 400);
+    }
+
+    const existingUser = await env.DB
       .prepare(
         `
-        SELECT
-          id,
-          username,
-          firstName,
-          lastName,
-          email,
-          timezone,
-          approved,
-          role,
-          theme,
-          language,
-          createdAt,
-          updatedAt
+        SELECT id, approved
         FROM users
-        ORDER BY
-          approved ASC,
-          createdAt DESC
+        WHERE id = ?
+        LIMIT 1
       `
       )
-      .all();
+      .bind(userId)
+      .first();
+
+    if (!existingUser) {
+      return jsonResponse({ error: "Usuario no encontrado" }, 404);
+    }
+
+    if (existingUser.approved === 1) {
+      return jsonResponse({
+        success: true,
+        message: "El usuario ya estaba aprobado",
+      });
+    }
+
+    await env.DB
+      .prepare(
+        `
+        UPDATE users
+        SET approved = 1
+        WHERE id = ?
+      `
+      )
+      .bind(userId)
+      .run();
 
     return jsonResponse({
       success: true,
-      users: results || [],
+      message: "Usuario aprobado correctamente",
     });
   } catch (error) {
     return jsonResponse(
-      { error: error.message || "Error interno al listar usuarios" },
+      { error: error.message || "Error interno al aprobar usuario" },
       500
     );
   }

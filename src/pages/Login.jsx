@@ -90,7 +90,10 @@ export default function Login() {
         <div className="space-y-2">
           <Label htmlFor="username">Username</Label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <User
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+              aria-hidden="true"
+            />
             <Input
               id="username"
               type="text"
@@ -115,8 +118,12 @@ export default function Login() {
               Forgot password?
             </Link>
           </div>
+
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Lock
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+              aria-hidden="true"
+            />
             <Input
               id="password"
               type="password"
@@ -144,6 +151,13 @@ export default function Login() {
           )}
         </Button>
       </form>
+
+      <div className="mt-6 text-center text-sm text-muted-foreground">
+        ¿No tenés cuenta?{" "}
+        <Link to="/register" className="text-primary font-medium hover:underline">
+          Registrate
+        </Link>
+      </div>
     </AuthLayout>
   );
 }
