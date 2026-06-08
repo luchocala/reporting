@@ -1,507 +1,58 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  Check,
-  Loader2,
-  RefreshCw,
-  Search,
-  Trash2,
-  UserCheck,
-  UserPlus,
-  X,
-} from "lucide-react";
+// functions/api/users/[id].js
 
-import {
-  approveUser,
-  deleteUser,
-  listUsers,
-  rejectUser,
-} from "@/lib/auth-service";
-
-const statusStyles = {
-  Active: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  Pending: "bg-amber-50 text-amber-700 border border-amber-200",
-};
-
-const roleIcons = {
-  admin: "◇",
-  user: "◈",
-  Superadmin: "◇",
-  Admin: "◈",
-  Manager: "◈",
-  Cashier: "◈",
-};
-
-function getUserDisplayName(user) {
-  const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
-
-  return fullName || user.username || user.email || "Usuario";
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
-function getUserStatus(user) {
-  return user.approved === 1 ? "Active" : "Pending";
-}
-
-export default function Users() {
-  const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState([]);
-  const [page, setPage] = useState(1);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [processingAction, setProcessingAction] = useState(null);
-  const [error, setError] = useState("");
-
-  const PER_PAGE = 10;
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const data = await listUsers();
-      setUsers(data.users || []);
-    } catch (err) {
-      setError(err.message || "No se pudieron cargar los usuarios.");
-    } finally {
-      setLoading(false);
+export async function onRequestDelete({ params, env }) {
+  try {
+    if (!env.DB) {
+      return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
     }
-  };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+    const userId = Number(params.id);
 
-  const filtered = useMemo(() => {
-    const normalizedSearch = search.toLowerCase().trim();
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return jsonResponse({ error: "ID de usuario inválido" }, 400);
+    }
 
-    return users.filter((user) => {
-      const name = getUserDisplayName(user).toLowerCase();
-      const email = (user.email || "").toLowerCase();
-      const username = (user.username || "").toLowerCase();
+    const existingUser = await env.DB
+      .prepare(
+        `
+        SELECT id
+        FROM users
+        WHERE id = ?
+        LIMIT 1
+      `
+      )
+      .bind(userId)
+      .first();
 
-      return (
-        name.includes(normalizedSearch) ||
-        email.includes(normalizedSearch) ||
-        username.includes(normalizedSearch)
-      );
+    if (!existingUser) {
+      return jsonResponse({ error: "Usuario no encontrado" }, 404);
+    }
+
+    await env.DB
+      .prepare(
+        `
+        DELETE FROM users
+        WHERE id = ?
+      `
+      )
+      .bind(userId)
+      .run();
+
+    return jsonResponse({
+      success: true,
+      message: "Usuario eliminado correctamente",
     });
-  }, [search, users]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-
-  const pendingUsers = users.filter((user) => user.approved !== 1).length;
-  const activeUsers = users.filter((user) => user.approved === 1).length;
-
-  const toggleAll = () => {
-    setSelected(
-      selected.length === paged.length ? [] : paged.map((user) => user.id)
+  } catch (error) {
+    return jsonResponse(
+      { error: error.message || "Error interno al eliminar usuario" },
+      500
     );
-  };
-
-  const toggleOne = (userId) => {
-    setSelected((current) =>
-      current.includes(userId)
-        ? current.filter((id) => id !== userId)
-        : [...current, userId]
-    );
-  };
-
-  const handleApproveUser = async (userId) => {
-    setProcessingAction({ userId, type: "approve" });
-    setError("");
-
-    try {
-      await approveUser(userId);
-
-      setUsers((current) =>
-        current.map((user) =>
-          user.id === userId
-            ? {
-                ...user,
-                approved: 1,
-              }
-            : user
-        )
-      );
-    } catch (err) {
-      setError(err.message || "No se pudo aprobar el usuario.");
-    } finally {
-      setProcessingAction(null);
-    }
-  };
-
-  const handleRejectUser = async (userId) => {
-    setProcessingAction({ userId, type: "reject" });
-    setError("");
-
-    try {
-      await rejectUser(userId);
-
-      setUsers((current) =>
-        current.map((user) =>
-          user.id === userId
-            ? {
-                ...user,
-                approved: 0,
-              }
-            : user
-        )
-      );
-    } catch (err) {
-      setError(err.message || "No se pudo marcar el usuario como no aprobado.");
-    } finally {
-      setProcessingAction(null);
-    }
-  };
-
-  const handleDeleteUser = async (userId) => {
-    const shouldDelete = window.confirm(
-      "¿Seguro que querés eliminar este usuario?"
-    );
-
-    if (!shouldDelete) {
-      return;
-    }
-
-    setProcessingAction({ userId, type: "delete" });
-    setError("");
-
-    try {
-      await deleteUser(userId);
-
-      setUsers((current) => current.filter((user) => user.id !== userId));
-      setSelected((current) => current.filter((id) => id !== userId));
-    } catch (err) {
-      setError(err.message || "No se pudo eliminar el usuario.");
-    } finally {
-      setProcessingAction(null);
-    }
-  };
-
-  const isProcessing = (userId, type) =>
-    processingAction?.userId === userId && processingAction?.type === type;
-
-  const isAnyActionProcessingForUser = (userId) =>
-    processingAction?.userId === userId;
-
-  return (
-    <div className="space-y-4">
-      <div className="text-xs text-muted-foreground flex items-center gap-1">
-        <span>Home</span>
-        <span>›</span>
-        <span className="text-foreground">Users</span>
-      </div>
-
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">User List</h1>
-
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted">
-            <UserPlus className="size-4" /> Invite User
-          </button>
-
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-foreground text-background rounded-md hover:opacity-90">
-            <UserCheck className="size-4" /> Add User
-          </button>
-
-          <button
-            type="button"
-            onClick={fetchUsers}
-            disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted disabled:opacity-60"
-          >
-            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        {[
-          {
-            icon: "◈",
-            label: "Total Users",
-            value: users.length,
-            sub: "Usuarios registrados",
-          },
-          {
-            icon: "◈",
-            label: "Pending Verifications",
-            value: pendingUsers,
-            sub: "Pendientes de aprobación",
-          },
-          {
-            icon: "◈",
-            label: "Active Users",
-            value: activeUsers,
-            sub: "Usuarios aprobados",
-          },
-          {
-            icon: "◈",
-            label: "Visible Results",
-            value: filtered.length,
-            sub: "Resultado del filtro actual",
-          },
-        ].map((card) => (
-          <div
-            key={card.label}
-            className="border border-border rounded-lg p-4 bg-card flex flex-col gap-2"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="text-sm">{card.icon}</span>
-                <span className="text-sm">{card.label}</span>
-              </div>
-              <span className="text-muted-foreground text-xs">ℹ</span>
-            </div>
-            <p className="text-2xl font-bold">{card.value}</p>
-            <p className="text-xs text-muted-foreground">{card.sub}</p>
-          </div>
-        ))}
-      </div>
-
-      {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-          <input
-            placeholder="Filter users..."
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
-            className="pl-8 pr-3 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none w-full"
-          />
-        </div>
-
-        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-input rounded-md hover:bg-muted">
-          ◎ Status
-        </button>
-
-        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-input rounded-md hover:bg-muted">
-          ⊕ Role
-        </button>
-
-        <button className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-sm border border-input rounded-md hover:bg-muted text-muted-foreground">
-          ☰ View
-        </button>
-      </div>
-
-      <div className="border border-border rounded-lg overflow-hidden bg-card">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="px-4 py-3 text-left">
-                <input
-                  type="checkbox"
-                  checked={selected.length === paged.length && paged.length > 0}
-                  onChange={toggleAll}
-                />
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                Name
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                Email ↕
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                Username
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                Status
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                Role
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
-                Actions
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-4 py-8 text-center text-sm text-muted-foreground"
-                >
-                  Cargando usuarios...
-                </td>
-              </tr>
-            )}
-
-            {!loading && paged.length === 0 && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-4 py-8 text-center text-sm text-muted-foreground"
-                >
-                  No hay usuarios para mostrar.
-                </td>
-              </tr>
-            )}
-
-            {!loading &&
-              paged.map((user) => {
-                const status = getUserStatus(user);
-                const isPending = user.approved !== 1;
-
-                return (
-                  <tr
-                    key={user.id}
-                    className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
-                  >
-                    <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(user.id)}
-                        onChange={() => toggleOne(user.id)}
-                      />
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <button className="text-sm font-medium underline underline-offset-2 hover:text-muted-foreground">
-                        {getUserDisplayName(user)}
-                      </button>
-                    </td>
-
-                    <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {user.email || "-"}
-                    </td>
-
-                    <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {user.username || "-"}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${statusStyles[status]}`}
-                      >
-                        {status}
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <span>{roleIcons[user.role] || "◈"}</span>
-                        <span>{user.role || "user"}</span>
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {isPending && (
-                          <button
-                            type="button"
-                            onClick={() => handleApproveUser(user.id)}
-                            disabled={isAnyActionProcessingForUser(user.id)}
-                            title="Aprobar usuario"
-                            className="inline-flex size-8 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {isProcessing(user.id, "approve") ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                              <Check className="size-4" />
-                            )}
-                          </button>
-                        )}
-
-                        {!isPending && (
-                          <button
-                            type="button"
-                            onClick={() => handleRejectUser(user.id)}
-                            disabled={isAnyActionProcessingForUser(user.id)}
-                            title="No aprobar usuario"
-                            className="inline-flex size-8 items-center justify-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {isProcessing(user.id, "reject") ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                              <X className="size-4" />
-                            )}
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteUser(user.id)}
-                          disabled={isAnyActionProcessingForUser(user.id)}
-                          title="Eliminar usuario"
-                          className="inline-flex size-8 items-center justify-center rounded-md border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {isProcessing(user.id, "delete") ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="size-4" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>
-          {selected.length} of {filtered.length} row(s) selected.
-        </span>
-
-        <div className="flex items-center gap-2">
-          <span>Rows per page</span>
-
-          <select className="border border-input rounded px-2 py-1 text-xs bg-background focus:outline-none">
-            <option>10</option>
-            <option>25</option>
-            <option>50</option>
-          </select>
-
-          <span>
-            Page {page} of {totalPages}
-          </span>
-
-          <button
-            onClick={() => setPage(1)}
-            disabled={page === 1}
-            className="p-1 hover:bg-muted rounded disabled:opacity-40"
-          >
-            «
-          </button>
-
-          <button
-            onClick={() => setPage((current) => Math.max(1, current - 1))}
-            disabled={page === 1}
-            className="p-1 hover:bg-muted rounded disabled:opacity-40"
-          >
-            ‹
-          </button>
-
-          <button
-            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-            disabled={page >= totalPages}
-            className="p-1 hover:bg-muted rounded disabled:opacity-40"
-          >
-            ›
-          </button>
-
-          <button
-            onClick={() => setPage(totalPages)}
-            disabled={page >= totalPages}
-            className="p-1 hover:bg-muted rounded disabled:opacity-40"
-          >
-            »
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  }
 }
