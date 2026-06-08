@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Bell, Sun, Moon, PanelLeft } from "lucide-react";
+import { Search, Bell, Sun, Moon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
@@ -31,16 +31,22 @@ export default function Header({ title = "Ecommerce App", onMenuClick }) {
     localStorage.setItem("theme", next ? "dark" : "light");
   };
 
+  const handleMenuClick = () => {
+    if (typeof onMenuClick === "function") {
+      onMenuClick();
+    }
+  };
+
   return (
     <header className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b border-border bg-background px-3">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden size-7"
-        onClick={onMenuClick}
+      <button
+        type="button"
+        className="inline-flex md:hidden size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+        onClick={handleMenuClick}
+        aria-label="Abrir menú"
       >
-        <PanelLeft className="size-4" />
-      </Button>
+        <Menu className="size-5" />
+      </button>
 
       <Separator orientation="vertical" className="h-4 hidden md:block" />
 
