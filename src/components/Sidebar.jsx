@@ -112,14 +112,16 @@ export default function Sidebar({ collapsed = false, onToggleCollapsed }) {
             {workspace.name.charAt(0)}
           </div>
         )}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="flex size-8 items-center justify-center rounded-md hover:bg-sidebar-accent"
-          title={dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
-        >
-          {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-        </button>
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex size-8 items-center justify-center rounded-md hover:bg-sidebar-accent"
+            title={dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+          >
+            {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+          </button>
+        )}
         <button
           type="button"
           onClick={onToggleCollapsed}
