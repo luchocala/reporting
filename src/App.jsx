@@ -134,7 +134,12 @@ const ProtectedApp = () => {
             />
           ))}
 
-        {/* Original - Users & Tasks */}
+        {/* Configuración */}
+        <Route path="/configuracion/users" element={<Users />} />
+        <Route path="/configuracion/tasks" element={<Tasks />} />
+        <Route path="/configuracion/profile" element={<Profile />} />
+
+        {/* Rutas heredadas de configuración */}
         <Route path="/users" element={<Users />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/profile" element={<Profile />} />
