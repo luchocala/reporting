@@ -2,11 +2,8 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  Package,
-  ShoppingCart,
   Users,
   User,
-  Truck,
   ChevronRight,
   ChevronsUpDown,
   Code,
@@ -20,10 +17,10 @@ import {
   X,
   LogOut,
   Database,
-Clock,
-BriefcaseBusiness,
-BarChart3,
-Building2,
+  Clock,
+  BriefcaseBusiness,
+  BarChart3,
+  Building2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,152 +58,92 @@ const navSections = [
           { label: "Dashboard 9", path: "/dashboard-9" },
         ],
       },
+    ],
+  },
+  {
+    label: "Estructural",
+    items: [
       {
-        icon: Package,
-        label: "Products",
+        icon: Database,
+        label: "Estructural",
         children: [
-          { label: "Add Product", path: "/ecommerce/add-product" },
-          { label: "Add Product 2", path: "/ecommerce/add-product-2" },
-          {
-            label: "Edit Product",
-            path: "/ecommerce/edit-product/radiance-ritual-set",
-          },
-          {
-            label: "Edit Product 2",
-            path: "/ecommerce/edit-product-2/radiance-ritual-set",
-          },
-          { label: "Product Detail 1", path: "/ecommerce/product-detail-1" },
-          { label: "Product Detail 2", path: "/ecommerce/product-detail-2" },
-          { label: "Product List 1", path: "/ecommerce/product-list-1" },
-          { label: "Product List 2", path: "/ecommerce/product-list-2" },
-          { label: "Product List 3", path: "/ecommerce/product-list-3" },
-          { label: "Product List 4", path: "/ecommerce/product-list-4" },
-        ],
-      },
-      {
-        icon: ShoppingCart,
-        label: "Orders",
-        children: [
-          { label: "Add New Order", path: "/ecommerce/add-order" },
-          { label: "Edit Order", path: "/ecommerce/edit-order/so-654" },
-          { label: "Order List 1", path: "/ecommerce/order-list-1" },
-          { label: "Order List 2", path: "/ecommerce/order-list-2" },
-          { label: "Order List 3", path: "/ecommerce/order-list-3" },
-          { label: "Order Detail 1", path: "/ecommerce/order-detail-1" },
-          { label: "Order Detail 2", path: "/ecommerce/order-detail-2" },
-        ],
-      },
-      {
-        icon: Users,
-        label: "Customers",
-        children: [
-          { label: "Add Customer", path: "/ecommerce/add-customer" },
-          {
-            label: "Edit Customer",
-            path: "/ecommerce/edit-customer/cus-1742",
-          },
-          { label: "Customer List 1", path: "/ecommerce/customer-list-1" },
-          { label: "Customer Detail 1", path: "/ecommerce/customer-detail-1" },
-        ],
-      },
-      {
-        icon: Truck,
-        label: "Shipments",
-        children: [
-          { label: "Create Shipping Label", path: "/ecommerce/add-shipping" },
-          { label: "Edit Shipping Label", path: "/ecommerce/edit-shipping" },
-          { label: "Shipment List 1", path: "/ecommerce/shipment-list-1" },
-          { label: "Shipment Detail 1", path: "/ecommerce/shipment-detail-1" },
+          { label: "Personas", path: "/estructural/personas" },
+          { label: "Razones Sociales", path: "/estructural/razones-sociales" },
+          { label: "CBUs", path: "/estructural/cbus" },
+          { label: "Cuentas", path: "/estructural/cuentas" },
+          { label: "Colaboradores", path: "/estructural/colaboradores" },
+          { label: "Proyectos", path: "/estructural/proyectos" },
+          { label: "Recurrentes", path: "/estructural/recurrentes" },
+          { label: "Facturación", path: "/estructural/facturacion" },
         ],
       },
     ],
   },
   {
-  label: "Estructural",
-  items: [
-    {
-      icon: Database,
-      label: "Estructural",
-      children: [
-        { label: "Personas", path: "/estructural/personas" },
-        { label: "Razones Sociales", path: "/estructural/razones-sociales" },
-        { label: "CBUs", path: "/estructural/cbus" },
-        { label: "Cuentas", path: "/estructural/cuentas" },
-        { label: "Colaboradores", path: "/estructural/colaboradores" },
-        { label: "Proyectos", path: "/estructural/proyectos" },
-        { label: "Recurrentes", path: "/estructural/recurrentes" },
-        { label: "Facturación", path: "/estructural/facturacion" },
-      ],
-    },
-  ],
-},
-{
-  label: "Proveedores",
-  items: [
-    {
-      icon: Clock,
-      label: "Proveedores",
-      children: [
-        { label: "Tiempo", path: "/proveedores/tiempo" },
-      ],
-    },
-  ],
-},
-{
-  label: "Gestión",
-  items: [
-    {
-      icon: BriefcaseBusiness,
-      label: "Gestión",
-      children: [
-        { label: "Agenda", path: "/gestion/agenda" },
-        { label: "Activos", path: "/gestion/activos" },
-        { label: "Dominios", path: "/gestion/dominios" },
-      ],
-    },
-  ],
-},
-{
-  label: "Reportes",
-  items: [
-    {
-      icon: BarChart3,
-      label: "Reportes",
-      children: [
-        { label: "Ventas", path: "/reportes/ventas" },
-        {
-          label: "Recurrentes por cuentas",
-          path: "/reportes/recurrentes-por-cuentas",
-        },
-        {
-          label: "Recurrentes por actividades",
-          path: "/reportes/recurrentes-por-actividades",
-        },
-      ],
-    },
-  ],
-},
-{
-  label: "Administración y Comercial",
-  items: [
-    {
-      icon: Building2,
-      label: "Administración y Comercial",
-      children: [
-        { label: "Ventas", path: "/administracion-comercial/ventas" },
-        { label: "Índices", path: "/administracion-comercial/indices" },
-      ],
-    },
-  ],
-},
+    label: "Proveedores",
+    items: [
+      {
+        icon: Clock,
+        label: "Proveedores",
+        children: [{ label: "Tiempo", path: "/proveedores/tiempo" }],
+      },
+    ],
+  },
   {
-  label: "Original",
-  items: [
-    { icon: Users, label: "Users", path: "/users" },
-    { icon: CheckSquare, label: "Tasks", path: "/tasks" },
-    { icon: User, label: "Profile", path: "/profile" },
-  ],
-},
+    label: "Gestión",
+    items: [
+      {
+        icon: BriefcaseBusiness,
+        label: "Gestión",
+        children: [
+          { label: "Agenda", path: "/gestion/agenda" },
+          { label: "Activos", path: "/gestion/activos" },
+          { label: "Dominios", path: "/gestion/dominios" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Reportes",
+    items: [
+      {
+        icon: BarChart3,
+        label: "Reportes",
+        children: [
+          { label: "Ventas", path: "/reportes/ventas" },
+          {
+            label: "Recurrentes por cuentas",
+            path: "/reportes/recurrentes-por-cuentas",
+          },
+          {
+            label: "Recurrentes por actividades",
+            path: "/reportes/recurrentes-por-actividades",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Administración y Comercial",
+    items: [
+      {
+        icon: Building2,
+        label: "Administración y Comercial",
+        children: [
+          { label: "Ventas", path: "/administracion-comercial/ventas" },
+          { label: "Índices", path: "/administracion-comercial/indices" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Original",
+    items: [
+      { icon: Users, label: "Users", path: "/users" },
+      { icon: CheckSquare, label: "Tasks", path: "/tasks" },
+      { icon: User, label: "Profile", path: "/profile" },
+    ],
+  },
   {
     label: "Developers",
     items: [
@@ -318,31 +255,25 @@ function NavItem({ item, collapsed = false, onNavigate }) {
     return (
       <li>
         <button
-          type="button"
-          onClick={() => setOpen((current) => !current)}
-          className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+          onClick={() => setOpen(!open)}
+          className={`w-full flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors ${
             isActive
-              ? "font-medium text-sidebar-foreground"
-              : "text-sidebar-foreground/60"
+              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+              : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`}
         >
           <Icon className="size-4 shrink-0" />
           <span className="flex-1 text-left truncate">{item.label}</span>
-          <ChevronRight
-            className={`size-3.5 shrink-0 transition-transform duration-200 ${
-              open ? "rotate-90" : ""
-            }`}
-          />
+          <ChevronRight className={`size-4 transition-transform ${open ? "rotate-90" : ""}`} />
         </button>
-
         {open && (
-          <ul className="ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
+          <ul className="ml-6 mt-1 space-y-1 border-l border-sidebar-border pl-2">
             {item.children.map((child) => (
               <li key={child.path}>
                 <Link
                   to={child.path}
                   onClick={onNavigate}
-                  className={`block rounded-md px-2 py-1 text-sm transition-colors ${
+                  className={`block rounded-md px-2 py-1.5 text-sm transition-colors ${
                     location.pathname === child.path
                       ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -363,7 +294,7 @@ function NavItem({ item, collapsed = false, onNavigate }) {
       <Link
         to={item.path}
         onClick={onNavigate}
-        className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors ${
+        className={`flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors ${
           isActive
             ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
             : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -376,189 +307,9 @@ function NavItem({ item, collapsed = false, onNavigate }) {
   );
 }
 
-function SidebarContent({
-  collapsed = false,
-  mobile = false,
-  activeTeam,
-  setActiveTeam,
-  user,
-  onLogout,
-  onNavigate,
-  onToggleCollapsed,
-  onMobileClose,
-}) {
-  return (
-    <>
-      <div className="p-2">
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={`flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 hover:bg-sidebar-accent transition-colors text-left ${
-                  collapsed ? "justify-center" : ""
-                }`}
-              >
-                <div className="flex size-7 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold shrink-0">
-                  {activeTeam.name.charAt(0)}
-                </div>
-
-                {!collapsed && (
-                  <>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold leading-tight truncate text-sidebar-foreground">
-                        {activeTeam.name}
-                      </p>
-                      <p className="text-[11px] text-sidebar-foreground/50 leading-tight truncate">
-                        {activeTeam.plan}
-                      </p>
-                    </div>
-                    <ChevronsUpDown className="size-3.5 text-sidebar-foreground/40 shrink-0" />
-                  </>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent className="w-52" align="start" side="bottom">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
-                Teams
-              </DropdownMenuLabel>
-
-              {teams.map((team) => (
-                <DropdownMenuItem
-                  key={team.name}
-                  onClick={() => setActiveTeam(team)}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <div className="flex size-6 items-center justify-center rounded bg-primary text-primary-foreground text-xs font-bold shrink-0">
-                    {team.name.charAt(0)}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate">{team.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {team.plan}
-                    </p>
-                  </div>
-
-                  {activeTeam.name === team.name && (
-                    <Check className="size-3.5 text-primary ml-auto" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem className="gap-2 cursor-pointer text-muted-foreground">
-                <Plus className="size-4" />
-                <span className="text-sm">Add team</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {mobile ? (
-            <button
-              type="button"
-              onClick={onMobileClose}
-              className="inline-flex size-9 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground md:hidden"
-              aria-label="Cerrar menú"
-            >
-              <X className="size-5" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={onToggleCollapsed}
-              className="hidden md:inline-flex size-8 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              aria-label={collapsed ? "Mostrar sidebar" : "Ocultar sidebar"}
-              title={collapsed ? "Mostrar sidebar" : "Ocultar sidebar"}
-            >
-              {collapsed ? (
-                <PanelLeftOpen className="size-4" />
-              ) : (
-                <PanelLeftClose className="size-4" />
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-
-      <nav className="flex-1 px-2 pb-2 space-y-3 overflow-y-auto">
-        {navSections.map((section) => (
-          <div key={section.label}>
-            {!collapsed && (
-              <p className="px-2 mb-1 text-[10px] font-semibold text-sidebar-foreground/40 uppercase tracking-widest">
-                {section.label}
-              </p>
-            )}
-
-            <ul className="flex flex-col gap-0.5">
-              {section.items.map((item) => (
-                <NavItem
-                  key={item.label}
-                  item={item}
-                  collapsed={collapsed}
-                  onNavigate={onNavigate}
-                />
-              ))}
-            </ul>
-          </div>
-        ))}
-      </nav>
-
-      <div className="border-t border-sidebar-border p-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 hover:bg-sidebar-accent transition-colors ${
-                collapsed ? "justify-center" : ""
-              }`}
-            >
-              <div className="size-7 rounded-full bg-sidebar-primary flex items-center justify-center text-xs font-semibold text-sidebar-primary-foreground shrink-0">
-                {getUserInitials(user)}
-              </div>
-
-              {!collapsed && (
-                <>
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-xs font-medium leading-tight truncate text-sidebar-foreground">
-                      {getDisplayName(user)}
-                    </p>
-                    <p className="text-[11px] text-sidebar-foreground/50 leading-tight truncate">
-                      {user?.email || user?.username || ""}
-                    </p>
-                  </div>
-                  <ChevronsUpDown className="size-3.5 text-sidebar-foreground/40 shrink-0" />
-                </>
-              )}
-            </button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent className="w-52" align="start" side="top">
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Cuenta
-            </DropdownMenuLabel>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem
-              onClick={onLogout}
-              className="gap-2 cursor-pointer text-red-600 focus:text-red-600"
-            >
-              <LogOut className="size-4" />
-              <span>Cerrar sesión</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </>
-  );
-}
-
-export default function Sidebar({
-  collapsed = false,
-  onToggleCollapsed,
-}) {
-  const [activeTeam, setActiveTeam] = useState(teams[0]);
+export default function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState(teams[0]);
   const { user, logout } = useLocalAuth();
   const navigate = useNavigate();
 
@@ -567,27 +318,113 @@ export default function Sidebar({
     navigate("/login", { replace: true });
   };
 
-  const handleMobileNavigate = () => {
-    if (mobileOpen) {
-      onMobileClose?.();
-    }
-  };
+  return (
+    <aside
+      className={`hidden md:flex fixed inset-y-0 left-0 z-30 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ${
+        collapsed ? "w-16" : "w-64"
+      }`}
+    >
+      <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-3">
+        {!collapsed && (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent flex-1 min-w-0">
+              <div className="flex size-6 items-center justify-center rounded bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
+                {selectedTeam.name.charAt(0)}
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="font-medium truncate">{selectedTeam.name}</p>
+                <p className="text-xs text-sidebar-foreground/50 truncate">{selectedTeam.plan}</p>
+              </div>
+              <ChevronsUpDown className="size-4 text-sidebar-foreground/50" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuLabel>Teams</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {teams.map((team) => (
+                <DropdownMenuItem key={team.name} onClick={() => setSelectedTeam(team)}>
+                  <div className="flex size-6 items-center justify-center rounded bg-muted text-xs font-semibold">
+                    {team.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-medium">{team.name}</p>
+                    <p className="text-xs text-muted-foreground">{team.plan}</p>
+                  </div>
+                  {selectedTeam.name === team.name && <Check className="ml-auto size-4" />}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Plus className="size-4" /> Add team
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        {collapsed && (
+          <div className="flex size-8 items-center justify-center rounded bg-sidebar-primary text-sidebar-primary-foreground text-sm font-semibold mx-auto">
+            {selectedTeam.name.charAt(0)}
+          </div>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex size-8 items-center justify-center rounded-md hover:bg-sidebar-accent"
+        >
+          {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+        </button>
+      </div>
 
-   return (
-  <aside
-    className={`hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar h-screen sticky top-0 overflow-y-auto transition-[width] duration-200 ${
-      collapsed ? "w-14" : "w-56"
-    }`}
-  >
-    <SidebarContent
-      collapsed={collapsed}
-      activeTeam={activeTeam}
-      setActiveTeam={setActiveTeam}
-      user={user}
-      onLogout={handleLogout}
-      onNavigate={undefined}
-      onToggleCollapsed={onToggleCollapsed}
-    />
-  </aside>
-);
+      <nav className="flex-1 overflow-y-auto px-2 py-3">
+        {navSections.map((section) => (
+          <div key={section.label} className="mb-4">
+            {!collapsed && (
+              <p className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/40">
+                {section.label}
+              </p>
+            )}
+            <ul className="space-y-1">
+              {section.items.map((item) => (
+                <NavItem key={item.label} item={item} collapsed={collapsed} />
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+
+      {user && (
+        <div className="border-t border-sidebar-border p-3">
+          {collapsed ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mx-auto flex size-9 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-foreground hover:bg-red-500/10 hover:text-red-600 transition-colors"
+              title="Cerrar sesión"
+            >
+              <LogOut className="size-4" />
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
+                {getUserInitials(user)}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium truncate">{getDisplayName(user)}</p>
+                <p className="text-xs text-sidebar-foreground/50 truncate">
+                  {user?.email || user?.username || ""}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex size-8 shrink-0 items-center justify-center rounded-md text-red-600 hover:bg-red-500/10 transition-colors"
+                title="Cerrar sesión"
+              >
+                <LogOut className="size-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </aside>
+  );
 }
