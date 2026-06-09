@@ -396,7 +396,7 @@ function IconButton({ onClick, title, children }) {
   );
 }
 
-function AdvancedFiltersButton({ onClick, mobile = false, showLabel = false }) {
+function AdvancedFiltersButton({ onClick, mobile = false, iconOnly = false }) {
   if (mobile) {
     return (
       <button
@@ -410,28 +410,22 @@ function AdvancedFiltersButton({ onClick, mobile = false, showLabel = false }) {
     );
   }
 
-  if (showLabel) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 2xl:px-4"
-        title="+Filtros"
-      >
-        <SlidersHorizontal className="size-4 shrink-0" />
-        <span className="hidden 2xl:inline">+Filtros</span>
-      </button>
-    );
-  }
-
   return (
-    <IconButton onClick={onClick} title="+Filtros">
-      <SlidersHorizontal className="size-4" />
-    </IconButton>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 ${
+        iconOnly ? "w-10 px-0" : "px-4"
+      }`}
+      title="+Filtros"
+    >
+      <SlidersHorizontal className="size-4 shrink-0" />
+      {!iconOnly && <span>+Filtros</span>}
+    </button>
   );
 }
 
-function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = false, resetKey }) {
+function ColumnSelector({ columns, visibleColumns, onToggleColumn, iconOnly = false, resetKey }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -443,11 +437,9 @@ function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = fal
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={
-          compact
-            ? "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-input bg-background shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
-            : "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-3 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 2xl:w-[160px] 2xl:px-4"
-        }
+        className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 ${
+          iconOnly ? "w-10 px-0" : "px-4"
+        }`}
         title="Columnas"
       >
         <svg
@@ -466,8 +458,7 @@ function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = fal
           <path d="M15 4v16" />
         </svg>
 
-        {!compact && <span className="hidden 2xl:inline">Columnas</span>}
-        {compact && <span className="hidden 2xl:inline">Columnas</span>}
+        {!iconOnly && <span>Columnas</span>}
       </button>
 
       {open && (
@@ -507,7 +498,7 @@ function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = fal
   );
 }
 
-function SelectAllButton({ allSelected, onClick, mobile = false }) {
+function SelectAllButton({ allSelected, onClick, mobile = false, compact = false }) {
   if (mobile) {
     return (
       <button
@@ -523,10 +514,26 @@ function SelectAllButton({ allSelected, onClick, mobile = false }) {
     );
   }
 
+  if (compact) {
+    return (
+      <IconButton onClick={onClick} title={allSelected ? "Quitar selección" : "Seleccionar todo"}>
+        <SquareCheckBig className={`size-4 ${allSelected ? "text-foreground" : "text-muted-foreground"}`} />
+      </IconButton>
+    );
+  }
+
   return (
-    <IconButton onClick={onClick} title={allSelected ? "Quitar selección" : "Seleccionar todo"}>
-      <SquareCheckBig className={`size-4 ${allSelected ? "text-foreground" : "text-muted-foreground"}`} />
-    </IconButton>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 ${
+        allSelected ? "bg-muted" : ""
+      }`}
+      title={allSelected ? "Quitar selección" : "Seleccionar todos"}
+    >
+      <SquareCheckBig className="size-4" />
+      <span>{allSelected ? "Quitar selección" : "Seleccionar todos"}</span>
+    </button>
   );
 }
 
@@ -594,50 +601,55 @@ function FiltersToolbar({
   const showSelectAllButton = desktopView === "lanes" || desktopView === "cards";
 
   return (
-    <div className="hidden sm:flex w-full flex-col gap-2 xl:flex-row xl:items-center">
-      <div className="flex w-full flex-col gap-2 xl:flex-row xl:items-center">
-        <div className="relative w-full xl:min-w-[280px] xl:flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <input
-            placeholder={`Buscar ${section.title.toLowerCase()}`}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="h-10 w-full rounded-xl border border-input bg-background pl-11 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/30"
-          />
-        </div>
+    <div className="hidden sm:flex w-full flex-col gap-3">
+      <div className="relative w-full xl:max-w-[420px] 2xl:max-w-none 2xl:flex-1">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <input
+          placeholder={`Buscar ${section.title.toLowerCase()}`}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          className="h-10 w-full rounded-xl border border-input bg-background pl-11 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/30"
+        />
+      </div>
 
-        <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 xl:flex xl:w-auto xl:shrink-0 xl:items-center">
-          {configuredPrimaryFilters.map((filter) => (
-            <MultiFilterSelect
-              key={`${sectionKey}-${filter.key}`}
-              value={primaryFilters[filter.key] || []}
-              onChange={(nextValue) => setPrimaryFilter(filter.key, nextValue)}
-              placeholder={filter.label}
-              className="min-w-0"
-              options={getFilterOptions(filter, rows)}
-              resetKey={sectionKey}
-              customDateRange={dateRangeFilters[filter.key]}
-              onCustomDateRangeChange={
-                filter.type === "dateRange"
-                  ? (nextRange) => setDateRangeFilter(filter.key, nextRange)
-                  : undefined
-              }
-            />
-          ))}
-
-          <AdvancedFiltersButton onClick={onOpenAdvancedFilters} showLabel />
-
-          <ColumnSelector
-            columns={columns}
-            visibleColumns={visibleColumns}
-            onToggleColumn={onToggleColumn}
+      <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-3 xl:flex xl:w-auto xl:shrink-0 xl:items-center">
+        {configuredPrimaryFilters.map((filter) => (
+          <MultiFilterSelect
+            key={`${sectionKey}-${filter.key}`}
+            value={primaryFilters[filter.key] || []}
+            onChange={(nextValue) => setPrimaryFilter(filter.key, nextValue)}
+            placeholder={filter.label}
+            className="min-w-0"
+            options={getFilterOptions(filter, rows)}
             resetKey={sectionKey}
+            customDateRange={dateRangeFilters[filter.key]}
+            onCustomDateRangeChange={
+              filter.type === "dateRange"
+                ? (nextRange) => setDateRangeFilter(filter.key, nextRange)
+                : undefined
+            }
           />
+        ))}
+      </div>
 
-          {showSelectAllButton && (
-            <SelectAllButton allSelected={allVisibleSelected} onClick={onToggleSelectAll} />
-          )}
-        </div>
+      <div className="flex w-full flex-wrap items-center gap-2 xl:w-auto">
+        <AdvancedFiltersButton onClick={onOpenAdvancedFilters} iconOnly={false} />
+
+        <ColumnSelector
+          columns={columns}
+          visibleColumns={visibleColumns}
+          onToggleColumn={onToggleColumn}
+          resetKey={sectionKey}
+          iconOnly={false}
+        />
+
+        {showSelectAllButton && (
+          <SelectAllButton
+            allSelected={allVisibleSelected}
+            onClick={onToggleSelectAll}
+            compact
+          />
+        )}
       </div>
     </div>
   );
