@@ -1,29 +1,13 @@
-import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  ChevronsUpDown,
-  Check,
-  Plus,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { navSections } from "@/config/navigation";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
 
-const teams = [
-  { name: "Acme Inc.", plan: "Enterprise" },
-  { name: "Globex Corp.", plan: "Pro" },
-  { name: "Initech LLC", plan: "Starter" },
-];
+const workspace = { name: "Adnovation SRL", plan: "Reporting" };
 
 function getUserInitials(user) {
   const first = user?.firstName?.trim()?.[0] || "";
@@ -68,26 +52,18 @@ function NavItem({ item, collapsed = false, onNavigate }) {
 }
 
 function SectionHeader({ section, collapsed = false }) {
-  const Icon = section.icon;
-
   if (collapsed) {
-    return Icon ? (
-      <div className="mb-2 flex justify-center text-sidebar-foreground/45" title={section.label}>
-        <Icon className="size-4" />
-      </div>
-    ) : null;
+    return null;
   }
 
   return (
-    <p className="mb-2 flex items-center gap-2 px-2 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/40">
-      {Icon && <Icon className="size-3.5 shrink-0" />}
-      <span className="truncate">{section.label}</span>
+    <p className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/40">
+      {section.label}
     </p>
   );
 }
 
 export default function Sidebar({ collapsed = false, onToggleCollapsed }) {
-  const [selectedTeam, setSelectedTeam] = useState(teams[0]);
   const { user, logout } = useLocalAuth();
   const navigate = useNavigate();
 
@@ -104,42 +80,19 @@ export default function Sidebar({ collapsed = false, onToggleCollapsed }) {
     >
       <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-3">
         {!collapsed && (
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent flex-1 min-w-0">
-              <div className="flex size-6 items-center justify-center rounded bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
-                {selectedTeam.name.charAt(0)}
-              </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="font-medium truncate">{selectedTeam.name}</p>
-                <p className="text-xs text-sidebar-foreground/50 truncate">{selectedTeam.plan}</p>
-              </div>
-              <ChevronsUpDown className="size-4 text-sidebar-foreground/50" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>Teams</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {teams.map((team) => (
-                <DropdownMenuItem key={team.name} onClick={() => setSelectedTeam(team)}>
-                  <div className="flex size-6 items-center justify-center rounded bg-muted text-xs font-semibold">
-                    {team.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-medium">{team.name}</p>
-                    <p className="text-xs text-muted-foreground">{team.plan}</p>
-                  </div>
-                  {selectedTeam.name === team.name && <Check className="ml-auto size-4" />}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Plus className="size-4" /> Add team
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm flex-1 min-w-0">
+            <div className="flex size-6 items-center justify-center rounded bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
+              {workspace.name.charAt(0)}
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-medium truncate">{workspace.name}</p>
+              <p className="text-xs text-sidebar-foreground/50 truncate">{workspace.plan}</p>
+            </div>
+          </div>
         )}
         {collapsed && (
           <div className="flex size-8 items-center justify-center rounded bg-sidebar-primary text-sidebar-primary-foreground text-sm font-semibold mx-auto">
-            {selectedTeam.name.charAt(0)}
+            {workspace.name.charAt(0)}
           </div>
         )}
         <button
