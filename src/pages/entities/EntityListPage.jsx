@@ -1,23 +1,14 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Search,
   Plus,
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
   Eye,
   Trash2,
-  Check,
-  SlidersHorizontal,
-  SquareCheckBig,
-  TableProperties,
-  Columns3,
-  LayoutGrid,
-  KanbanSquare,
-  Table2,
-  ChevronDown,
 } from "lucide-react";
+import EntityToolbar from "@/components/entity/EntityToolbar";
 
 const statusStyles = {
   ACTIVO:
@@ -49,13 +40,6 @@ function getUniqueValues(items, key) {
   );
 }
 
-function getOptionsForColumn(items, columnKey) {
-  return getUniqueValues(items, columnKey).map((value) => ({
-    value,
-    label: value,
-  }));
-}
-
 function formatMoney(value, moneda = "ARS") {
   return `${moneda} ${new Intl.NumberFormat("es-AR", {
     minimumFractionDigits: 2,
@@ -83,114 +67,6 @@ function renderCell(row, column) {
   }
 
   return value || "-";
-}
-
-function ToolbarButton({
-  children,
-  icon: Icon,
-  onClick,
-  active = false,
-  disabled = false,
-  className = "",
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-        active
-          ? "border-foreground bg-foreground text-background"
-          : "border-input bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
-      } ${className}`}
-    >
-      {Icon && <Icon className="size-3.5" />}
-      {children}
-    </button>
-  );
-}
-
-function ViewButton({ active, icon: Icon, label, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={label}
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors ${
-        active
-          ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      <Icon className="size-3.5" />
-      <span className="hidden sm:inline">{label}</span>
-    </button>
-  );
-}
-
-function DropdownButton({
-  label,
-  icon: Icon,
-  children,
-  align = "left",
-  width = "w-64",
-  active = false,
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  return (
-    <div className="relative" ref={ref}>
-      <ToolbarButton
-        icon={Icon}
-        active={active}
-        onClick={() => setOpen((current) => !current)}
-      >
-        <span>{label}</span>
-        <ChevronDown className="size-3.5 opacity-70" />
-      </ToolbarButton>
-
-      {open && (
-        <>
-          <button
-            type="button"
-            aria-label="Cerrar menú"
-            className="fixed inset-0 z-30 cursor-default"
-            onClick={() => setOpen(false)}
-            tabIndex={-1}
-          />
-
-          <div
-            className={`absolute z-40 mt-2 ${width} rounded-lg border border-border bg-popover p-2 shadow-md ${
-              align === "right" ? "right-0" : "left-0"
-            }`}
-          >
-            {children({ close: () => setOpen(false) })}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function FilterSelect({ label, value, onChange, options }) {
-  return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-8 min-w-[140px] appearance-none rounded-md border border-input bg-background pl-3 pr-8 text-xs font-medium text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus:text-foreground"
-      >
-        <option value="">{label}</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-    </div>
-  );
 }
 
 export default function EntityListPage({ section }) {
@@ -296,6 +172,11 @@ export default function EntityListPage({ section }) {
     );
   };
 
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setPage(1);
+  };
+
   const handlePrimaryFilterChange = (key, value) => {
     setPrimaryFilters((current) => ({
       ...current,
@@ -307,6 +188,11 @@ export default function EntityListPage({ section }) {
   const handleAdvancedColumnChange = (columnKey) => {
     setAdvancedFilterColumn(columnKey);
     setAdvancedFilterValue("");
+    setPage(1);
+  };
+
+  const handleAdvancedFilterValueChange = (value) => {
+    setAdvancedFilterValue(value);
     setPage(1);
   };
 
@@ -351,185 +237,28 @@ export default function EntityListPage({ section }) {
         )}
       </div>
 
-      <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <div className="relative min-w-[220px] flex-1 sm:flex-none">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <input
-              placeholder={`Filtrar ${section.title.toLowerCase()}...`}
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
-              }}
-              className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-3 text-xs outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring sm:w-56"
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {primaryFilterColumns.map((column) => (
-              <FilterSelect
-                key={column.key}
-                label={column.label}
-                value={primaryFilters[column.key] || ""}
-                onChange={(value) => handlePrimaryFilterChange(column.key, value)}
-                options={getOptionsForColumn(rows, column.key)}
-              />
-            ))}
-          </div>
-
-          <DropdownButton
-            label="Filtrar"
-            icon={SlidersHorizontal}
-            active={Boolean(advancedFilterColumn || advancedFilterValue)}
-          >
-            {() => (
-              <div className="space-y-2">
-                <p className="px-1 text-xs font-medium text-muted-foreground">
-                  Filtrar por columna
-                </p>
-
-                <select
-                  value={advancedFilterColumn}
-                  onChange={(event) =>
-                    handleAdvancedColumnChange(event.target.value)
-                  }
-                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs outline-none"
-                >
-                  <option value="">Seleccionar columna</option>
-                  {editableColumns.map((column) => (
-                    <option key={column.key} value={column.key}>
-                      {column.label}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={advancedFilterValue}
-                  onChange={(event) => {
-                    setAdvancedFilterValue(event.target.value);
-                    setPage(1);
-                  }}
-                  disabled={!advancedFilterColumn}
-                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs outline-none disabled:opacity-50"
-                >
-                  <option value="">Seleccionar valor</option>
-                  {advancedFilterColumn &&
-                    getOptionsForColumn(rows, advancedFilterColumn).map(
-                      (option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      )
-                    )}
-                </select>
-
-                {hasActiveFilters && (
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="h-8 w-full rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-                  >
-                    Limpiar filtros
-                  </button>
-                )}
-              </div>
-            )}
-          </DropdownButton>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2 xl:justify-end">
-          <DropdownButton label="Columnas" icon={Columns3} align="right">
-            {() => (
-              <div className="space-y-1">
-                <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">
-                  Mostrar columnas
-                </p>
-
-                {columns.map((column) => {
-                  const checked = visibleColumns.includes(column.key);
-
-                  return (
-                    <button
-                      key={column.key}
-                      type="button"
-                      onClick={() => toggleColumn(column.key)}
-                      disabled={column.locked}
-                      className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-xs hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <span className="flex size-4 items-center justify-center rounded border border-border">
-                        {checked && <Check className="size-3" />}
-                      </span>
-                      <span className="flex-1 text-left">{column.label}</span>
-                      {column.locked && (
-                        <span className="text-[10px] text-muted-foreground">
-                          fijo
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </DropdownButton>
-
-          <DropdownButton
-            label="Cambios masivos"
-            icon={SquareCheckBig}
-            align="right"
-            width="w-56"
-          >
-            {() => (
-              <div className="space-y-1">
-                <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">
-                  {selected.length} registros seleccionados
-                </p>
-
-                <button
-                  type="button"
-                  disabled={selected.length === 0}
-                  className="h-8 w-full rounded-md px-2 text-left text-xs hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Cambiar estado
-                </button>
-
-                <button
-                  type="button"
-                  disabled={selected.length === 0}
-                  className="h-8 w-full rounded-md px-2 text-left text-xs text-red-600 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Eliminar seleccionados
-                </button>
-              </div>
-            )}
-          </DropdownButton>
-
-          <div className="inline-flex h-8 items-center rounded-md border border-input bg-muted/40 p-0.5">
-            <ViewButton
-              active={viewMode === "table"}
-              icon={Table2}
-              label="Tabla"
-              onClick={() => setViewMode("table")}
-            />
-            <ViewButton
-              active={viewMode === "lanes"}
-              icon={KanbanSquare}
-              label="Lane"
-              onClick={() => setViewMode("lanes")}
-            />
-            <ViewButton
-              active={viewMode === "cards"}
-              icon={LayoutGrid}
-              label="Card"
-              onClick={() => setViewMode("cards")}
-            />
-          </div>
-
-          <ToolbarButton icon={TableProperties}>
-            Vista
-          </ToolbarButton>
-        </div>
-      </div>
+      <EntityToolbar
+        section={section}
+        rows={rows}
+        columns={columns}
+        editableColumns={editableColumns}
+        primaryFilterColumns={primaryFilterColumns}
+        search={search}
+        onSearchChange={handleSearchChange}
+        primaryFilters={primaryFilters}
+        onPrimaryFilterChange={handlePrimaryFilterChange}
+        advancedFilterColumn={advancedFilterColumn}
+        advancedFilterValue={advancedFilterValue}
+        onAdvancedFilterColumnChange={handleAdvancedColumnChange}
+        onAdvancedFilterValueChange={handleAdvancedFilterValueChange}
+        visibleColumns={visibleColumns}
+        onToggleColumn={toggleColumn}
+        selectedCount={selected.length}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onClearFilters={clearFilters}
+        hasActiveFilters={Boolean(hasActiveFilters)}
+      />
 
       {viewMode === "table" && (
         <div className="border border-border rounded-lg overflow-hidden bg-card">
@@ -641,7 +370,8 @@ export default function EntityListPage({ section }) {
                   <p className="text-xs text-muted-foreground">{row.id}</p>
                 </div>
 
-                {row.estado && renderCell(row, { key: "estado", type: "status" })}
+                {row.estado &&
+                  renderCell(row, { key: "estado", type: "status" })}
               </div>
 
               <div className="space-y-1">
