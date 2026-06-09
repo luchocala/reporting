@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { X, LogOut } from "lucide-react";
+import { X, LogOut, Moon, Sun } from "lucide-react";
 
 import { navSections } from "@/config/navigation";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
@@ -59,6 +59,16 @@ function MobileSectionHeader({ section }) {
 export default function MobileSidebar({ isOpen, onClose }) {
   const { user, logout } = useLocalAuth();
   const navigate = useNavigate();
+  const [dark, setDark] = useState(() =>
+    document.documentElement.classList.contains("dark")
+  );
+
+  const toggleTheme = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
 
   useEffect(() => {
     const handleEsc = (event) => {
@@ -106,14 +116,25 @@ export default function MobileSidebar({ isOpen, onClose }) {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex size-10 items-center justify-center rounded-lg hover:bg-sidebar-accent transition-colors"
-          aria-label="Cerrar menú"
-        >
-          <X className="size-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex size-10 items-center justify-center rounded-lg hover:bg-sidebar-accent transition-colors"
+            aria-label={dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+          >
+            {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex size-10 items-center justify-center rounded-lg hover:bg-sidebar-accent transition-colors"
+            aria-label="Cerrar menú"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
