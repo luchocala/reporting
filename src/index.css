@@ -137,11 +137,6 @@
     box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.16);
   }
 
-  /*
-   * Scrollbars
-   * Estilo global para sidebar, páginas comunes, tablas y contenedores con overflow.
-   */
-
   * {
     scrollbar-width: thin;
     scrollbar-color: hsl(0 0% 82%) transparent;
@@ -172,14 +167,29 @@
   }
 
   .dark * {
-    scrollbar-color: hsl(0 0% 34%) transparent;
+    scrollbar-color: hsl(0 0% 24%) transparent;
   }
 
   .dark *::-webkit-scrollbar-thumb {
-    background-color: hsl(0 0% 34%);
+    background-color: hsl(0 0% 24%);
   }
 
   .dark *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(0 0% 46%);
+  }
+
+  .dark aside,
+  .dark aside * {
+    scrollbar-color: hsl(0 0% 34%) transparent;
+  }
+
+  .dark aside::-webkit-scrollbar-thumb,
+  .dark aside *::-webkit-scrollbar-thumb {
+    background-color: hsl(0 0% 34%);
+  }
+
+  .dark aside::-webkit-scrollbar-thumb:hover,
+  .dark aside *::-webkit-scrollbar-thumb:hover {
     background-color: hsl(0 0% 76%);
   }
 
