@@ -6,7 +6,7 @@ import {
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
-  Eye,
+  Pencil,
   Trash2,
   Check,
   SlidersHorizontal,
@@ -758,15 +758,32 @@ function ActionButtons({
 }) {
   if (compact) {
     return (
-      <div className="flex items-center gap-1">
-        <button type="button" onClick={() => onView(item)} className="hover:bg-muted rounded" title="Ver detalle">
-          <Eye className="size-3.5 text-muted-foreground" />
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => onView(item)}
+          className="p-1 hover:bg-muted rounded"
+          title="Editar"
+        >
+          <Pencil className="size-4 text-muted-foreground" />
         </button>
-        <button type="button" onClick={() => onMarkDone(item)} className="hover:bg-muted rounded" title="Confirmar">
-          <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+
+        <button
+          type="button"
+          onClick={() => onMarkDone(item)}
+          className="p-1 hover:bg-muted rounded"
+          title="Confirmar"
+        >
+          <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
         </button>
-        <button type="button" onClick={() => onDelete(item)} className="hover:bg-muted rounded" title="Eliminar">
-          <Trash2 className="size-3.5 text-red-600 dark:text-red-400" />
+
+        <button
+          type="button"
+          onClick={() => onDelete(item)}
+          className="p-1 hover:bg-muted rounded"
+          title="Eliminar"
+        >
+          <Trash2 className="size-4 text-red-600 dark:text-red-400" />
         </button>
       </div>
     );
@@ -774,24 +791,39 @@ function ActionButtons({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <button type="button" onClick={() => onView(item)} className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted">
-        <Eye className="size-3.5" /> Ver
+      <button
+        type="button"
+        onClick={() => onView(item)}
+        className="inline-flex items-center gap-1.5 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted"
+      >
+        <Pencil className="size-4" /> Editar
       </button>
-      <button type="button" onClick={() => onMarkDone(item)} className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted">
-        <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" /> Confirmar
+
+      <button
+        type="button"
+        onClick={() => onMarkDone(item)}
+        className="inline-flex items-center gap-1.5 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted"
+      >
+        <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" /> Confirmar
       </button>
-      <button type="button" onClick={() => onDelete(item)} className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted text-destructive">
-        <Trash2 className="size-3.5" /> Eliminar
+
+      <button
+        type="button"
+        onClick={() => onDelete(item)}
+        className="inline-flex items-center gap-1.5 text-xs px-2 py-1 border border-border rounded-md hover:bg-muted text-destructive"
+      >
+        <Trash2 className="size-4" /> Eliminar
       </button>
+
       {showSelectionButton && (
         <button
           type="button"
           onClick={() => onToggleSelected(getRowId(item))}
-          className={`inline-flex items-center gap-1 text-xs px-2 py-1 border rounded-md transition-colors ${
+          className={`inline-flex items-center gap-1.5 text-xs px-2 py-1 border rounded-md transition-colors ${
             selected ? "border-foreground bg-foreground text-background" : "border-border hover:bg-muted"
           }`}
         >
-          <SquareCheckBig className="size-3.5" /> Seleccionar
+          <SquareCheckBig className="size-4" /> Seleccionar
         </button>
       )}
     </div>
