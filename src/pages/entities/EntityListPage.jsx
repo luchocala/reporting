@@ -967,7 +967,7 @@ function LanesView({ section, columns, items, selectedIds, onToggleSelected, onV
     <div className="block">
       <RecordsCount count={items.length} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 2xl:grid-cols-3 gap-4">
         {lanes.map((lane) => (
           <div key={lane.id} className="space-y-3 min-w-0">
             <div className="flex items-center justify-between px-1">
