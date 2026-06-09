@@ -237,8 +237,14 @@ function MultiFilterSelect({
   className = "",
   customDateRange,
   onCustomDateRangeChange,
+  resetKey,
 }) {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [resetKey]);
+
   const selectedValues = Array.isArray(value) ? value.map(String) : [];
   const allOptionValues = options.map((option) => String(option.value));
   const selectableOptionValues = allOptionValues.filter((optionValue) => optionValue !== "custom");
@@ -425,8 +431,12 @@ function AdvancedFiltersButton({ onClick, mobile = false, showLabel = false }) {
   );
 }
 
-function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = false }) {
+function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = false, resetKey }) {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [resetKey]);
 
   return (
     <div className="relative">
@@ -563,6 +573,7 @@ function getFilterOptions(filter, rows) {
 
 function FiltersToolbar({
   section,
+  sectionKey,
   rows,
   columns,
   configuredPrimaryFilters,
@@ -579,7 +590,7 @@ function FiltersToolbar({
   allVisibleSelected,
   desktopView,
 }) {
-  const showColumnSelector = desktopView === "table";
+  const showColumnSelector = true;
   const showSelectAllButton = desktopView === "lanes" || desktopView === "cards";
 
   return (
@@ -598,12 +609,13 @@ function FiltersToolbar({
         <div className="grid w-full grid-cols-[1fr_1fr_1fr_auto_auto_auto] gap-2 xl:flex xl:w-auto xl:shrink-0 xl:items-center">
           {configuredPrimaryFilters.map((filter) => (
             <MultiFilterSelect
-              key={filter.key}
+              key={`${sectionKey}-${filter.key}`}
               value={primaryFilters[filter.key] || []}
               onChange={(nextValue) => setPrimaryFilter(filter.key, nextValue)}
               placeholder={filter.label}
               className="min-w-0"
               options={getFilterOptions(filter, rows)}
+              resetKey={sectionKey}
               customDateRange={dateRangeFilters[filter.key]}
               onCustomDateRangeChange={
                 filter.type === "dateRange"
@@ -613,14 +625,14 @@ function FiltersToolbar({
             />
           ))}
 
-          <AdvancedFiltersButton onClick={onOpenAdvancedFilters} showLabel={desktopView === "table"} />
+          <AdvancedFiltersButton onClick={onOpenAdvancedFilters} showLabel />
 
           {showColumnSelector && (
             <ColumnSelector
-              compact={desktopView !== "table"}
               columns={columns}
               visibleColumns={visibleColumns}
               onToggleColumn={onToggleColumn}
+              resetKey={sectionKey}
             />
           )}
 
@@ -633,7 +645,7 @@ function FiltersToolbar({
   );
 }
 
-function AdvancedFiltersPanel({ columns, rows, advancedFilters, setAdvancedFilters, onClose }) {
+function AdvancedFiltersPanel({ columns, rows, advancedFilters, setAdvancedFilters, onClose, resetKey }) {
   const advancedColumns = columns.filter((column) => column.type !== "actions" && !column.locked);
 
   const updateFilter = (columnKey, nextValue) => {
@@ -670,6 +682,7 @@ function AdvancedFiltersPanel({ columns, rows, advancedFilters, setAdvancedFilte
               placeholder={column.label}
               className="min-w-0"
               options={getOptionsForColumn(rows, column.key)}
+              resetKey={resetKey}
             />
           </div>
         ))}
@@ -701,7 +714,8 @@ function BulkChangesPanel({ columns, selectedCount, bulkChanges, setBulkChanges,
         <div>
           <h2 className="text-lg font-semibold">Cambios masivos</h2>
           <p className="text-sm text-muted-foreground">
-            Editá campos para aplicar cambios a {selectedCount} registro{selectedCount === 1 ? "" : "s"} seleccionado{selectedCount === 1 ? "" : "s"}.
+            Editá campos para aplicar cambios a {selectedCount} registro{selectedCount === 1 ? "" : "s"} seleccionado
+            {selectedCount === 1 ? "" : "s"}.
           </p>
         </div>
       </div>
@@ -1271,6 +1285,7 @@ export default function EntityListPage({ section }) {
       {!advancedFiltersOpen && !bulkChangesOpen && (
         <FiltersToolbar
           section={section}
+          sectionKey={section.key}
           rows={rows}
           columns={columns}
           configuredPrimaryFilters={configuredPrimaryFilters}
@@ -1302,6 +1317,7 @@ export default function EntityListPage({ section }) {
           advancedFilters={advancedFilters}
           setAdvancedFilters={setAdvancedFilters}
           onClose={() => setAdvancedFiltersOpen(false)}
+          resetKey={section.key}
         />
       )}
 
