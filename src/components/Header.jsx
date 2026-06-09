@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Bell, Sun, Moon, Menu } from "lucide-react";
+import { Sun, Moon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
@@ -17,7 +17,7 @@ function getDisplayName(user) {
   return fullName || user?.username || "Admin";
 }
 
-export default function Header({ title = "Ecommerce App", onMenuClick }) {
+export default function Header({ onMenuClick }) {
   const { user } = useLocalAuth();
 
   const [dark, setDark] = useState(() =>
@@ -46,30 +46,9 @@ export default function Header({ title = "Ecommerce App", onMenuClick }) {
         <Menu className="pointer-events-none size-5" />
       </button>
 
-      <Separator orientation="vertical" className="h-4 hidden md:block" />
-
-      <span className="text-sm font-medium text-foreground">{title}</span>
+      <span className="md:hidden text-sm font-medium text-foreground">Reporting</span>
 
       <div className="ml-auto flex items-center gap-0.5">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-muted-foreground hover:text-foreground"
-        >
-          <Search className="size-4" />
-        </Button>
-
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-muted-foreground hover:text-foreground"
-          >
-            <Bell className="size-4" />
-          </Button>
-          <span className="absolute top-1 right-1 flex size-2 rounded-full bg-red-500" />
-        </div>
-
         <Button
           variant="outline"
           size="icon"
