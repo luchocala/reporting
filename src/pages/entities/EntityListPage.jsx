@@ -15,19 +15,18 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
-const statusStyles = {
-  ACTIVO:
+const badgeColorStyles = {
+  green:
     "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-900/30 dark:text-emerald-400 dark:ring-emerald-400/20",
-  PENDIENTE:
+  blue:
     "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-400/20",
-  INACTIVO:
-    "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20 dark:bg-red-900/30 dark:text-red-400 dark:ring-red-400/20",
-  BORRADOR:
+  yellow:
     "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-400/20",
+  red:
+    "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20 dark:bg-red-900/30 dark:text-red-400 dark:ring-red-400/20",
+  slate:
+    "bg-slate-50 text-slate-700 ring-1 ring-inset ring-slate-600/20 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-400/20",
 };
-
-const defaultStatusStyle =
-  "bg-slate-50 text-slate-700 ring-1 ring-inset ring-slate-600/20 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-400/20";
 
 function getInitialView() {
   if (typeof window === "undefined") return "table";
@@ -41,7 +40,7 @@ function getRowId(row) {
 function getPrimaryText(row, columns) {
   const primaryColumn = columns.find((column) => column.primary);
   if (primaryColumn && row[primaryColumn.key]) return String(row[primaryColumn.key]);
-  return String(row.nombre || row.razonSocial || row.descripcion || getRowId(row));
+  return String(row.nombre || row.razonSocial || row.descripcion || row.leyenda || getRowId(row));
 }
 
 function getSecondaryText(row) {
@@ -78,11 +77,79 @@ function formatMoney(value, moneda = "ARS") {
   return `${moneda} ${formatAmount(value)}`;
 }
 
-function renderCell(row, column) {
+function parseDate(value) {
+  if (!value) return null;
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  const stringValue = String(value);
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(stringValue)) {
+    const [day, month, year] = stringValue.split("/").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
+    const [year, month, day] = stringValue.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  const parsed = new Date(stringValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function getCurrentMonthRange() {
+  const today = new Date();
+  return {
+    start: new Date(today.getFullYear(), today.getMonth(), 1),
+    end: new Date(today.getFullYear(), today.getMonth() + 1, 0),
+  };
+}
+
+function getPreviousMonthRange() {
+  const today = new Date();
+  return {
+    start: new Date(today.getFullYear(), today.getMonth() - 1, 1),
+    end: new Date(today.getFullYear(), today.getMonth(), 0),
+  };
+}
+
+function normalizeDate(date) {
+  if (!date) return null;
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function isDateInRange(date, range) {
+  const normalizedDate = normalizeDate(date);
+  const normalizedStart = normalizeDate(range?.start);
+  const normalizedEnd = normalizeDate(range?.end);
+
+  if (!normalizedDate || !normalizedStart || !normalizedEnd) return false;
+
+  return normalizedDate >= normalizedStart && normalizedDate <= normalizedEnd;
+}
+
+function getDateRangeFromFilterValue(value, customRange) {
+  if (value === "currentMonth") return getCurrentMonthRange();
+  if (value === "previousMonth") return getPreviousMonthRange();
+
+  if (value === "custom" && customRange?.from && customRange?.to) {
+    return {
+      start: parseDate(customRange.from),
+      end: parseDate(customRange.to),
+    };
+  }
+
+  return null;
+}
+
+function renderCell(row, column, section) {
   const value = row[column.key];
 
-  if (column.type === "status") {
-    return <StatusBadge value={value} />;
+  if (column.type === "status" || column.type === "badge") {
+    return <StatusBadge value={value} columnKey={column.key} section={section} />;
   }
 
   if (column.type === "money") {
@@ -96,14 +163,14 @@ function renderCell(row, column) {
   return value === null || value === undefined || value === "" ? "-" : String(value);
 }
 
-function StatusBadge({ value }) {
+function StatusBadge({ value, columnKey = "estado", section }) {
   const normalized = String(value || "SIN ESTADO");
+  const configuredColor = section?.badgeStyles?.[columnKey]?.[normalized];
+  const className = badgeColorStyles[configuredColor] || badgeColorStyles.slate;
 
   return (
     <span
-      className={`inline-block max-w-full rounded-md px-2 py-1 text-[10px] font-medium leading-tight whitespace-normal break-words text-center ${
-        statusStyles[normalized] || defaultStatusStyle
-      }`}
+      className={`inline-block max-w-full rounded-md px-2 py-1 text-[10px] font-medium leading-tight whitespace-normal break-words text-center ${className}`}
     >
       {normalized}
     </span>
@@ -137,13 +204,41 @@ function ViewSwitcher({ value, onChange }) {
   );
 }
 
-function MultiFilterSelect({ value, onChange, options, placeholder, className = "" }) {
+function ChevronRightIcon({ open }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={`size-4 shrink-0 text-muted-foreground transition-transform ${
+        open ? "rotate-90" : ""
+      }`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
+function MultiFilterSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  className = "",
+  customDateRange,
+  onCustomDateRangeChange,
+}) {
   const [open, setOpen] = useState(false);
   const selectedValues = Array.isArray(value) ? value.map(String) : [];
   const allOptionValues = options.map((option) => String(option.value));
+  const selectableOptionValues = allOptionValues.filter((optionValue) => optionValue !== "custom");
   const allSelected =
-    allOptionValues.length > 0 &&
-    allOptionValues.every((optionValue) => selectedValues.includes(optionValue));
+    selectableOptionValues.length > 0 &&
+    selectableOptionValues.every((optionValue) => selectedValues.includes(optionValue));
 
   const selectedLabels = options
     .filter((option) => selectedValues.includes(String(option.value)))
@@ -160,16 +255,29 @@ function MultiFilterSelect({ value, onChange, options, placeholder, className = 
     const normalized = String(optionValue);
 
     if (normalized === "all") {
-      onChange(allSelected ? [] : allOptionValues);
+      onChange(allSelected ? [] : selectableOptionValues);
       return;
     }
 
-    if (selectedValues.includes(normalized)) {
-      onChange(selectedValues.filter((item) => item !== normalized));
+    if (normalized === "custom") {
+      onChange(selectedValues.includes("custom") ? [] : ["custom"]);
       return;
     }
 
-    onChange([...selectedValues, normalized]);
+    const valuesWithoutCustom = selectedValues.filter((item) => item !== "custom");
+
+    if (valuesWithoutCustom.includes(normalized)) {
+      onChange(valuesWithoutCustom.filter((item) => item !== normalized));
+      return;
+    }
+
+    onChange([...valuesWithoutCustom, normalized]);
+  };
+
+  const isActive = (optionValue) => {
+    const normalized = String(optionValue);
+    if (normalized === "all") return allSelected;
+    return selectedValues.includes(normalized);
   };
 
   return (
@@ -206,7 +314,7 @@ function MultiFilterSelect({ value, onChange, options, placeholder, className = 
             </button>
 
             {options.map((option) => {
-              const active = selectedValues.includes(String(option.value));
+              const active = isActive(option.value);
 
               return (
                 <button
@@ -222,27 +330,44 @@ function MultiFilterSelect({ value, onChange, options, placeholder, className = 
                 </button>
               );
             })}
+
+            {selectedValues.includes("custom") && onCustomDateRangeChange && (
+              <div className="mt-1 border-t border-border p-3 space-y-2">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Desde</label>
+                  <input
+                    type="date"
+                    value={customDateRange?.from || ""}
+                    onChange={(event) =>
+                      onCustomDateRangeChange({
+                        ...customDateRange,
+                        from: event.target.value,
+                      })
+                    }
+                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring/30"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Hasta</label>
+                  <input
+                    type="date"
+                    value={customDateRange?.to || ""}
+                    onChange={(event) =>
+                      onCustomDateRangeChange({
+                        ...customDateRange,
+                        to: event.target.value,
+                      })
+                    }
+                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring/30"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
     </div>
-  );
-}
-
-function ChevronRightIcon({ open }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={`size-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="m9 18 6-6-6-6" />
-    </svg>
   );
 }
 
@@ -356,7 +481,9 @@ function SelectAllButton({ allSelected, onClick, mobile = false }) {
       <button
         type="button"
         onClick={onClick}
-        className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 ${allSelected ? "bg-muted" : ""}`}
+        className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 ${
+          allSelected ? "bg-muted" : ""
+        }`}
       >
         <SquareCheckBig className="size-4" />
         {allSelected ? "Quitar selección" : "Seleccionar todos"}
@@ -378,7 +505,9 @@ function BulkChangesButton({ selectedCount, onClick, mobile = false }) {
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90 ${mobile ? "w-full" : ""}`}
+      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90 ${
+        mobile ? "w-full" : ""
+      }`}
     >
       <SquareCheckBig className="size-4" />
       Cambios masivos
@@ -387,15 +516,41 @@ function BulkChangesButton({ selectedCount, onClick, mobile = false }) {
   );
 }
 
+function getConfiguredPrimaryFilters(section, columns) {
+  return (section.primaryFilters || [])
+    .map((filter) => {
+      if (typeof filter === "string") {
+        const column = columns.find((item) => item.key === filter);
+        if (!column) return null;
+        return {
+          key: column.key,
+          label: column.label,
+          type: "select",
+        };
+      }
+
+      return filter;
+    })
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
+function getFilterOptions(filter, rows) {
+  if (filter.options) return filter.options;
+  return getOptionsForColumn(rows, filter.key);
+}
+
 function FiltersToolbar({
   section,
   rows,
   columns,
-  primaryFilterColumns,
+  configuredPrimaryFilters,
   search,
   setSearch,
   primaryFilters,
   setPrimaryFilter,
+  dateRangeFilters,
+  setDateRangeFilter,
   visibleColumns,
   onToggleColumn,
   onOpenAdvancedFilters,
@@ -420,21 +575,32 @@ function FiltersToolbar({
         </div>
 
         <div className="grid w-full grid-cols-[1fr_1fr_1fr_auto_auto_auto] gap-2 xl:flex xl:w-auto xl:items-center">
-          {primaryFilterColumns.map((column) => (
+          {configuredPrimaryFilters.map((filter) => (
             <MultiFilterSelect
-              key={column.key}
-              value={primaryFilters[column.key] || []}
-              onChange={(nextValue) => setPrimaryFilter(column.key, nextValue)}
-              placeholder={column.label}
+              key={filter.key}
+              value={primaryFilters[filter.key] || []}
+              onChange={(nextValue) => setPrimaryFilter(filter.key, nextValue)}
+              placeholder={filter.label}
               className="min-w-0"
-              options={getOptionsForColumn(rows, column.key)}
+              options={getFilterOptions(filter, rows)}
+              customDateRange={dateRangeFilters[filter.key]}
+              onCustomDateRangeChange={
+                filter.type === "dateRange"
+                  ? (nextRange) => setDateRangeFilter(filter.key, nextRange)
+                  : undefined
+              }
             />
           ))}
 
           <AdvancedFiltersButton onClick={onOpenAdvancedFilters} />
 
           {showColumnSelector && (
-            <ColumnSelector compact columns={columns} visibleColumns={visibleColumns} onToggleColumn={onToggleColumn} />
+            <ColumnSelector
+              compact
+              columns={columns}
+              visibleColumns={visibleColumns}
+              onToggleColumn={onToggleColumn}
+            />
           )}
 
           {showSelectAllButton && (
@@ -480,7 +646,11 @@ function AdvancedFiltersPanel({ columns, rows, advancedFilters, setAdvancedFilte
       </div>
 
       <div className="mt-5 flex justify-end">
-        <button type="button" onClick={onClose} className="inline-flex h-10 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90">
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90"
+        >
           Guardar cambios
         </button>
       </div>
@@ -521,7 +691,11 @@ function BulkChangesPanel({ columns, selectedCount, bulkChanges, setBulkChanges,
       </div>
 
       <div className="mt-5 flex justify-end">
-        <button type="button" onClick={onClose} className="inline-flex h-10 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90">
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90"
+        >
           Guardar cambios
         </button>
       </div>
@@ -529,7 +703,16 @@ function BulkChangesPanel({ columns, selectedCount, bulkChanges, setBulkChanges,
   );
 }
 
-function ActionButtons({ item, onView, onDelete, onMarkDone, compact = false, showSelectionButton = false, selected = false, onToggleSelected }) {
+function ActionButtons({
+  item,
+  onView,
+  onDelete,
+  onMarkDone,
+  compact = false,
+  showSelectionButton = false,
+  selected = false,
+  onToggleSelected,
+}) {
   if (compact) {
     return (
       <div className="flex items-center gap-1">
@@ -561,7 +744,9 @@ function ActionButtons({ item, onView, onDelete, onMarkDone, compact = false, sh
         <button
           type="button"
           onClick={() => onToggleSelected(getRowId(item))}
-          className={`inline-flex items-center gap-1 text-xs px-2 py-1 border rounded-md transition-colors ${selected ? "border-foreground bg-foreground text-background" : "border-border hover:bg-muted"}`}
+          className={`inline-flex items-center gap-1 text-xs px-2 py-1 border rounded-md transition-colors ${
+            selected ? "border-foreground bg-foreground text-background" : "border-border hover:bg-muted"
+          }`}
         >
           <SquareCheckBig className="size-3.5" /> Seleccionar
         </button>
@@ -570,7 +755,19 @@ function ActionButtons({ item, onView, onDelete, onMarkDone, compact = false, sh
   );
 }
 
-function DesktopTable({ columns, items, visibleColumns, selectedIds, onToggleSelected, onToggleSelectAll, allVisibleSelected, onView, onDelete, onMarkDone }) {
+function DesktopTable({
+  section,
+  columns,
+  items,
+  visibleColumns,
+  selectedIds,
+  onToggleSelected,
+  onToggleSelectAll,
+  allVisibleSelected,
+  onView,
+  onDelete,
+  onMarkDone,
+}) {
   const isVisible = (columnKey) => visibleColumns.includes(columnKey);
 
   return (
@@ -580,36 +777,69 @@ function DesktopTable({ columns, items, visibleColumns, selectedIds, onToggleSel
           <thead>
             <tr className="border-b border-border bg-muted/30">
               <th className="px-4 py-3 text-left w-8">
-                <input type="checkbox" checked={allVisibleSelected} onChange={onToggleSelectAll} className="size-3.5" aria-label="Seleccionar todos" />
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={onToggleSelectAll}
+                  className="size-3.5"
+                  aria-label="Seleccionar todos"
+                />
               </th>
               {columns.filter((column) => isVisible(column.key)).map((column) => (
-                <th key={column.key} className={`px-4 py-3 text-xs font-medium text-muted-foreground ${column.type === "money" || column.type === "actions" ? "text-right" : "text-left"}`}>
+                <th
+                  key={column.key}
+                  className={`px-4 py-3 text-xs font-medium text-muted-foreground ${
+                    column.type === "money" || column.type === "number" || column.type === "actions"
+                      ? "text-right"
+                      : "text-left"
+                  }`}
+                >
                   {column.label}
                 </th>
               ))}
             </tr>
           </thead>
+
           <tbody>
             {items.map((item) => {
               const rowId = getRowId(item);
               const selected = selectedIds.includes(rowId);
 
               return (
-                <tr key={rowId} className={`border-b border-border last:border-0 hover:bg-muted/20 transition-colors ${selected ? "bg-muted/40" : ""}`}>
+                <tr
+                  key={rowId}
+                  className={`border-b border-border last:border-0 hover:bg-muted/20 transition-colors ${
+                    selected ? "bg-muted/40" : ""
+                  }`}
+                >
                   <td className="px-4 py-3 align-top">
-                    <input type="checkbox" checked={selected} onChange={() => onToggleSelected(rowId)} className="size-3.5" aria-label={`Seleccionar ${rowId}`} />
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => onToggleSelected(rowId)}
+                      className="size-3.5"
+                      aria-label={`Seleccionar ${rowId}`}
+                    />
                   </td>
+
                   {columns.filter((column) => isVisible(column.key)).map((column) => (
-                    <td key={column.key} className={`px-4 py-3 text-xs align-top ${column.type === "money" || column.type === "actions" ? "text-right" : "text-left"}`}>
+                    <td
+                      key={column.key}
+                      className={`px-4 py-3 text-xs align-top ${
+                        column.type === "money" || column.type === "number" || column.type === "actions"
+                          ? "text-right"
+                          : "text-left"
+                      }`}
+                    >
                       {column.type === "actions" ? (
                         <ActionButtons item={item} compact onView={onView} onDelete={onDelete} onMarkDone={onMarkDone} />
                       ) : column.primary ? (
                         <div>
-                          <p className="font-medium text-sm">{renderCell(item, column)}</p>
+                          <p className="font-medium text-sm">{renderCell(item, column, section)}</p>
                           <p className="text-xs text-muted-foreground truncate max-w-sm">{getSecondaryText(item)}</p>
                         </div>
                       ) : (
-                        renderCell(item, column)
+                        renderCell(item, column, section)
                       )}
                     </td>
                   ))}
@@ -621,10 +851,16 @@ function DesktopTable({ columns, items, visibleColumns, selectedIds, onToggleSel
       </div>
 
       <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-        <span className="text-xs text-muted-foreground">1–{items.length} of {items.length}</span>
+        <span className="text-xs text-muted-foreground">
+          1–{items.length} of {items.length}
+        </span>
         <div className="flex items-center gap-1">
-          <button className="p-1 hover:bg-muted rounded"><ChevronLeft className="size-4 text-muted-foreground" /></button>
-          <button className="p-1 hover:bg-muted rounded"><ChevronRight className="size-4 text-muted-foreground" /></button>
+          <button className="p-1 hover:bg-muted rounded">
+            <ChevronLeft className="size-4 text-muted-foreground" />
+          </button>
+          <button className="p-1 hover:bg-muted rounded">
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </button>
         </div>
       </div>
     </Card>
@@ -643,34 +879,75 @@ function LanesView({ section, columns, items, selectedIds, onToggleSelected, onV
       <div className="flex items-center justify-end mb-3">
         <span className="text-xs text-muted-foreground">{items.length} registros</span>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
         {lanes.map((lane) => (
           <div key={lane.id} className="space-y-3 min-w-0">
-<div className="flex items-center justify-between px-1">
-  <div className="flex items-center gap-1.5 text-sm font-medium min-w-0">
-    <span className="text-muted-foreground">◎</span>
-    <span className="truncate">{lane.label}</span>
-    <span className="text-muted-foreground font-normal">{lane.count}</span>
-  </div>
-</div>
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-1.5 text-sm font-medium min-w-0">
+                <span className="text-muted-foreground">◎</span>
+                <span className="truncate">{lane.label}</span>
+                <span className="text-muted-foreground font-normal">{lane.count}</span>
+              </div>
+            </div>
+
             <div className="space-y-3">
               {lane.items.map((item) => {
                 const rowId = getRowId(item);
                 const selected = selectedIds.includes(rowId);
+
                 return (
-                  <Card key={rowId} className={`shadow-none p-3 space-y-2 cursor-pointer hover:shadow-sm transition-shadow ${selected ? "bg-muted/40 ring-1 ring-border" : ""}`}>
+                  <Card
+                    key={rowId}
+                    className={`shadow-none p-3 space-y-2 cursor-pointer hover:shadow-sm transition-shadow ${
+                      selected ? "bg-muted/40 ring-1 ring-border" : ""
+                    }`}
+                  >
                     <div className="flex items-start justify-between text-xs text-muted-foreground gap-2">
-                      <span>ID: <span className="font-semibold text-foreground text-sm">#{rowId}</span></span>
-                      {item.total !== undefined && <span className="text-right">Total <span className="font-semibold text-foreground">{formatMoney(item.total, item.moneda)}</span></span>}
+                      <span>
+                        ID: <span className="font-semibold text-foreground text-sm">#{rowId}</span>
+                      </span>
+                      {item.importeTotal !== undefined && (
+                        <span className="text-right">
+                          Total{" "}
+                          <span className="font-semibold text-foreground">
+                            {formatMoney(item.importeTotal, item.moneda)}
+                          </span>
+                        </span>
+                      )}
+                      {item.total !== undefined && item.importeTotal === undefined && (
+                        <span className="text-right">
+                          Total{" "}
+                          <span className="font-semibold text-foreground">
+                            {formatMoney(item.total, item.moneda)}
+                          </span>
+                        </span>
+                      )}
                     </div>
-                    <p className="text-xs font-medium leading-tight break-words">{getPrimaryText(item, columns)}</p>
-                    <p className="text-xs text-muted-foreground break-words">{getSecondaryText(item)}</p>
-                    <div className="flex flex-wrap gap-1"><StatusBadge value={getStatus(item, laneField)} /></div>
-                    <ActionButtons item={item} onView={onView} onDelete={onDelete} onMarkDone={onMarkDone} showSelectionButton selected={selected} onToggleSelected={onToggleSelected} />
+
+                    <p className="text-xs font-medium leading-tight break-words">
+                      {getPrimaryText(item, columns)}
+                    </p>
+                    <p className="text-xs text-muted-foreground break-words">
+                      {getSecondaryText(item)}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1">
+                      <StatusBadge value={getStatus(item, laneField)} columnKey={laneField} section={section} />
+                    </div>
+
+                    <ActionButtons
+                      item={item}
+                      onView={onView}
+                      onDelete={onDelete}
+                      onMarkDone={onMarkDone}
+                      showSelectionButton
+                      selected={selected}
+                      onToggleSelected={onToggleSelected}
+                    />
                   </Card>
                 );
               })}
-              
             </div>
           </div>
         ))}
@@ -685,24 +962,51 @@ function MobileCards({ section, columns, items, selectedIds, onToggleSelected, o
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>{items.length} registros</span>
       </div>
+
       {items.map((item) => {
         const rowId = getRowId(item);
         const selected = selectedIds.includes(rowId);
+
         return (
-          <Card key={rowId} className={`shadow-none p-4 hover:shadow-sm transition-shadow cursor-pointer ${selected ? "bg-muted/40 ring-1 ring-border" : ""}`}>
+          <Card
+            key={rowId}
+            className={`shadow-none p-4 hover:shadow-sm transition-shadow cursor-pointer ${
+              selected ? "bg-muted/40 ring-1 ring-border" : ""
+            }`}
+          >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold">#{rowId}</span>
-                  <StatusBadge value={getStatus(item, section.laneField)} />
+                  <StatusBadge value={getStatus(item, section.laneField)} columnKey={section.laneField} section={section} />
                 </div>
+
                 <p className="text-base font-semibold mt-1 break-words">{getPrimaryText(item, columns)}</p>
                 <p className="text-xs text-muted-foreground break-words">{getSecondaryText(item)}</p>
-                <div className="mt-3"><ActionButtons item={item} onView={onView} onDelete={onDelete} onMarkDone={onMarkDone} showSelectionButton selected={selected} onToggleSelected={onToggleSelected} /></div>
+
+                <div className="mt-3">
+                  <ActionButtons
+                    item={item}
+                    onView={onView}
+                    onDelete={onDelete}
+                    onMarkDone={onMarkDone}
+                    showSelectionButton
+                    selected={selected}
+                    onToggleSelected={onToggleSelected}
+                  />
+                </div>
               </div>
+
               <div className="flex flex-col items-end gap-2 shrink-0">
-                {item.total !== undefined && <span className="text-lg font-bold text-right">{formatMoney(item.total, item.moneda)}</span>}
-                <button className="p-1 hover:bg-muted rounded"><MoreHorizontal className="size-4 text-muted-foreground" /></button>
+                {item.importeTotal !== undefined && (
+                  <span className="text-lg font-bold text-right">{formatMoney(item.importeTotal, item.moneda)}</span>
+                )}
+                {item.total !== undefined && item.importeTotal === undefined && (
+                  <span className="text-lg font-bold text-right">{formatMoney(item.total, item.moneda)}</span>
+                )}
+                <button className="p-1 hover:bg-muted rounded">
+                  <MoreHorizontal className="size-4 text-muted-foreground" />
+                </button>
               </div>
             </div>
           </Card>
@@ -721,6 +1025,7 @@ export default function EntityListPage({ section }) {
   const [search, setSearch] = useState("");
   const [desktopView, setDesktopView] = useState(getInitialView);
   const [primaryFilters, setPrimaryFilters] = useState({});
+  const [dateRangeFilters, setDateRangeFilters] = useState({});
   const [visibleColumns, setVisibleColumns] = useState(section.defaultVisibleColumns || columns.map((column) => column.key));
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({});
@@ -732,63 +1037,117 @@ export default function EntityListPage({ section }) {
     const handleResize = () => {
       const isDesktop = window.innerWidth >= 1280;
       const wasDesktop = previousIsDesktopRef.current;
+
       if (wasDesktop && !isDesktop) {
         setDesktopView("lanes");
         userSelectedViewRef.current = false;
       }
+
       if (!wasDesktop && isDesktop && !userSelectedViewRef.current) {
         setDesktopView("table");
       }
+
       previousIsDesktopRef.current = isDesktop;
     };
 
     window.addEventListener("resize", handleResize);
     handleResize();
+
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const primaryFilterColumns = (section.primaryFilters || []).map((key) => columns.find((column) => column.key === key)).filter(Boolean).slice(0, 3);
+  const configuredPrimaryFilters = getConfiguredPrimaryFilters(section, columns);
   const searchableColumns = columns.filter((column) => column.type !== "actions");
 
-  const setPrimaryFilter = (columnKey, nextValue) => {
-    setPrimaryFilters((current) => ({ ...current, [columnKey]: nextValue }));
+  const setPrimaryFilter = (filterKey, nextValue) => {
+    setPrimaryFilters((current) => ({ ...current, [filterKey]: nextValue }));
+  };
+
+  const setDateRangeFilter = (filterKey, nextRange) => {
+    setDateRangeFilters((current) => ({ ...current, [filterKey]: nextRange }));
   };
 
   const toggleColumn = (columnKey) => {
     const column = columns.find((item) => item.key === columnKey);
     if (column?.locked) return;
+
     setVisibleColumns((current) => {
-      const next = current.includes(columnKey) ? current.filter((key) => key !== columnKey) : [...current, columnKey];
+      const next = current.includes(columnKey)
+        ? current.filter((key) => key !== columnKey)
+        : [...current, columnKey];
+
       return columns.map((item) => item.key).filter((key) => next.includes(key));
     });
   };
 
   const filtered = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-    const normalizedAdvancedFilters = Object.fromEntries(Object.entries(advancedFilters).filter(([, values]) => Array.isArray(values) && values.length > 0));
+
+    const normalizedAdvancedFilters = Object.fromEntries(
+      Object.entries(advancedFilters).filter(([, values]) => Array.isArray(values) && values.length > 0)
+    );
 
     return rows.filter((item) => {
       const matchesSearch =
         !normalizedSearch ||
-        searchableColumns.some((column) => String(item[column.key] || "").toLowerCase().includes(normalizedSearch));
+        searchableColumns.some((column) =>
+          String(item[column.key] || "").toLowerCase().includes(normalizedSearch)
+        );
 
-      const matchesPrimaryFilters = Object.entries(primaryFilters).every(([columnKey, values]) => !Array.isArray(values) || values.length === 0 || values.includes(String(item[columnKey])));
+      const matchesPrimaryFilters = configuredPrimaryFilters.every((filter) => {
+        const values = primaryFilters[filter.key];
 
-      const matchesAdvancedFilters = Object.entries(normalizedAdvancedFilters).every(([columnKey, selectedValues]) => selectedValues.includes(String(item[columnKey])));
+        if (!Array.isArray(values) || values.length === 0) return true;
+
+        if (filter.type === "dateRange") {
+          const itemDate = parseDate(item[filter.sourceKey || filter.key]);
+          if (!itemDate) return false;
+
+          const ranges = values
+            .map((value) => getDateRangeFromFilterValue(value, dateRangeFilters[filter.key]))
+            .filter(Boolean);
+
+          if (ranges.length === 0) return true;
+
+          return ranges.some((range) => isDateInRange(itemDate, range));
+        }
+
+        return values.includes(String(item[filter.key]));
+      });
+
+      const matchesAdvancedFilters = Object.entries(normalizedAdvancedFilters).every(
+        ([columnKey, selectedValues]) => selectedValues.includes(String(item[columnKey]))
+      );
 
       return matchesSearch && matchesPrimaryFilters && matchesAdvancedFilters;
     });
-  }, [rows, search, searchableColumns, primaryFilters, advancedFilters]);
+  }, [
+    rows,
+    search,
+    searchableColumns,
+    configuredPrimaryFilters,
+    primaryFilters,
+    dateRangeFilters,
+    advancedFilters,
+  ]);
 
   const visibleIds = useMemo(() => filtered.map((item) => getRowId(item)), [filtered]);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
   const toggleSelected = (rowId) => {
-    setSelectedIds((current) => current.includes(rowId) ? current.filter((id) => id !== rowId) : [...current, rowId]);
+    setSelectedIds((current) =>
+      current.includes(rowId)
+        ? current.filter((id) => id !== rowId)
+        : [...current, rowId]
+    );
   };
 
   const toggleSelectAllVisible = () => {
-    setSelectedIds((current) => allVisibleSelected ? current.filter((id) => !visibleIds.includes(id)) : Array.from(new Set([...current, ...visibleIds])));
+    setSelectedIds((current) =>
+      allVisibleSelected
+        ? current.filter((id) => !visibleIds.includes(id))
+        : Array.from(new Set([...current, ...visibleIds]))
+    );
   };
 
   const handleViewChange = (nextView) => {
@@ -808,8 +1167,12 @@ export default function EntityListPage({ section }) {
           <h1 className="text-2xl font-bold">{section.title}</h1>
           <p className="text-sm text-muted-foreground">{section.subtitle}</p>
         </div>
-        {section.createPath && (
-          <Link to={section.createPath} className="flex items-center gap-1.5 bg-foreground text-background px-3 py-1.5 rounded-md text-sm hover:opacity-90">
+
+        {section.createPath && desktopView !== "lanes" && (
+          <Link
+            to={section.createPath}
+            className="flex items-center gap-1.5 bg-foreground text-background px-3 py-1.5 rounded-md text-sm hover:opacity-90"
+          >
             <Plus className="size-4" /> Nuevo {section.title.toLowerCase()}
           </Link>
         )}
@@ -817,11 +1180,19 @@ export default function EntityListPage({ section }) {
 
       {!advancedFiltersOpen && !bulkChangesOpen && (
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="hidden sm:flex items-center gap-2"><ViewSwitcher value={desktopView} onChange={handleViewChange} /></div>
+          <div className="hidden sm:flex items-center gap-2">
+            <ViewSwitcher value={desktopView} onChange={handleViewChange} />
+          </div>
+
           <div className="flex sm:hidden items-center gap-2 w-full">
             <div className="relative w-full">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-              <input placeholder={`Buscar ${section.title.toLowerCase()}...`} value={search} onChange={(event) => setSearch(event.target.value)} className="w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-3 text-base focus:outline-none" />
+              <input
+                placeholder={`Buscar ${section.title.toLowerCase()}...`}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-3 text-base focus:outline-none"
+              />
             </div>
           </div>
         </div>
@@ -830,9 +1201,17 @@ export default function EntityListPage({ section }) {
       {!advancedFiltersOpen && !bulkChangesOpen && (
         <div className="sm:hidden space-y-2">
           <AdvancedFiltersButton mobile onClick={() => setAdvancedFiltersOpen(true)} />
+
           <div className={`grid gap-2 ${selectedCount > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
             <SelectAllButton mobile allSelected={allVisibleSelected} onClick={toggleSelectAllVisible} />
-            {selectedCount > 0 && <BulkChangesButton mobile selectedCount={selectedCount} onClick={() => setBulkChangesOpen(true)} />}
+
+            {selectedCount > 0 && (
+              <BulkChangesButton
+                mobile
+                selectedCount={selectedCount}
+                onClick={() => setBulkChangesOpen(true)}
+              />
+            )}
           </div>
         </div>
       )}
@@ -842,11 +1221,13 @@ export default function EntityListPage({ section }) {
           section={section}
           rows={rows}
           columns={columns}
-          primaryFilterColumns={primaryFilterColumns}
+          configuredPrimaryFilters={configuredPrimaryFilters}
           search={search}
           setSearch={setSearch}
           primaryFilters={primaryFilters}
           setPrimaryFilter={setPrimaryFilter}
+          dateRangeFilters={dateRangeFilters}
+          setDateRangeFilter={setDateRangeFilter}
           visibleColumns={visibleColumns}
           onToggleColumn={toggleColumn}
           onOpenAdvancedFilters={() => setAdvancedFiltersOpen(true)}
@@ -857,20 +1238,89 @@ export default function EntityListPage({ section }) {
       )}
 
       {!advancedFiltersOpen && !bulkChangesOpen && selectedCount > 0 && (
-        <div className="hidden sm:block"><BulkChangesButton selectedCount={selectedCount} onClick={() => setBulkChangesOpen(true)} /></div>
+        <div className="hidden sm:block">
+          <BulkChangesButton selectedCount={selectedCount} onClick={() => setBulkChangesOpen(true)} />
+        </div>
       )}
 
-      {advancedFiltersOpen && <AdvancedFiltersPanel columns={columns} rows={rows} advancedFilters={advancedFilters} setAdvancedFilters={setAdvancedFilters} onClose={() => setAdvancedFiltersOpen(false)} />}
-      {bulkChangesOpen && <BulkChangesPanel columns={columns} selectedCount={selectedCount} bulkChanges={bulkChanges} setBulkChanges={setBulkChanges} onClose={() => setBulkChangesOpen(false)} />}
+      {advancedFiltersOpen && (
+        <AdvancedFiltersPanel
+          columns={columns}
+          rows={rows}
+          advancedFilters={advancedFilters}
+          setAdvancedFilters={setAdvancedFilters}
+          onClose={() => setAdvancedFiltersOpen(false)}
+        />
+      )}
+
+      {bulkChangesOpen && (
+        <BulkChangesPanel
+          columns={columns}
+          selectedCount={selectedCount}
+          bulkChanges={bulkChanges}
+          setBulkChanges={setBulkChanges}
+          onClose={() => setBulkChangesOpen(false)}
+        />
+      )}
 
       {!advancedFiltersOpen && !bulkChangesOpen && (
         <>
           <div className="hidden sm:block">
-            {desktopView === "table" && <DesktopTable columns={columns} items={filtered} visibleColumns={visibleColumns} selectedIds={selectedIds} onToggleSelected={toggleSelected} onToggleSelectAll={toggleSelectAllVisible} allVisibleSelected={allVisibleSelected} onView={handleView} onDelete={handleDelete} onMarkDone={handleMarkDone} />}
-            {desktopView === "lanes" && <LanesView section={section} columns={columns} items={filtered} selectedIds={selectedIds} onToggleSelected={toggleSelected} onView={handleView} onDelete={handleDelete} onMarkDone={handleMarkDone} />}
-            {desktopView === "cards" && <MobileCards section={section} columns={columns} items={filtered} selectedIds={selectedIds} onToggleSelected={toggleSelected} onView={handleView} onDelete={handleDelete} onMarkDone={handleMarkDone} />}
+            {desktopView === "table" && (
+              <DesktopTable
+                section={section}
+                columns={columns}
+                items={filtered}
+                visibleColumns={visibleColumns}
+                selectedIds={selectedIds}
+                onToggleSelected={toggleSelected}
+                onToggleSelectAll={toggleSelectAllVisible}
+                allVisibleSelected={allVisibleSelected}
+                onView={handleView}
+                onDelete={handleDelete}
+                onMarkDone={handleMarkDone}
+              />
+            )}
+
+            {desktopView === "lanes" && (
+              <LanesView
+                section={section}
+                columns={columns}
+                items={filtered}
+                selectedIds={selectedIds}
+                onToggleSelected={toggleSelected}
+                onView={handleView}
+                onDelete={handleDelete}
+                onMarkDone={handleMarkDone}
+              />
+            )}
+
+            {desktopView === "cards" && (
+              <MobileCards
+                section={section}
+                columns={columns}
+                items={filtered}
+                selectedIds={selectedIds}
+                onToggleSelected={toggleSelected}
+                onView={handleView}
+                onDelete={handleDelete}
+                onMarkDone={handleMarkDone}
+              />
+            )}
           </div>
-          <div className="sm:hidden"><MobileCards section={section} columns={columns} items={filtered} selectedIds={selectedIds} onToggleSelected={toggleSelected} onView={handleView} onDelete={handleDelete} onMarkDone={handleMarkDone} /></div>
+
+          <div className="sm:hidden">
+            <MobileCards
+              section={section}
+              columns={columns}
+              items={filtered}
+              selectedIds={selectedIds}
+              onToggleSelected={toggleSelected}
+              onView={handleView}
+              onDelete={handleDelete}
+              onMarkDone={handleMarkDone}
+            />
+          </div>
         </>
       )}
     </div>

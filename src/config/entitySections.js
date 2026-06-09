@@ -49,7 +49,7 @@ const commonRows = [
 
 const ordenesFacturacionColumns = [
   { key: "orderId", label: "Order ID", type: "text", locked: true },
-  { key: "fecha", label: "Fecha", type: "text" },
+  { key: "fecha", label: "Fecha", type: "date" },
   { key: "estado", label: "Estado", type: "status" },
   { key: "tc", label: "T/C", type: "text" },
   { key: "provincia", label: "Provincia", type: "text" },
@@ -142,6 +142,24 @@ const ordenesFacturacionRows = [
   },
 ];
 
+const defaultBadgeStyles = {
+  estado: {
+    ACTIVO: "green",
+    PENDIENTE: "blue",
+    INACTIVO: "red",
+    BORRADOR: "yellow",
+  },
+};
+
+const ordenesFacturacionBadgeStyles = {
+  estado: {
+    "ESPERANDO PAGO": "blue",
+    PAGADO: "green",
+    BORRADOR: "yellow",
+    ANULADO: "red",
+  },
+};
+
 const defaultActions = {
   view: true,
   edit: true,
@@ -162,6 +180,7 @@ function makeSection({
   rows = commonRows,
   primaryFilters = ["estado", "tipo", "moneda"],
   laneField = "estado",
+  badgeStyles = defaultBadgeStyles,
   actions = {},
 }) {
   return {
@@ -176,6 +195,7 @@ function makeSection({
     rows,
     primaryFilters,
     laneField,
+    badgeStyles,
     actions: {
       ...defaultActions,
       ...actions,
@@ -352,8 +372,31 @@ export const entitySections = [
     endpoint: "/api/administracion-comercial/ordenes-facturacion",
     columns: ordenesFacturacionColumns,
     rows: ordenesFacturacionRows,
-    primaryFilters: ["estado", "emisora", "moneda"],
+    primaryFilters: [
+      {
+        key: "periodo",
+        label: "Período",
+        type: "dateRange",
+        sourceKey: "fecha",
+        options: [
+          { value: "currentMonth", label: "Mes actual" },
+          { value: "previousMonth", label: "Mes anterior" },
+          { value: "custom", label: "Personalizado" },
+        ],
+      },
+      {
+        key: "emisora",
+        label: "Emisora",
+        type: "select",
+      },
+      {
+        key: "estado",
+        label: "Estado",
+        type: "select",
+      },
+    ],
     laneField: "estado",
+    badgeStyles: ordenesFacturacionBadgeStyles,
   }),
 ];
 
