@@ -167,15 +167,15 @@
   }
 
   .dark * {
-    scrollbar-color: hsl(0 0% 42%) transparent;
+    scrollbar-color: hsl(0 0% 34%) transparent;
   }
 
   .dark *::-webkit-scrollbar-thumb {
-    background-color: hsl(0 0% 42%);
+    background-color: hsl(0 0% 34%);
   }
 
   .dark *::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(0 0% 68%);
+    background-color: hsl(0 0% 46%);
   }
 
   .dark aside,
