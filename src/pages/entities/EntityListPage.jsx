@@ -606,7 +606,7 @@ function FiltersToolbar({
           />
         </div>
 
-        <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 xl:flex xl:w-auto xl:shrink-0 xl:items-center">
+        <div className="grid w-full grid-cols-3 gap-2 xl:flex xl:w-auto xl:shrink-0 xl:items-center">
           {configuredPrimaryFilters.map((filter) => (
             <MultiFilterSelect
               key={`${sectionKey}-${filter.key}`}
@@ -625,18 +625,20 @@ function FiltersToolbar({
             />
           ))}
 
-          <AdvancedFiltersButton onClick={onOpenAdvancedFilters} showLabel />
+          <div className="col-span-3 flex flex-wrap items-center gap-2 xl:col-span-1 xl:flex-nowrap">
+            <AdvancedFiltersButton onClick={onOpenAdvancedFilters} showLabel />
 
-          <ColumnSelector
-            columns={columns}
-            visibleColumns={visibleColumns}
-            onToggleColumn={onToggleColumn}
-            resetKey={sectionKey}
-          />
+            <ColumnSelector
+              columns={columns}
+              visibleColumns={visibleColumns}
+              onToggleColumn={onToggleColumn}
+              resetKey={sectionKey}
+            />
 
-          {showSelectAllButton && (
-            <SelectAllButton allSelected={allVisibleSelected} onClick={onToggleSelectAll} />
-          )}
+            {showSelectAllButton && (
+              <SelectAllButton allSelected={allVisibleSelected} onClick={onToggleSelectAll} />
+            )}
+          </div>
         </div>
       </div>
     </div>
