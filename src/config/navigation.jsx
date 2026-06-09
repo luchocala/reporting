@@ -12,7 +12,6 @@ import {
   Globe,
   HardDrive,
   Landmark,
-  LayoutDashboard,
   LineChart,
   ReceiptText,
   Repeat,
@@ -23,21 +22,6 @@ import {
 } from "lucide-react";
 
 export const navSections = [
-  {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    items: [
-      { icon: LayoutDashboard, label: "Dashboard 1", path: "/" },
-      { icon: LayoutDashboard, label: "Dashboard 2", path: "/dashboard-2" },
-      { icon: LayoutDashboard, label: "Dashboard 3", path: "/dashboard-3" },
-      { icon: LayoutDashboard, label: "Dashboard 4", path: "/dashboard-4" },
-      { icon: LayoutDashboard, label: "Dashboard 5", path: "/dashboard-5" },
-      { icon: LayoutDashboard, label: "Dashboard 6", path: "/dashboard-6" },
-      { icon: LayoutDashboard, label: "Dashboard 7", path: "/dashboard-7" },
-      { icon: LayoutDashboard, label: "Dashboard 8", path: "/dashboard-8" },
-      { icon: LayoutDashboard, label: "Dashboard 9", path: "/dashboard-9" },
-    ],
-  },
   {
     label: "Estructural",
     icon: Database,
