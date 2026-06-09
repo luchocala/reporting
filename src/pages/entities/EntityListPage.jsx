@@ -415,11 +415,11 @@ function AdvancedFiltersButton({ onClick, mobile = false, showLabel = false }) {
       <button
         type="button"
         onClick={onClick}
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 2xl:px-4"
+        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
         title="+Filtros"
       >
         <SlidersHorizontal className="size-4 shrink-0" />
-        <span className="hidden 2xl:inline">+Filtros</span>
+        <span>+Filtros</span>
       </button>
     );
   }
@@ -446,7 +446,7 @@ function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = fal
         className={
           compact
             ? "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-input bg-background shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
-            : "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-3 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 2xl:w-[160px] 2xl:px-4"
+            : "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
         }
         title="Columnas"
       >
@@ -466,8 +466,7 @@ function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = fal
           <path d="M15 4v16" />
         </svg>
 
-        {!compact && <span className="hidden 2xl:inline">Columnas</span>}
-        {compact && <span className="hidden 2xl:inline">Columnas</span>}
+        {!compact && <span>Columnas</span>}
       </button>
 
       {open && (
