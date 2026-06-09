@@ -13,6 +13,7 @@ import {
   SquareCheckBig,
   CheckCircle2,
   ArrowLeft,
+  RefreshCw,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -1242,10 +1243,23 @@ export default function EntityListPage({ section }) {
     setDesktopView(nextView);
   };
 
-  const handleView = (item) => console.log("Ver detalle", item);
-  const handleDelete = (item) => console.log("Eliminar", item);
-  const handleMarkDone = (item) => console.log("Confirmar", item);
-  const selectedCount = selectedIds.length;
+const handleView = (item) => console.log("Ver detalle", item);
+const handleDelete = (item) => console.log("Eliminar", item);
+const handleMarkDone = (item) => console.log("Confirmar", item);
+
+const handleRefresh = () => {
+  setSearch("");
+  setPrimaryFilters({});
+  setDateRangeFilters({});
+  setAdvancedFilters({});
+  setBulkChanges({});
+  setSelectedIds([]);
+  setAdvancedFiltersOpen(false);
+  setBulkChangesOpen(false);
+  setVisibleColumns(getAllColumnKeys(section.columns || []));
+};
+
+const selectedCount = selectedIds.length;
 
   return (
     <div className="space-y-4">
@@ -1257,14 +1271,27 @@ export default function EntityListPage({ section }) {
           <p className="text-sm text-muted-foreground">{section.subtitle}</p>
         </div>
 
-        {section.createPath && (
-          <Link
-            to={section.createPath}
-            className="flex items-center gap-1.5 bg-foreground text-background px-3 py-1.5 rounded-md text-sm hover:opacity-90"
-          >
-            <Plus className="size-4" /> Nuevo {section.title.toLowerCase()}
-          </Link>
-        )}
+<div className="flex items-center gap-2">
+  <button
+    type="button"
+    onClick={handleRefresh}
+    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-foreground px-2.5 text-sm text-background transition-opacity hover:opacity-90 xl:px-3"
+    title="Refresh"
+  >
+    <RefreshCw className="size-4" />
+    <span className="hidden xl:inline">Refresh</span>
+  </button>
+
+  {section.createPath && (
+    <Link
+      to={section.createPath}
+      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-foreground px-2.5 text-sm text-background transition-opacity hover:opacity-90 xl:px-3"
+    >
+      <Plus className="size-4" />
+      <span className="hidden xl:inline">Nuevo {section.title.toLowerCase()}</span>
+    </Link>
+  )}
+</div>
       </div>
 
       {!advancedFiltersOpen && !bulkChangesOpen && (
