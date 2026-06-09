@@ -712,7 +712,7 @@ function BulkChangesPanel({ columns, selectedCount, bulkChanges, setBulkChanges,
     <Card className="shadow-none p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          >Cambios masivos</h2>
+          <h2 className="text-lg font-semibold">Cambios masivos</h2>
           <p className="text-sm text-muted-foreground">
             Editá campos para aplicar cambios a {selectedCount} registro{selectedCount === 1 ? "" : "s"} seleccionado
             {selectedCount === 1 ? "" : "s"}.
