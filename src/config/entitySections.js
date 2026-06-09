@@ -142,6 +142,88 @@ const ordenesFacturacionRows = [
   },
 ];
 
+const tasksColumns = [
+  { key: "id", label: "Task", type: "text", locked: true },
+  { key: "tipo", label: "Tipo", type: "badge" },
+  { key: "titulo", label: "Título", type: "text", primary: true },
+  { key: "estado", label: "Estado", type: "status" },
+  { key: "prioridad", label: "Prioridad", type: "badge" },
+  { key: "acciones", label: "Acciones", type: "actions", locked: true },
+];
+
+const tasksRows = [
+  {
+    id: "TASK-8782",
+    tipo: "Documentation",
+    titulo: "You can't compress the program without quantifying the open-source S...",
+    estado: "In Progress",
+    prioridad: "Medium",
+  },
+  {
+    id: "TASK-7878",
+    tipo: "Documentation",
+    titulo: "Try to calculate the EXE feed, maybe it will index the multi-byte pixel!",
+    estado: "Backlog",
+    prioridad: "Medium",
+  },
+  {
+    id: "TASK-7839",
+    tipo: "Bug",
+    titulo: "We need to bypass the neural TCP card!",
+    estado: "Todo",
+    prioridad: "High",
+  },
+  {
+    id: "TASK-5562",
+    tipo: "Feature",
+    titulo: "The SAS interface is down, bypass the open-source pixel so we can bac...",
+    estado: "Backlog",
+    prioridad: "Medium",
+  },
+  {
+    id: "TASK-8686",
+    tipo: "Feature",
+    titulo: "I'll parse the wireless SSL protocol, that should driver the API panel!",
+    estado: "Canceled",
+    prioridad: "Medium",
+  },
+  {
+    id: "TASK-1280",
+    tipo: "Bug",
+    titulo: "Use the digital TLS panel, then you can transmit the haptic system!",
+    estado: "Done",
+    prioridad: "High",
+  },
+  {
+    id: "TASK-7262",
+    tipo: "Feature",
+    titulo: "The UTF8 application is down, parse the neural bandwidth so we can ba...",
+    estado: "Done",
+    prioridad: "High",
+  },
+  {
+    id: "TASK-1138",
+    tipo: "Feature",
+    titulo: "Generating the driver won't do anything, we need to quantify the 1080p ...",
+    estado: "In Progress",
+    prioridad: "Medium",
+  },
+  {
+    id: "TASK-7184",
+    tipo: "Feature",
+    titulo: "We need to program the back-end THX pixel!",
+    estado: "Todo",
+    prioridad: "Low",
+  },
+  {
+    id: "TASK-5160",
+    tipo: "Documentation",
+    titulo: "Calculating the bus won't do anything, we need to navigate the back-en...",
+    estado: "In Progress",
+    prioridad: "High",
+  },
+];
+
 const defaultBadgeStyles = {
   estado: {
     ACTIVO: "green",
@@ -157,6 +239,26 @@ const ordenesFacturacionBadgeStyles = {
     PAGADO: "green",
     BORRADOR: "yellow",
     ANULADO: "red",
+  },
+};
+
+const tasksBadgeStyles = {
+  estado: {
+    "In Progress": "blue",
+    Backlog: "slate",
+    Todo: "slate",
+    Canceled: "red",
+    Done: "green",
+  },
+  tipo: {
+    Documentation: "blue",
+    Bug: "red",
+    Feature: "yellow",
+  },
+  prioridad: {
+    High: "red",
+    Medium: "blue",
+    Low: "slate",
   },
 };
 
@@ -397,6 +499,21 @@ export const entitySections = [
     ],
     laneField: "estado",
     badgeStyles: ordenesFacturacionBadgeStyles,
+  }),
+
+  makeSection({
+    key: "configuracion-tasks",
+    group: "Configuración",
+    title: "Tasks",
+    subtitle: "Listado de tareas configuradas.",
+    path: "/configuracion/tasks",
+    createPath: "/configuracion/tasks/new",
+    endpoint: "/api/configuracion/tasks",
+    columns: tasksColumns,
+    rows: tasksRows,
+    primaryFilters: ["estado", "prioridad", "tipo"],
+    laneField: "estado",
+    badgeStyles: tasksBadgeStyles,
   }),
 ];
 
