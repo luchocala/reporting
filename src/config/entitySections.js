@@ -207,7 +207,7 @@ export const entitySections = [
     title: "Ventas",
     subtitle: "Reporte de ventas.",
     path: "/reportes/ventas",
-    createPath: null,
+    createPath: "/reportes/ventas/new",
     endpoint: "/api/reportes/ventas",
   }),
   makeSection({
@@ -216,7 +216,7 @@ export const entitySections = [
     title: "Recurrentes por cuentas",
     subtitle: "Reporte de recurrentes por cuentas.",
     path: "/reportes/recurrentes-por-cuentas",
-    createPath: null,
+    createPath: "/reportes/recurrentes-por-cuentas/new",
     endpoint: "/api/reportes/recurrentes-por-cuentas",
   }),
   makeSection({
@@ -225,7 +225,7 @@ export const entitySections = [
     title: "Recurrentes por actividades",
     subtitle: "Reporte de recurrentes por actividades.",
     path: "/reportes/recurrentes-por-actividades",
-    createPath: null,
+    createPath: "/reportes/recurrentes-por-actividades/new",
     endpoint: "/api/reportes/recurrentes-por-actividades",
   }),
 
@@ -235,7 +235,7 @@ export const entitySections = [
     title: "Ventas",
     subtitle: "Administración comercial de ventas.",
     path: "/administracion-comercial/ventas",
-    createPath: null,
+    createPath: "/administracion-comercial/ventas/new",
     endpoint: "/api/administracion-comercial/ventas",
   }),
   makeSection({
@@ -244,7 +244,7 @@ export const entitySections = [
     title: "Índices",
     subtitle: "Administración comercial de índices.",
     path: "/administracion-comercial/indices",
-    createPath: null,
+    createPath: "/administracion-comercial/indices/new",
     endpoint: "/api/administracion-comercial/indices",
   }),
 ];
