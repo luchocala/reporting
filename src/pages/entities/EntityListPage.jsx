@@ -297,7 +297,7 @@ function MultiFilterSelect({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 xl:w-[180px]"
+        className="inline-flex h-10 w-full min-w-[160px] items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 xl:w-[180px]"
       >
         <span className="truncate">{label}</span>
         <ChevronRightIcon open={open} />
@@ -415,11 +415,11 @@ function AdvancedFiltersButton({ onClick, mobile = false, showLabel = false }) {
       <button
         type="button"
         onClick={onClick}
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
+        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 2xl:px-4"
         title="+Filtros"
       >
-        <SlidersHorizontal className="size-4" />
-        <span>+Filtros</span>
+        <SlidersHorizontal className="size-4 shrink-0" />
+        <span className="hidden 2xl:inline">+Filtros</span>
       </button>
     );
   }
@@ -446,13 +446,13 @@ function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = fal
         className={
           compact
             ? "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-input bg-background shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
-            : "inline-flex h-10 w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 xl:w-[160px]"
+            : "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-3 text-sm font-semibold shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30 2xl:w-[160px] 2xl:px-4"
         }
         title="Columnas"
       >
         <svg
           viewBox="0 0 24 24"
-          className="size-5"
+          className="size-5 shrink-0"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.9"
@@ -465,7 +465,8 @@ function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = fal
           <path d="M9 4v16" />
           <path d="M15 4v16" />
         </svg>
-        {!compact && <span>Columnas</span>}
+
+        {!compact && <span className="hidden 2xl:inline">Columnas</span>}
         {compact && <span className="hidden 2xl:inline">Columnas</span>}
       </button>
 
@@ -605,7 +606,7 @@ function FiltersToolbar({
           />
         </div>
 
-        <div className="grid w-full grid-cols-[1fr_1fr_1fr_auto_auto_auto] gap-2 xl:flex xl:w-auto xl:shrink-0 xl:items-center">
+        <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 xl:flex xl:w-auto xl:shrink-0 xl:items-center">
           {configuredPrimaryFilters.map((filter) => (
             <MultiFilterSelect
               key={`${sectionKey}-${filter.key}`}
