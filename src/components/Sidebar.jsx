@@ -14,7 +14,6 @@ import {
   Plus,
   PanelLeftClose,
   PanelLeftOpen,
-  X,
   LogOut,
   Database,
   Clock,
@@ -212,31 +211,12 @@ function NavItem({ item, collapsed = false, onNavigate }) {
   const Icon = item.icon;
 
   if (collapsed) {
-    if (hasChildren) {
-      const firstChildPath = item.children[0]?.path || "#";
-
-      return (
-        <li>
-          <Link
-            to={firstChildPath}
-            onClick={onNavigate}
-            title={item.label}
-            className={`flex items-center justify-center rounded-md px-2 py-2 text-sm transition-colors ${
-              isActive
-                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            }`}
-          >
-            <Icon className="size-4 shrink-0" />
-          </Link>
-        </li>
-      );
-    }
+    const targetPath = hasChildren ? item.children[0]?.path || "#" : item.path;
 
     return (
       <li>
         <Link
-          to={item.path}
+          to={targetPath}
           onClick={onNavigate}
           title={item.label}
           className={`flex items-center justify-center rounded-md px-2 py-2 text-sm transition-colors ${
@@ -307,8 +287,7 @@ function NavItem({ item, collapsed = false, onNavigate }) {
   );
 }
 
-export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+export default function Sidebar({ collapsed = false, onToggleCollapsed }) {
   const [selectedTeam, setSelectedTeam] = useState(teams[0]);
   const { user, logout } = useLocalAuth();
   const navigate = useNavigate();
@@ -365,7 +344,7 @@ export default function Sidebar() {
           </div>
         )}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={onToggleCollapsed}
           className="flex size-8 items-center justify-center rounded-md hover:bg-sidebar-accent"
         >
           {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
@@ -405,14 +384,12 @@ export default function Sidebar() {
               <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
                 {getUserInitials(user)}
               </div>
-
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium truncate">{getDisplayName(user)}</p>
                 <p className="text-xs text-sidebar-foreground/50 truncate">
                   {user?.email || user?.username || ""}
                 </p>
               </div>
-
               <button
                 type="button"
                 onClick={handleLogout}
