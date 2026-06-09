@@ -111,7 +111,8 @@ const ProtectedApp = () => {
         <Route path="/dashboard-8" element={<Dashboard8 />} />
         <Route path="/dashboard-9" element={<Dashboard9 />} />
 
-        {/* Reporting original */}
+        {/* Órdenes de Facturación */}
+        <Route path="/administracion-comercial/ordenes-facturacion" element={<Comprobantes />} />
         <Route path="/comprobantes" element={<Comprobantes />} />
 
         {/* Secciones genéricas */}
