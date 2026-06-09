@@ -78,14 +78,14 @@ export const navSections = [
         label: "Órdenes de Facturación",
         path: "/administracion-comercial/ordenes-facturacion",
       },
+      { icon: CheckSquare, label: "Tareas", path: "/configuracion/tasks" },      
     ],
   },
   {
     label: "Configuración",
     items: [
-      { icon: Users, label: "Users", path: "/configuracion/users" },
-      { icon: CheckSquare, label: "Tasks", path: "/configuracion/tasks" },
-      { icon: User, label: "Profile", path: "/configuracion/profile" },
+      { icon: Users, label: "Usuarios", path: "/configuracion/users" },
+      { icon: User, label: "Perfil", path: "/configuracion/profile" },
     ],
   },
 ];

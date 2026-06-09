@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { navSections } from "@/config/navigation";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
+import { useEffect, useState } from "react";
+import { isDarkTheme, toggleTheme } from "@/lib/theme";
 
 const workspace = { name: "Adnovation SRL", plan: "Reporting" };
 
@@ -69,9 +71,19 @@ function SectionHeader({ section, collapsed = false }) {
 export default function Sidebar({ collapsed = false, onToggleCollapsed }) {
   const { user, logout } = useLocalAuth();
   const navigate = useNavigate();
-  const [dark, setDark] = useState(() =>
-    document.documentElement.classList.contains("dark")
-  );
+  const [dark, setDark] = useState(isDarkTheme());
+
+  useEffect(() => {
+    const syncTheme = (e) => {
+      setDark(e.detail.dark);
+    };
+
+    window.addEventListener("themechange", syncTheme);
+
+    return () => {
+      window.removeEventListener("themechange", syncTheme);
+    };
+  }, []);
 
   const toggleTheme = () => {
     const next = !dark;

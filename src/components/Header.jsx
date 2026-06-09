@@ -3,6 +3,8 @@ import { Sun, Moon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
+import { useEffect, useState } from "react";
+import { isDarkTheme, toggleTheme } from "@/lib/theme";
 
 function getUserInitial(user) {
   return (
@@ -20,9 +22,23 @@ function getDisplayName(user) {
 export default function Header({ onMenuClick }) {
   const { user } = useLocalAuth();
 
-  const [dark, setDark] = useState(() =>
-    document.documentElement.classList.contains("dark")
-  );
+  const [dark, setDark] = useState(isDarkTheme());
+
+  useEffect(() => {
+    const syncTheme = (e) => {
+      setDark(e.detail.dark);
+    };
+
+    window.addEventListener("themechange", syncTheme);
+
+    return () => {
+      window.removeEventListener("themechange", syncTheme);
+    };
+  }, []);
+
+  const handleThemeToggle = () => {
+    toggleTheme();
+  };
 
   const toggleTheme = () => {
     const next = !dark;
@@ -53,7 +69,7 @@ export default function Header({ onMenuClick }) {
           variant="outline"
           size="icon"
           className="size-8"
-          onClick={toggleTheme}
+          onClick={handleThemeToggle}
           title={dark ? "Switch to light mode" : "Switch to dark mode"}
         >
           {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
