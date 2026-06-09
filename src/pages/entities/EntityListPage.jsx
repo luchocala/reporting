@@ -1118,6 +1118,7 @@ export default function EntityListPage({ section }) {
   const [bulkChangesOpen, setBulkChangesOpen] = useState(false);
   const [bulkChanges, setBulkChanges] = useState({});
   const [selectedIds, setSelectedIds] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     setSearch("");
@@ -1243,23 +1244,35 @@ export default function EntityListPage({ section }) {
     setDesktopView(nextView);
   };
 
-const handleView = (item) => console.log("Ver detalle", item);
-const handleDelete = (item) => console.log("Eliminar", item);
-const handleMarkDone = (item) => console.log("Confirmar", item);
+  const handleView = (item) => console.log("Ver detalle", item);
+  const handleDelete = (item) => console.log("Eliminar", item);
+  const handleMarkDone = (item) => console.log("Confirmar", item);
 
-const handleRefresh = () => {
-  setSearch("");
-  setPrimaryFilters({});
-  setDateRangeFilters({});
-  setAdvancedFilters({});
-  setBulkChanges({});
-  setSelectedIds([]);
-  setAdvancedFiltersOpen(false);
-  setBulkChangesOpen(false);
-  setVisibleColumns(getAllColumnKeys(section.columns || []));
-};
+  const handleRefresh = async () => {
+    setRefreshing(true);
 
-const selectedCount = selectedIds.length;
+    setSearch("");
+    setPrimaryFilters({});
+    setDateRangeFilters({});
+    setAdvancedFilters({});
+    setBulkChanges({});
+    setSelectedIds([]);
+    setAdvancedFiltersOpen(false);
+    setBulkChangesOpen(false);
+    setVisibleColumns(getAllColumnKeys(section.columns || []));
+
+    try {
+      if (typeof section.onRefresh === "function") {
+        await section.onRefresh();
+      }
+    } finally {
+      window.setTimeout(() => {
+        setRefreshing(false);
+      }, 450);
+    }
+  };
+
+  const selectedCount = selectedIds.length;
 
   return (
     <div className="space-y-4">
@@ -1271,27 +1284,28 @@ const selectedCount = selectedIds.length;
           <p className="text-sm text-muted-foreground">{section.subtitle}</p>
         </div>
 
-<div className="flex items-center gap-2">
-  <button
-    type="button"
-    onClick={handleRefresh}
-    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-foreground px-2.5 text-sm text-background transition-opacity hover:opacity-90 xl:px-3"
-    title="Refresh"
-  >
-    <RefreshCw className="size-4" />
-    <span className="hidden xl:inline">Refresh</span>
-  </button>
+        <div className="flex items-center gap-2">
+          {section.createPath && (
+            <Link
+              to={section.createPath}
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-foreground px-2.5 text-sm text-background transition-opacity hover:opacity-90 xl:px-3"
+            >
+              <Plus className="size-4" />
+              <span className="hidden xl:inline">Nuevo {section.title.toLowerCase()}</span>
+            </Link>
+          )}
 
-  {section.createPath && (
-    <Link
-      to={section.createPath}
-      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-foreground px-2.5 text-sm text-background transition-opacity hover:opacity-90 xl:px-3"
-    >
-      <Plus className="size-4" />
-      <span className="hidden xl:inline">Nuevo {section.title.toLowerCase()}</span>
-    </Link>
-  )}
-</div>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-70 xl:px-3"
+            title="Refresh"
+          >
+            <RefreshCw className={`size-4 ${refreshing ? "animate-spin" : ""}`} />
+            <span className="hidden xl:inline">Refresh</span>
+          </button>
+        </div>
       </div>
 
       {!advancedFiltersOpen && !bulkChangesOpen && (
