@@ -646,14 +646,13 @@ function LanesView({ section, columns, items, selectedIds, onToggleSelected, onV
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
         {lanes.map((lane) => (
           <div key={lane.id} className="space-y-3 min-w-0">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-1.5 text-sm font-medium min-w-0">
-                <span className="text-muted-foreground">◎</span>
-                <span className="truncate">{lane.label}</span>
-                <span className="text-muted-foreground font-normal">{lane.count}</span>
-              </div>
-              <button className="p-1 hover:bg-muted rounded"><Plus className="size-3.5 text-muted-foreground" /></button>
-            </div>
+<div className="flex items-center justify-between px-1">
+  <div className="flex items-center gap-1.5 text-sm font-medium min-w-0">
+    <span className="text-muted-foreground">◎</span>
+    <span className="truncate">{lane.label}</span>
+    <span className="text-muted-foreground font-normal">{lane.count}</span>
+  </div>
+</div>
             <div className="space-y-3">
               {lane.items.map((item) => {
                 const rowId = getRowId(item);
@@ -671,7 +670,7 @@ function LanesView({ section, columns, items, selectedIds, onToggleSelected, onV
                   </Card>
                 );
               })}
-              <button className="w-full text-xs text-muted-foreground flex items-center gap-1.5 hover:text-foreground py-1"><Plus className="size-3.5" /> New</button>
+              
             </div>
           </div>
         ))}
