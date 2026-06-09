@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 
 export default function EntityCreatePage({ section }) {
   const navigate = useNavigate();
@@ -7,20 +8,8 @@ export default function EntityCreatePage({ section }) {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <div className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-          <span>Home</span>
-          <span>›</span>
-          <span>{section.group}</span>
-          <span>›</span>
-          <button
-            type="button"
-            onClick={() => navigate(section.path)}
-            className="hover:text-foreground"
-          >
-            {section.title}
-          </button>
-          <span>›</span>
-          <span className="text-foreground">Agregar</span>
+        <div className="mb-2">
+          <PageBreadcrumb section={section} currentLabel="Agregar" />
         </div>
 
         <div className="flex items-center justify-between gap-4">
