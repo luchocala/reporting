@@ -8,6 +8,10 @@ import ScrollToTop from './components/ScrollToTop';
 import Layout from './components/Layout';
 import { LocalAuthProvider, useLocalAuth } from '@/lib/LocalAuthContext';
 
+import EntityListPage from './pages/entities/EntityListPage';
+import EntityCreatePage from './pages/entities/EntityCreatePage';
+import { entitySections } from './config/entitySections';
+
 import Dashboard from './pages/ecommerce/dashboard/Dashboard';
 import Users from './pages/original/Users';
 import Tasks from './pages/original/Tasks';
@@ -31,7 +35,6 @@ import Dashboard8 from './pages/ecommerce/dashboard/Dashboard8';
 import Dashboard9 from './pages/ecommerce/dashboard/Dashboard9';
 import Comprobantes from './pages/reporting/Comprobantes';
 import Profile from './pages/profile/Profile';
-
 
 // Ecommerce - Products
 import AddProduct from './pages/ecommerce/products/AddProduct';
@@ -107,8 +110,29 @@ const ProtectedApp = () => {
         <Route path="/dashboard-7" element={<Dashboard7 />} />
         <Route path="/dashboard-8" element={<Dashboard8 />} />
         <Route path="/dashboard-9" element={<Dashboard9 />} />
+
+        {/* Reporting original */}
         <Route path="/comprobantes" element={<Comprobantes />} />
-        
+
+        {/* Secciones genéricas */}
+        {entitySections.map((section) => (
+          <Route
+            key={section.path}
+            path={section.path}
+            element={<EntityListPage section={section} />}
+          />
+        ))}
+
+        {/* Altas genéricas */}
+        {entitySections
+          .filter((section) => section.createPath)
+          .map((section) => (
+            <Route
+              key={section.createPath}
+              path={section.createPath}
+              element={<EntityCreatePage section={section} />}
+            />
+          ))}
 
         {/* Original - Users & Tasks */}
         <Route path="/users" element={<Users />} />

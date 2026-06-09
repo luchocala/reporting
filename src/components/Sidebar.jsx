@@ -19,6 +19,11 @@ import {
   PanelLeftOpen,
   X,
   LogOut,
+  Database,
+Clock,
+BriefcaseBusiness,
+BarChart3,
+Building2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -116,6 +121,84 @@ const navSections = [
       },
     ],
   },
+  {
+  label: "Estructural",
+  items: [
+    {
+      icon: Database,
+      label: "Estructural",
+      children: [
+        { label: "Personas", path: "/estructural/personas" },
+        { label: "Razones Sociales", path: "/estructural/razones-sociales" },
+        { label: "CBUs", path: "/estructural/cbus" },
+        { label: "Cuentas", path: "/estructural/cuentas" },
+        { label: "Colaboradores", path: "/estructural/colaboradores" },
+        { label: "Proyectos", path: "/estructural/proyectos" },
+        { label: "Recurrentes", path: "/estructural/recurrentes" },
+        { label: "Facturación", path: "/estructural/facturacion" },
+      ],
+    },
+  ],
+},
+{
+  label: "Proveedores",
+  items: [
+    {
+      icon: Clock,
+      label: "Proveedores",
+      children: [
+        { label: "Tiempo", path: "/proveedores/tiempo" },
+      ],
+    },
+  ],
+},
+{
+  label: "Gestión",
+  items: [
+    {
+      icon: BriefcaseBusiness,
+      label: "Gestión",
+      children: [
+        { label: "Agenda", path: "/gestion/agenda" },
+        { label: "Activos", path: "/gestion/activos" },
+        { label: "Dominios", path: "/gestion/dominios" },
+      ],
+    },
+  ],
+},
+{
+  label: "Reportes",
+  items: [
+    {
+      icon: BarChart3,
+      label: "Reportes",
+      children: [
+        { label: "Ventas", path: "/reportes/ventas" },
+        {
+          label: "Recurrentes por cuentas",
+          path: "/reportes/recurrentes-por-cuentas",
+        },
+        {
+          label: "Recurrentes por actividades",
+          path: "/reportes/recurrentes-por-actividades",
+        },
+      ],
+    },
+  ],
+},
+{
+  label: "Administración y Comercial",
+  items: [
+    {
+      icon: Building2,
+      label: "Administración y Comercial",
+      children: [
+        { label: "Ventas", path: "/administracion-comercial/ventas" },
+        { label: "Índices", path: "/administracion-comercial/indices" },
+      ],
+    },
+  ],
+},
   {
   label: "Original",
   items: [
