@@ -13,8 +13,8 @@ import EntityCreatePage from './pages/entities/EntityCreatePage';
 import { entitySections } from './config/entitySections';
 
 import Dashboard from './pages/ecommerce/dashboard/Dashboard';
-import Users from './pages/original/Users';
-import Tasks from './pages/original/Tasks';
+import Users from './pages/configuracion/Users';
+import Tasks from './pages/configuracion/Tasks';
 import SettingsLayout from './pages/original/settings/SettingsLayout';
 import SettingsGeneral from './pages/original/settings/General';
 import SettingsBilling from './pages/original/settings/Billing';
