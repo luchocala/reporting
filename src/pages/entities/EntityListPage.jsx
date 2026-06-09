@@ -384,7 +384,7 @@ function IconButton({ onClick, title, children }) {
   );
 }
 
-function AdvancedFiltersButton({ onClick, mobile = false }) {
+function AdvancedFiltersButton({ onClick, mobile = false, showLabel = false }) {
   if (mobile) {
     return (
       <button
@@ -394,6 +394,20 @@ function AdvancedFiltersButton({ onClick, mobile = false }) {
       >
         <SlidersHorizontal className="size-4" />
         Filtros avanzados
+      </button>
+    );
+  }
+
+  if (showLabel) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
+        title="Filtros avanzados"
+      >
+        <SlidersHorizontal className="size-4" />
+        <span>Filtros avanzados</span>
       </button>
     );
   }
@@ -436,6 +450,7 @@ function ColumnSelector({ columns, visibleColumns, onToggleColumn, compact = fal
           <path d="M15 4v16" />
         </svg>
         {!compact && <span>Columnas</span>}
+        {compact && <span className="hidden 2xl:inline">Columnas</span>}
       </button>
 
       {open && (
@@ -592,11 +607,11 @@ function FiltersToolbar({
             />
           ))}
 
-          <AdvancedFiltersButton onClick={onOpenAdvancedFilters} />
+          <AdvancedFiltersButton onClick={onOpenAdvancedFilters} showLabel={desktopView === "table"} />
 
           {showColumnSelector && (
             <ColumnSelector
-              compact
+              compact={desktopView !== "table"}
               columns={columns}
               visibleColumns={visibleColumns}
               onToggleColumn={onToggleColumn}
@@ -833,9 +848,9 @@ function DesktopTable({
                     >
                       {column.type === "actions" ? (
                         <ActionButtons item={item} compact onView={onView} onDelete={onDelete} onMarkDone={onMarkDone} />
-                      ) : column.primary ? (
+                      ) : column.cellLayout === "stacked" ? (
                         <div>
-                          <p className="font-medium text-sm">{renderCell(item, column, section)}</p>
+                          <p className="font-medium text-xs">{renderCell(item, column, section)}</p>
                           <p className="text-xs text-muted-foreground truncate max-w-sm">{getSecondaryText(item)}</p>
                         </div>
                       ) : (
@@ -1168,7 +1183,7 @@ export default function EntityListPage({ section }) {
           <p className="text-sm text-muted-foreground">{section.subtitle}</p>
         </div>
 
-        {section.createPath && desktopView !== "lanes" && (
+        {section.createPath && (
           <Link
             to={section.createPath}
             className="flex items-center gap-1.5 bg-foreground text-background px-3 py-1.5 rounded-md text-sm hover:opacity-90"
