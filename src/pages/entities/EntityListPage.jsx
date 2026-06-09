@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Search,
@@ -590,7 +590,6 @@ function FiltersToolbar({
   allVisibleSelected,
   desktopView,
 }) {
-  const showColumnSelector = true;
   const showSelectAllButton = desktopView === "lanes" || desktopView === "cards";
 
   return (
@@ -627,14 +626,12 @@ function FiltersToolbar({
 
           <AdvancedFiltersButton onClick={onOpenAdvancedFilters} showLabel />
 
-          {showColumnSelector && (
-            <ColumnSelector
-              columns={columns}
-              visibleColumns={visibleColumns}
-              onToggleColumn={onToggleColumn}
-              resetKey={sectionKey}
-            />
-          )}
+          <ColumnSelector
+            columns={columns}
+            visibleColumns={visibleColumns}
+            onToggleColumn={onToggleColumn}
+            resetKey={sectionKey}
+          />
 
           {showSelectAllButton && (
             <SelectAllButton allSelected={allVisibleSelected} onClick={onToggleSelectAll} />
@@ -798,6 +795,7 @@ function ActionButtons({
     </div>
   );
 }
+
 function RecordsCount({ count }) {
   return (
     <div className="flex items-center justify-start mb-3">
@@ -807,6 +805,7 @@ function RecordsCount({ count }) {
     </div>
   );
 }
+
 function DesktopTable({
   section,
   columns,
@@ -822,105 +821,105 @@ function DesktopTable({
 }) {
   const isVisible = (columnKey) => visibleColumns.includes(columnKey);
 
-return (
-  <div>
-    <RecordsCount count={items.length} />
+  return (
+    <div>
+      <RecordsCount count={items.length} />
 
-    <Card className="shadow-none overflow-hidden block">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="px-4 py-3 text-left w-8">
-                <input
-                  type="checkbox"
-                  checked={allVisibleSelected}
-                  onChange={onToggleSelectAll}
-                  className="size-3.5"
-                  aria-label="Seleccionar todos"
-                />
-              </th>
-              {columns.filter((column) => isVisible(column.key)).map((column) => (
-                <th
-                  key={column.key}
-                  className={`px-4 py-3 text-xs font-medium text-muted-foreground ${
-                    column.type === "money" || column.type === "number" || column.type === "actions"
-                      ? "text-right"
-                      : "text-left"
-                  }`}
-                >
-                  {column.label}
+      <Card className="shadow-none overflow-hidden block">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="px-4 py-3 text-left w-8">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={onToggleSelectAll}
+                    className="size-3.5"
+                    aria-label="Seleccionar todos"
+                  />
                 </th>
-              ))}
-            </tr>
-          </thead>
+                {columns.filter((column) => isVisible(column.key)).map((column) => (
+                  <th
+                    key={column.key}
+                    className={`px-4 py-3 text-xs font-medium text-muted-foreground ${
+                      column.type === "money" || column.type === "number" || column.type === "actions"
+                        ? "text-right"
+                        : "text-left"
+                    }`}
+                  >
+                    {column.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
-          <tbody>
-            {items.map((item) => {
-              const rowId = getRowId(item);
-              const selected = selectedIds.includes(rowId);
+            <tbody>
+              {items.map((item) => {
+                const rowId = getRowId(item);
+                const selected = selectedIds.includes(rowId);
 
-              return (
-                <tr
-                  key={rowId}
-                  className={`border-b border-border last:border-0 hover:bg-muted/20 transition-colors ${
-                    selected ? "bg-muted/40" : ""
-                  }`}
-                >
-                  <td className="px-4 py-3 align-top">
-                    <input
-                      type="checkbox"
-                      checked={selected}
-                      onChange={() => onToggleSelected(rowId)}
-                      className="size-3.5"
-                      aria-label={`Seleccionar ${rowId}`}
-                    />
-                  </td>
-
-                  {columns.filter((column) => isVisible(column.key)).map((column) => (
-                    <td
-                      key={column.key}
-                      className={`px-4 py-3 text-xs align-top ${
-                        column.type === "money" || column.type === "number" || column.type === "actions"
-                          ? "text-right"
-                          : "text-left"
-                      }`}
-                    >
-                      {column.type === "actions" ? (
-                        <ActionButtons item={item} compact onView={onView} onDelete={onDelete} onMarkDone={onMarkDone} />
-                      ) : column.cellLayout === "stacked" ? (
-                        <div>
-                          <p className="font-medium text-xs">{renderCell(item, column, section)}</p>
-                          <p className="text-xs text-muted-foreground truncate max-w-sm">{getSecondaryText(item)}</p>
-                        </div>
-                      ) : (
-                        renderCell(item, column, section)
-                      )}
+                return (
+                  <tr
+                    key={rowId}
+                    className={`border-b border-border last:border-0 hover:bg-muted/20 transition-colors ${
+                      selected ? "bg-muted/40" : ""
+                    }`}
+                  >
+                    <td className="px-4 py-3 align-top">
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => onToggleSelected(rowId)}
+                        className="size-3.5"
+                        aria-label={`Seleccionar ${rowId}`}
+                      />
                     </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
 
-      <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-        <span className="text-xs text-muted-foreground">
-          1–{items.length} of {items.length}
-        </span>
-        <div className="flex items-center gap-1">
-          <button className="p-1 hover:bg-muted rounded">
-            <ChevronLeft className="size-4 text-muted-foreground" />
-          </button>
-          <button className="p-1 hover:bg-muted rounded">
-            <ChevronRight className="size-4 text-muted-foreground" />
-          </button>
+                    {columns.filter((column) => isVisible(column.key)).map((column) => (
+                      <td
+                        key={column.key}
+                        className={`px-4 py-3 text-xs align-top ${
+                          column.type === "money" || column.type === "number" || column.type === "actions"
+                            ? "text-right"
+                            : "text-left"
+                        }`}
+                      >
+                        {column.type === "actions" ? (
+                          <ActionButtons item={item} compact onView={onView} onDelete={onDelete} onMarkDone={onMarkDone} />
+                        ) : column.cellLayout === "stacked" ? (
+                          <div>
+                            <p className="font-medium text-xs">{renderCell(item, column, section)}</p>
+                            <p className="text-xs text-muted-foreground truncate max-w-sm">{getSecondaryText(item)}</p>
+                          </div>
+                        ) : (
+                          renderCell(item, column, section)
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      </div>
-    </Card>
-</div>
-);
+
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+          <span className="text-xs text-muted-foreground">
+            1–{items.length} of {items.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <button className="p-1 hover:bg-muted rounded">
+              <ChevronLeft className="size-4 text-muted-foreground" />
+            </button>
+            <button className="p-1 hover:bg-muted rounded">
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
 }
 
 function LanesView({ section, columns, items, selectedIds, onToggleSelected, onView, onDelete, onMarkDone }) {
@@ -1013,7 +1012,7 @@ function LanesView({ section, columns, items, selectedIds, onToggleSelected, onV
 function MobileCards({ section, columns, items, selectedIds, onToggleSelected, onView, onDelete, onMarkDone }) {
   return (
     <div className="space-y-3">
-    <RecordsCount count={items.length} />
+      <RecordsCount count={items.length} />
 
       {items.map((item) => {
         const rowId = getRowId(item);
@@ -1071,7 +1070,6 @@ function MobileCards({ section, columns, items, selectedIds, onToggleSelected, o
 export default function EntityListPage({ section }) {
   const rows = section.rows || [];
   const columns = section.columns || [];
-  const allColumnKeys = useMemo(() => getAllColumnKeys(columns), [section.key]);
   const previousIsDesktopRef = useRef(typeof window !== "undefined" ? window.innerWidth >= 1280 : true);
   const userSelectedViewRef = useRef(false);
 
@@ -1079,26 +1077,24 @@ export default function EntityListPage({ section }) {
   const [desktopView, setDesktopView] = useState(getInitialView);
   const [primaryFilters, setPrimaryFilters] = useState({});
   const [dateRangeFilters, setDateRangeFilters] = useState({});
-  const [visibleColumns, setVisibleColumns] = useState(allColumnKeys);
+  const [visibleColumns, setVisibleColumns] = useState(() => getAllColumnKeys(section.columns || []));
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({});
   const [bulkChangesOpen, setBulkChangesOpen] = useState(false);
   const [bulkChanges, setBulkChanges] = useState({});
   const [selectedIds, setSelectedIds] = useState([]);
 
-useEffect(() => {
-  const nextColumnKeys = getAllColumnKeys(section.columns || []);
-
-  setSearch("");
-  setPrimaryFilters({});
-  setDateRangeFilters({});
-  setAdvancedFilters({});
-  setBulkChanges({});
-  setSelectedIds([]);
-  setAdvancedFiltersOpen(false);
-  setBulkChangesOpen(false);
-  setVisibleColumns(nextColumnKeys);
-}, [section.key]);
+  useEffect(() => {
+    setSearch("");
+    setPrimaryFilters({});
+    setDateRangeFilters({});
+    setAdvancedFilters({});
+    setBulkChanges({});
+    setSelectedIds([]);
+    setAdvancedFiltersOpen(false);
+    setBulkChangesOpen(false);
+    setVisibleColumns(getAllColumnKeys(section.columns || []));
+  }, [section.key]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1123,15 +1119,8 @@ useEffect(() => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const configuredPrimaryFilters = useMemo(
-    () => getConfiguredPrimaryFilters(section, columns),
-    [section, columns]
-  );
-
-  const searchableColumns = useMemo(
-    () => columns.filter((column) => column.type !== "actions"),
-    [columns]
-  );
+  const configuredPrimaryFilters = getConfiguredPrimaryFilters(section, columns);
+  const searchableColumns = columns.filter((column) => column.type !== "actions");
 
   const setPrimaryFilter = (filterKey, nextValue) => {
     setPrimaryFilters((current) => ({ ...current, [filterKey]: nextValue }));
@@ -1141,71 +1130,61 @@ useEffect(() => {
     setDateRangeFilters((current) => ({ ...current, [filterKey]: nextRange }));
   };
 
- const toggleColumn = (columnKey) => {
-  const column = columns.find((item) => item.key === columnKey);
-  if (column?.locked) return;
+  const toggleColumn = (columnKey) => {
+    const column = columns.find((item) => item.key === columnKey);
+    if (column?.locked) return;
 
-  setVisibleColumns((current) => {
-    const next = current.includes(columnKey)
-      ? current.filter((key) => key !== columnKey)
-      : [...current, columnKey];
+    setVisibleColumns((current) => {
+      const next = current.includes(columnKey)
+        ? current.filter((key) => key !== columnKey)
+        : [...current, columnKey];
 
-    return getAllColumnKeys(columns).filter((key) => next.includes(key));
-  });
-};
+      return getAllColumnKeys(columns).filter((key) => next.includes(key));
+    });
+  };
 
-  const filtered = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+  const normalizedSearch = search.trim().toLowerCase();
 
-    const normalizedAdvancedFilters = Object.fromEntries(
-      Object.entries(advancedFilters).filter(([, values]) => Array.isArray(values) && values.length > 0)
-    );
+  const normalizedAdvancedFilters = Object.fromEntries(
+    Object.entries(advancedFilters).filter(([, values]) => Array.isArray(values) && values.length > 0)
+  );
 
-    return rows.filter((item) => {
-      const matchesSearch =
-        !normalizedSearch ||
-        searchableColumns.some((column) =>
-          String(item[column.key] || "").toLowerCase().includes(normalizedSearch)
-        );
-
-      const matchesPrimaryFilters = configuredPrimaryFilters.every((filter) => {
-        const values = primaryFilters[filter.key];
-
-        if (!Array.isArray(values) || values.length === 0) return true;
-
-        if (filter.type === "dateRange") {
-          const itemDate = parseDate(item[filter.sourceKey || filter.key]);
-          if (!itemDate) return false;
-
-          const ranges = values
-            .map((value) => getDateRangeFromFilterValue(value, dateRangeFilters[filter.key]))
-            .filter(Boolean);
-
-          if (ranges.length === 0) return true;
-
-          return ranges.some((range) => isDateInRange(itemDate, range));
-        }
-
-        return values.includes(String(item[filter.key]));
-      });
-
-      const matchesAdvancedFilters = Object.entries(normalizedAdvancedFilters).every(
-        ([columnKey, selectedValues]) => selectedValues.includes(String(item[columnKey]))
+  const filtered = rows.filter((item) => {
+    const matchesSearch =
+      !normalizedSearch ||
+      searchableColumns.some((column) =>
+        String(item[column.key] || "").toLowerCase().includes(normalizedSearch)
       );
 
-      return matchesSearch && matchesPrimaryFilters && matchesAdvancedFilters;
-    });
-  }, [
-    rows,
-    search,
-    searchableColumns,
-    configuredPrimaryFilters,
-    primaryFilters,
-    dateRangeFilters,
-    advancedFilters,
-  ]);
+    const matchesPrimaryFilters = configuredPrimaryFilters.every((filter) => {
+      const values = primaryFilters[filter.key];
 
-  const visibleIds = useMemo(() => filtered.map((item) => getRowId(item)), [filtered]);
+      if (!Array.isArray(values) || values.length === 0) return true;
+
+      if (filter.type === "dateRange") {
+        const itemDate = parseDate(item[filter.sourceKey || filter.key]);
+        if (!itemDate) return false;
+
+        const ranges = values
+          .map((value) => getDateRangeFromFilterValue(value, dateRangeFilters[filter.key]))
+          .filter(Boolean);
+
+        if (ranges.length === 0) return true;
+
+        return ranges.some((range) => isDateInRange(itemDate, range));
+      }
+
+      return values.includes(String(item[filter.key]));
+    });
+
+    const matchesAdvancedFilters = Object.entries(normalizedAdvancedFilters).every(
+      ([columnKey, selectedValues]) => selectedValues.includes(String(item[columnKey]))
+    );
+
+    return matchesSearch && matchesPrimaryFilters && matchesAdvancedFilters;
+  });
+
+  const visibleIds = filtered.map((item) => getRowId(item));
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
   const toggleSelected = (rowId) => {
