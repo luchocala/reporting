@@ -33,7 +33,6 @@ import Dashboard6 from './pages/ecommerce/dashboard/Dashboard6';
 import Dashboard7 from './pages/ecommerce/dashboard/Dashboard7';
 import Dashboard8 from './pages/ecommerce/dashboard/Dashboard8';
 import Dashboard9 from './pages/ecommerce/dashboard/Dashboard9';
-import Comprobantes from './pages/reporting/Comprobantes';
 import Profile from './pages/profile/Profile';
 
 // Ecommerce - Products
@@ -111,9 +110,6 @@ const ProtectedApp = () => {
         <Route path="/dashboard-8" element={<Dashboard8 />} />
         <Route path="/dashboard-9" element={<Dashboard9 />} />
 
-        {/* Órdenes de Facturación */}
-        <Route path="/administracion-comercial/ordenes-facturacion" element={<Comprobantes />} />
-
         {/* Secciones genéricas */}
         {entitySections.map((section) => (
           <Route
@@ -183,7 +179,7 @@ const ProtectedApp = () => {
 
         {/* Ecommerce - Customers */}
         <Route path="/ecommerce/add-customer" element={<AddCustomer />} />
-        <Route path="/ecommerce/edit-customer/:id" element={<EditCustomer />} />
+        <Route path="/ecommerce/edit-customer" element={<EditCustomer />} />
         <Route path="/ecommerce/customer-list-1" element={<CustomerList1 />} />
         <Route path="/ecommerce/customer-detail-1" element={<CustomerDetail1 />} />
 
