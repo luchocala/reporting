@@ -1071,7 +1071,7 @@ function MobileCards({ section, columns, items, selectedIds, onToggleSelected, o
 export default function EntityListPage({ section }) {
   const rows = section.rows || [];
   const columns = section.columns || [];
-  const allColumnKeys = useMemo(() => getAllColumnKeys(columns), [columns]);
+  const allColumnKeys = useMemo(() => getAllColumnKeys(columns), [section.key]);
   const previousIsDesktopRef = useRef(typeof window !== "undefined" ? window.innerWidth >= 1280 : true);
   const userSelectedViewRef = useRef(false);
 
@@ -1086,17 +1086,19 @@ export default function EntityListPage({ section }) {
   const [bulkChanges, setBulkChanges] = useState({});
   const [selectedIds, setSelectedIds] = useState([]);
 
-  useEffect(() => {
-    setSearch("");
-    setPrimaryFilters({});
-    setDateRangeFilters({});
-    setAdvancedFilters({});
-    setBulkChanges({});
-    setSelectedIds([]);
-    setAdvancedFiltersOpen(false);
-    setBulkChangesOpen(false);
-    setVisibleColumns(allColumnKeys);
-  }, [section.key, allColumnKeys]);
+useEffect(() => {
+  const nextColumnKeys = getAllColumnKeys(section.columns || []);
+
+  setSearch("");
+  setPrimaryFilters({});
+  setDateRangeFilters({});
+  setAdvancedFilters({});
+  setBulkChanges({});
+  setSelectedIds([]);
+  setAdvancedFiltersOpen(false);
+  setBulkChangesOpen(false);
+  setVisibleColumns(nextColumnKeys);
+}, [section.key]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1139,18 +1141,18 @@ export default function EntityListPage({ section }) {
     setDateRangeFilters((current) => ({ ...current, [filterKey]: nextRange }));
   };
 
-  const toggleColumn = (columnKey) => {
-    const column = columns.find((item) => item.key === columnKey);
-    if (column?.locked) return;
+ const toggleColumn = (columnKey) => {
+  const column = columns.find((item) => item.key === columnKey);
+  if (column?.locked) return;
 
-    setVisibleColumns((current) => {
-      const next = current.includes(columnKey)
-        ? current.filter((key) => key !== columnKey)
-        : [...current, columnKey];
+  setVisibleColumns((current) => {
+    const next = current.includes(columnKey)
+      ? current.filter((key) => key !== columnKey)
+      : [...current, columnKey];
 
-      return allColumnKeys.filter((key) => next.includes(key));
-    });
-  };
+    return getAllColumnKeys(columns).filter((key) => next.includes(key));
+  });
+};
 
   const filtered = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
