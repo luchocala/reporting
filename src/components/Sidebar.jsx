@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   PanelLeftClose,
@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { navSections } from "@/config/navigation";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
-import { useEffect, useState } from "react";
 import { isDarkTheme, toggleTheme } from "@/lib/theme";
 
 const workspace = { name: "Adnovation SRL", plan: "Reporting" };
@@ -74,8 +73,8 @@ export default function Sidebar({ collapsed = false, onToggleCollapsed }) {
   const [dark, setDark] = useState(isDarkTheme());
 
   useEffect(() => {
-    const syncTheme = (e) => {
-      setDark(e.detail.dark);
+    const syncTheme = (event) => {
+      setDark(event.detail.dark);
     };
 
     window.addEventListener("themechange", syncTheme);
@@ -84,13 +83,6 @@ export default function Sidebar({ collapsed = false, onToggleCollapsed }) {
       window.removeEventListener("themechange", syncTheme);
     };
   }, []);
-
-  const toggleTheme = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-  };
 
   const handleLogout = () => {
     logout();
