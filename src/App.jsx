@@ -33,7 +33,7 @@ import Dashboard6 from './pages/ecommerce/dashboard/Dashboard6';
 import Dashboard7 from './pages/ecommerce/dashboard/Dashboard7';
 import Dashboard8 from './pages/ecommerce/dashboard/Dashboard8';
 import Dashboard9 from './pages/ecommerce/dashboard/Dashboard9';
-import Profile from './pages/profile/Profile';
+import Profile from './pages/configuracion/Profile';
 
 // Ecommerce - Products
 import AddProduct from './pages/ecommerce/products/AddProduct';
