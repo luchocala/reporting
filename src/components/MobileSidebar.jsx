@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ChevronRight, X, LogOut } from "lucide-react";
+import { X, LogOut } from "lucide-react";
 
 import { navSections } from "@/config/navigation";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
@@ -24,80 +24,38 @@ function getDisplayName(user) {
 function MobileNavItem({ item, onNavigate }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [open, setOpen] = useState(() => {
-    return item.children?.some((child) => child.path === location.pathname);
-  });
-
   const Icon = item.icon;
-  const hasChildren = Array.isArray(item.children) && item.children.length > 0;
-
-  const isActive = hasChildren
-    ? item.children.some((child) => child.path === location.pathname)
-    : item.path === location.pathname;
+  const isActive = item.path === location.pathname;
 
   const handleNavigate = (path) => {
     navigate(path);
     onNavigate();
   };
 
-  if (!hasChildren) {
-    return (
-      <button
-        type="button"
-        onClick={() => handleNavigate(item.path)}
-        className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-          isActive
-            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        }`}
-      >
-        <Icon className="size-4 shrink-0" />
-        <span>{item.label}</span>
-      </button>
-    );
-  }
+  return (
+    <button
+      type="button"
+      onClick={() => handleNavigate(item.path)}
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+        isActive
+          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      }`}
+    >
+      {Icon && <Icon className="size-4 shrink-0" />}
+      <span className="truncate">{item.label}</span>
+    </button>
+  );
+}
+
+function MobileSectionHeader({ section }) {
+  const Icon = section.icon;
 
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-          isActive
-            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        }`}
-      >
-        <Icon className="size-4 shrink-0" />
-        <span className="flex-1 text-left">{item.label}</span>
-        <ChevronRight
-          className={`size-4 transition-transform ${open ? "rotate-90" : ""}`}
-        />
-      </button>
-
-      {open && (
-        <div className="ml-5 mt-1 space-y-1 border-l border-sidebar-border pl-3">
-          {item.children.map((child) => {
-            const childActive = location.pathname === child.path;
-
-            return (
-              <button
-                type="button"
-                key={child.path}
-                onClick={() => handleNavigate(child.path)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  childActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                }`}
-              >
-                {child.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    <p className="mb-2 flex items-center gap-2 px-1 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/45">
+      {Icon && <Icon className="size-3.5 shrink-0" />}
+      <span className="truncate">{section.label}</span>
+    </p>
   );
 }
 
@@ -164,9 +122,7 @@ export default function MobileSidebar({ isOpen, onClose }) {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
         {navSections.map((section) => (
           <div key={section.label}>
-            <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/45">
-              {section.label}
-            </p>
+            <MobileSectionHeader section={section} />
 
             <div className="space-y-1">
               {section.items.map((item) => (
