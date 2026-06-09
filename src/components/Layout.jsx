@@ -37,7 +37,9 @@ export default function Layout() {
           sidebarCollapsed ? "md:ml-16" : "md:ml-64"
         }`}
       >
-        <Header onMenuClick={handleMobileMenuOpen} />
+        <div className="md:hidden">
+          <Header onMenuClick={handleMobileMenuOpen} />
+        </div>
 
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           <Outlet />
