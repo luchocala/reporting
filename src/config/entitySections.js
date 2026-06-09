@@ -47,6 +47,14 @@ const commonRows = [
   },
 ];
 
+const defaultActions = {
+  view: true,
+  edit: true,
+  delete: true,
+  confirm: false,
+  confirmLabel: "Confirmar",
+};
+
 function makeSection({
   key,
   group,
@@ -59,6 +67,7 @@ function makeSection({
   rows = commonRows,
   primaryFilters = ["estado", "tipo", "moneda"],
   laneField = "estado",
+  actions = {},
 }) {
   return {
     key,
@@ -72,6 +81,10 @@ function makeSection({
     rows,
     primaryFilters,
     laneField,
+    actions: {
+      ...defaultActions,
+      ...actions,
+    },
     defaultVisibleColumns: columns.map((column) => column.key),
   };
 }
