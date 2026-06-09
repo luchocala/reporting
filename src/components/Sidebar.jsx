@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { navSections } from "@/config/navigation";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
@@ -66,6 +69,16 @@ function SectionHeader({ section, collapsed = false }) {
 export default function Sidebar({ collapsed = false, onToggleCollapsed }) {
   const { user, logout } = useLocalAuth();
   const navigate = useNavigate();
+  const [dark, setDark] = useState(() =>
+    document.documentElement.classList.contains("dark")
+  );
+
+  const toggleTheme = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
 
   const handleLogout = () => {
     logout();
@@ -96,8 +109,18 @@ export default function Sidebar({ collapsed = false, onToggleCollapsed }) {
           </div>
         )}
         <button
+          type="button"
+          onClick={toggleTheme}
+          className="flex size-8 items-center justify-center rounded-md hover:bg-sidebar-accent"
+          title={dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+        >
+          {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </button>
+        <button
+          type="button"
           onClick={onToggleCollapsed}
           className="flex size-8 items-center justify-center rounded-md hover:bg-sidebar-accent"
+          title={collapsed ? "Expandir sidebar" : "Contraer sidebar"}
         >
           {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
         </button>
