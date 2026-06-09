@@ -49,12 +49,9 @@ function MobileNavItem({ item, onNavigate }) {
 }
 
 function MobileSectionHeader({ section }) {
-  const Icon = section.icon;
-
   return (
-    <p className="mb-2 flex items-center gap-2 px-1 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/45">
-      {Icon && <Icon className="size-3.5 shrink-0" />}
-      <span className="truncate">{section.label}</span>
+    <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/45">
+      {section.label}
     </p>
   );
 }
@@ -101,10 +98,10 @@ export default function MobileSidebar({ isOpen, onClose }) {
 
           <div className="min-w-0">
             <h1 className="text-sm font-semibold text-sidebar-foreground truncate">
-              Ecommerce App
+              Adnovation SRL
             </h1>
             <p className="text-xs text-sidebar-foreground/50 truncate">
-              Navigation menu
+              Reporting
             </p>
           </div>
         </div>
