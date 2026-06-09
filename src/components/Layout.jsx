@@ -21,7 +21,7 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggleCollapsed={handleSidebarToggle}
@@ -32,7 +32,11 @@ export default function Layout() {
         onClose={handleMobileMenuClose}
       />
 
-      <div className="flex flex-1 flex-col min-w-0">
+      <div
+        className={`flex min-h-screen flex-col min-w-0 transition-all duration-300 ${
+          sidebarCollapsed ? "md:ml-16" : "md:ml-64"
+        }`}
+      >
         <Header onMenuClick={handleMobileMenuOpen} />
 
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
