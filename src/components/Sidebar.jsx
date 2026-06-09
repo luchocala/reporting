@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  ChevronRight,
   ChevronsUpDown,
   Check,
   Plus,
@@ -44,87 +43,46 @@ function getDisplayName(user) {
 
 function NavItem({ item, collapsed = false, onNavigate }) {
   const location = useLocation();
-  const hasChildren = item.children && item.children.length > 0;
-  const isActive = hasChildren
-    ? item.children.some((child) => child.path === location.pathname)
-    : item.path === location.pathname;
-  const [open, setOpen] = useState(isActive);
+  const isActive = item.path === location.pathname;
   const Icon = item.icon;
-
-  if (collapsed) {
-    const targetPath = hasChildren ? item.children[0]?.path || "#" : item.path;
-
-    return (
-      <li>
-        <Link
-          to={targetPath}
-          onClick={onNavigate}
-          title={item.label}
-          className={`flex items-center justify-center rounded-md px-2 py-2 text-sm transition-colors ${
-            isActive
-              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-              : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          }`}
-        >
-          <Icon className="size-4 shrink-0" />
-        </Link>
-      </li>
-    );
-  }
-
-  if (hasChildren) {
-    return (
-      <li>
-        <button
-          onClick={() => setOpen(!open)}
-          className={`w-full flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors ${
-            isActive
-              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-              : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          }`}
-        >
-          <Icon className="size-4 shrink-0" />
-          <span className="flex-1 text-left truncate">{item.label}</span>
-          <ChevronRight className={`size-4 transition-transform ${open ? "rotate-90" : ""}`} />
-        </button>
-        {open && (
-          <ul className="ml-6 mt-1 space-y-1 border-l border-sidebar-border pl-2">
-            {item.children.map((child) => (
-              <li key={child.path}>
-                <Link
-                  to={child.path}
-                  onClick={onNavigate}
-                  className={`block rounded-md px-2 py-1.5 text-sm transition-colors ${
-                    location.pathname === child.path
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  }`}
-                >
-                  {child.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </li>
-    );
-  }
 
   return (
     <li>
       <Link
         to={item.path}
         onClick={onNavigate}
+        title={item.label}
         className={`flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors ${
+          collapsed ? "justify-center" : ""
+        } ${
           isActive
             ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
             : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         }`}
       >
-        <Icon className="size-4 shrink-0" />
-        <span className="truncate">{item.label}</span>
+        {Icon && <Icon className="size-4 shrink-0" />}
+        {!collapsed && <span className="truncate">{item.label}</span>}
       </Link>
     </li>
+  );
+}
+
+function SectionHeader({ section, collapsed = false }) {
+  const Icon = section.icon;
+
+  if (collapsed) {
+    return Icon ? (
+      <div className="mb-2 flex justify-center text-sidebar-foreground/45" title={section.label}>
+        <Icon className="size-4" />
+      </div>
+    ) : null;
+  }
+
+  return (
+    <p className="mb-2 flex items-center gap-2 px-2 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/40">
+      {Icon && <Icon className="size-3.5 shrink-0" />}
+      <span className="truncate">{section.label}</span>
+    </p>
   );
 }
 
@@ -195,11 +153,7 @@ export default function Sidebar({ collapsed = false, onToggleCollapsed }) {
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         {navSections.map((section) => (
           <div key={section.label} className="mb-4">
-            {!collapsed && (
-              <p className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/40">
-                {section.label}
-              </p>
-            )}
+            <SectionHeader section={section} collapsed={collapsed} />
             <ul className="space-y-1">
               {section.items.map((item) => (
                 <NavItem key={item.label} item={item} collapsed={collapsed} />
