@@ -113,7 +113,6 @@ const ProtectedApp = () => {
 
         {/* Órdenes de Facturación */}
         <Route path="/administracion-comercial/ordenes-facturacion" element={<Comprobantes />} />
-        <Route path="/comprobantes" element={<Comprobantes />} />
 
         {/* Secciones genéricas */}
         {entitySections.map((section) => (
