@@ -12,8 +12,10 @@ import {
   SlidersHorizontal,
   SquareCheckBig,
   CheckCircle2,
+  ArrowLeft,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 
 const badgeColorStyles = {
   green:
@@ -31,6 +33,10 @@ const badgeColorStyles = {
 function getInitialView() {
   if (typeof window === "undefined") return "table";
   return window.innerWidth >= 1280 ? "table" : "lanes";
+}
+
+function getAllColumnKeys(columns) {
+  return columns.map((column) => column.key);
 }
 
 function getRowId(row) {
@@ -577,9 +583,9 @@ function FiltersToolbar({
   const showSelectAllButton = desktopView === "lanes" || desktopView === "cards";
 
   return (
-    <div className="hidden sm:flex w-full flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+    <div className="hidden sm:flex w-full flex-col gap-2 xl:flex-row xl:items-center">
       <div className="flex w-full flex-col gap-2 xl:flex-row xl:items-center">
-        <div className="relative w-full xl:w-64">
+        <div className="relative w-full xl:min-w-[280px] xl:flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <input
             placeholder={`Buscar ${section.title.toLowerCase()}`}
@@ -589,7 +595,7 @@ function FiltersToolbar({
           />
         </div>
 
-        <div className="grid w-full grid-cols-[1fr_1fr_1fr_auto_auto_auto] gap-2 xl:flex xl:w-auto xl:items-center">
+        <div className="grid w-full grid-cols-[1fr_1fr_1fr_auto_auto_auto] gap-2 xl:flex xl:w-auto xl:shrink-0 xl:items-center">
           {configuredPrimaryFilters.map((filter) => (
             <MultiFilterSelect
               key={filter.key}
@@ -636,18 +642,27 @@ function AdvancedFiltersPanel({ columns, rows, advancedFilters, setAdvancedFilte
 
   return (
     <Card className="shadow-none p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-4 mb-4">
+      <div className="flex items-start justify-between gap-4 mb-5">
         <div>
           <h2 className="text-lg font-semibold">Filtros avanzados</h2>
           <p className="text-sm text-muted-foreground">
             Ajustá los filtros por columna y guardá los cambios para volver a la vista normal.
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex shrink-0 items-center gap-2 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted"
+        >
+          <ArrowLeft className="size-4" />
+          Volver
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
         {advancedColumns.map((column) => (
-          <div key={column.key} className="grid grid-cols-1 gap-1.5 sm:grid-cols-[180px_1fr] sm:items-center">
+          <div key={column.key} className="grid grid-cols-1 gap-1.5 sm:grid-cols-[160px_1fr] sm:items-center">
             <span className="text-sm font-medium text-muted-foreground">{column.label}</span>
             <MultiFilterSelect
               value={advancedFilters[column.key] || []}
@@ -1034,6 +1049,7 @@ function MobileCards({ section, columns, items, selectedIds, onToggleSelected, o
 export default function EntityListPage({ section }) {
   const rows = section.rows || [];
   const columns = section.columns || [];
+  const allColumnKeys = useMemo(() => getAllColumnKeys(columns), [columns]);
   const previousIsDesktopRef = useRef(typeof window !== "undefined" ? window.innerWidth >= 1280 : true);
   const userSelectedViewRef = useRef(false);
 
@@ -1041,12 +1057,24 @@ export default function EntityListPage({ section }) {
   const [desktopView, setDesktopView] = useState(getInitialView);
   const [primaryFilters, setPrimaryFilters] = useState({});
   const [dateRangeFilters, setDateRangeFilters] = useState({});
-  const [visibleColumns, setVisibleColumns] = useState(section.defaultVisibleColumns || columns.map((column) => column.key));
+  const [visibleColumns, setVisibleColumns] = useState(allColumnKeys);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({});
   const [bulkChangesOpen, setBulkChangesOpen] = useState(false);
   const [bulkChanges, setBulkChanges] = useState({});
   const [selectedIds, setSelectedIds] = useState([]);
+
+  useEffect(() => {
+    setSearch("");
+    setPrimaryFilters({});
+    setDateRangeFilters({});
+    setAdvancedFilters({});
+    setBulkChanges({});
+    setSelectedIds([]);
+    setAdvancedFiltersOpen(false);
+    setBulkChangesOpen(false);
+    setVisibleColumns(allColumnKeys);
+  }, [section.key, allColumnKeys]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1071,8 +1099,15 @@ export default function EntityListPage({ section }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const configuredPrimaryFilters = getConfiguredPrimaryFilters(section, columns);
-  const searchableColumns = columns.filter((column) => column.type !== "actions");
+  const configuredPrimaryFilters = useMemo(
+    () => getConfiguredPrimaryFilters(section, columns),
+    [section, columns]
+  );
+
+  const searchableColumns = useMemo(
+    () => columns.filter((column) => column.type !== "actions"),
+    [columns]
+  );
 
   const setPrimaryFilter = (filterKey, nextValue) => {
     setPrimaryFilters((current) => ({ ...current, [filterKey]: nextValue }));
@@ -1091,7 +1126,7 @@ export default function EntityListPage({ section }) {
         ? current.filter((key) => key !== columnKey)
         : [...current, columnKey];
 
-      return columns.map((item) => item.key).filter((key) => next.includes(key));
+      return allColumnKeys.filter((key) => next.includes(key));
     });
   };
 
@@ -1177,6 +1212,8 @@ export default function EntityListPage({ section }) {
 
   return (
     <div className="space-y-4">
+      <PageBreadcrumb section={section} />
+
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">{section.title}</h1>
