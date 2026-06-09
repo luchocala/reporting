@@ -101,7 +101,7 @@ const ProtectedApp = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Navigate to="/administracion-comercial/ordenes-facturacion" replace />} />
         <Route path="/dashboard-2" element={<Dashboard2 />} />
         <Route path="/dashboard-3" element={<Dashboard3 />} />
         <Route path="/dashboard-4" element={<Dashboard4 />} />
