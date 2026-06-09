@@ -106,7 +106,10 @@ export const navSections = [
         children: [
           { label: "Ventas", path: "/administracion-comercial/ventas" },
           { label: "Índices", path: "/administracion-comercial/indices" },
-          { label: "Órdenes de Facturación", path: "/comprobantes" },
+          {
+            label: "Órdenes de Facturación",
+            path: "/administracion-comercial/ordenes-facturacion",
+          },
         ],
       },
     ],
