@@ -47,6 +47,59 @@ const commonRows = [
   },
 ];
 
+const ordenesFacturacionColumns = [
+  { key: "id", label: "ID", type: "text", locked: true },
+  { key: "estado", label: "Estado", type: "status" },
+  { key: "nombre", label: "Cliente", type: "text", primary: true },
+  { key: "razonSocial", label: "Razón Social", type: "text" },
+  { key: "tipo", label: "Tipo", type: "text" },
+  { key: "periodo", label: "Período", type: "text" },
+  { key: "descripcion", label: "Concepto", type: "text" },
+  { key: "total", label: "Total", type: "money" },
+  { key: "moneda", label: "Moneda", type: "text" },
+  { key: "vencimiento", label: "Vencimiento", type: "text" },
+  { key: "acciones", label: "Acciones", type: "actions", locked: true },
+];
+
+const ordenesFacturacionRows = [
+  {
+    id: "OF-001",
+    estado: "PENDIENTE",
+    nombre: "Adnovation SRL",
+    razonSocial: "Adnovation SRL",
+    tipo: "Servicio mensual",
+    periodo: "2026-06",
+    descripcion: "Servicio mensual de reporting y administración comercial",
+    total: 2600000,
+    moneda: "ARS",
+    vencimiento: "2026-06-30",
+  },
+  {
+    id: "OF-002",
+    estado: "ACTIVO",
+    nombre: "Cliente de ejemplo",
+    razonSocial: "Cliente de ejemplo S.A.",
+    tipo: "Hora adicional",
+    periodo: "2026-06",
+    descripcion: "Horas adicionales aprobadas para facturación",
+    total: 162500,
+    moneda: "ARS",
+    vencimiento: "2026-06-25",
+  },
+  {
+    id: "OF-003",
+    estado: "BORRADOR",
+    nombre: "Proyecto interno",
+    razonSocial: "Proyecto interno",
+    tipo: "Ajuste",
+    periodo: "2026-07",
+    descripcion: "Orden pendiente de revisión comercial",
+    total: 243750,
+    moneda: "ARS",
+    vencimiento: "2026-07-10",
+  },
+];
+
 const defaultActions = {
   view: true,
   edit: true,
@@ -246,6 +299,19 @@ export const entitySections = [
     path: "/administracion-comercial/indices",
     createPath: "/administracion-comercial/indices/new",
     endpoint: "/api/administracion-comercial/indices",
+  }),
+  makeSection({
+    key: "ordenes-facturacion",
+    group: "Administración y Comercial",
+    title: "Órdenes de Facturación",
+    subtitle: "Gestión de órdenes de facturación.",
+    path: "/administracion-comercial/ordenes-facturacion",
+    createPath: "/administracion-comercial/ordenes-facturacion/new",
+    endpoint: "/api/administracion-comercial/ordenes-facturacion",
+    columns: ordenesFacturacionColumns,
+    rows: ordenesFacturacionRows,
+    primaryFilters: ["estado", "tipo", "moneda"],
+    laneField: "estado",
   }),
 ];
 
