@@ -1,6 +1,83 @@
-export const entitySections = [
-  // Estructural
+const commonColumns = [
+  { key: "id", label: "ID", type: "text", locked: true },
+  { key: "estado", label: "Estado", type: "status" },
+  { key: "nombre", label: "Nombre", type: "text", primary: true },
+  { key: "tipo", label: "Tipo", type: "text" },
+  { key: "documento", label: "Documento", type: "text" },
+  { key: "descripcion", label: "Descripción", type: "text" },
+  { key: "email", label: "Email", type: "text" },
+  { key: "total", label: "Total", type: "money" },
+  { key: "moneda", label: "Moneda", type: "text" },
+  { key: "acciones", label: "Acciones", type: "actions", locked: true },
+];
+
+const commonRows = [
   {
+    id: "REG-001",
+    estado: "ACTIVO",
+    nombre: "Registro de ejemplo",
+    tipo: "General",
+    documento: "20333444556",
+    descripcion: "Descripción o referencia del registro",
+    email: "info@example.com",
+    total: 45000,
+    moneda: "ARS",
+  },
+  {
+    id: "REG-002",
+    estado: "PENDIENTE",
+    nombre: "Segundo registro",
+    tipo: "General",
+    documento: "30711222334",
+    descripcion: "Información complementaria",
+    email: "admin@example.com",
+    total: 100000,
+    moneda: "ARS",
+  },
+  {
+    id: "REG-003",
+    estado: "INACTIVO",
+    nombre: "Tercer registro",
+    tipo: "Especial",
+    documento: "27123456789",
+    descripcion: "Observaciones internas",
+    email: "contacto@example.com",
+    total: 20576,
+    moneda: "ARS",
+  },
+];
+
+function makeSection({
+  key,
+  group,
+  title,
+  subtitle,
+  path,
+  createPath,
+  endpoint,
+  columns = commonColumns,
+  rows = commonRows,
+  primaryFilters = ["estado", "tipo", "moneda"],
+  laneField = "estado",
+}) {
+  return {
+    key,
+    group,
+    title,
+    subtitle,
+    path,
+    createPath,
+    endpoint,
+    columns,
+    rows,
+    primaryFilters,
+    laneField,
+    defaultVisibleColumns: columns.map((column) => column.key),
+  };
+}
+
+export const entitySections = [
+  makeSection({
     key: "personas",
     group: "Estructural",
     title: "Personas",
@@ -8,8 +85,8 @@ export const entitySections = [
     path: "/estructural/personas",
     createPath: "/estructural/personas/new",
     endpoint: "/api/estructural/personas",
-  },
-  {
+  }),
+  makeSection({
     key: "razones-sociales",
     group: "Estructural",
     title: "Razones Sociales",
@@ -17,8 +94,8 @@ export const entitySections = [
     path: "/estructural/razones-sociales",
     createPath: "/estructural/razones-sociales/new",
     endpoint: "/api/estructural/razones-sociales",
-  },
-  {
+  }),
+  makeSection({
     key: "cbus",
     group: "Estructural",
     title: "CBUs",
@@ -26,8 +103,8 @@ export const entitySections = [
     path: "/estructural/cbus",
     createPath: "/estructural/cbus/new",
     endpoint: "/api/estructural/cbus",
-  },
-  {
+  }),
+  makeSection({
     key: "cuentas",
     group: "Estructural",
     title: "Cuentas",
@@ -35,8 +112,8 @@ export const entitySections = [
     path: "/estructural/cuentas",
     createPath: "/estructural/cuentas/new",
     endpoint: "/api/estructural/cuentas",
-  },
-  {
+  }),
+  makeSection({
     key: "colaboradores",
     group: "Estructural",
     title: "Colaboradores",
@@ -44,8 +121,8 @@ export const entitySections = [
     path: "/estructural/colaboradores",
     createPath: "/estructural/colaboradores/new",
     endpoint: "/api/estructural/colaboradores",
-  },
-  {
+  }),
+  makeSection({
     key: "proyectos",
     group: "Estructural",
     title: "Proyectos",
@@ -53,8 +130,8 @@ export const entitySections = [
     path: "/estructural/proyectos",
     createPath: "/estructural/proyectos/new",
     endpoint: "/api/estructural/proyectos",
-  },
-  {
+  }),
+  makeSection({
     key: "recurrentes",
     group: "Estructural",
     title: "Recurrentes",
@@ -62,8 +139,8 @@ export const entitySections = [
     path: "/estructural/recurrentes",
     createPath: "/estructural/recurrentes/new",
     endpoint: "/api/estructural/recurrentes",
-  },
-  {
+  }),
+  makeSection({
     key: "facturacion",
     group: "Estructural",
     title: "Facturación",
@@ -71,10 +148,9 @@ export const entitySections = [
     path: "/estructural/facturacion",
     createPath: "/estructural/facturacion/new",
     endpoint: "/api/estructural/facturacion",
-  },
+  }),
 
-  // Proveedores
-  {
+  makeSection({
     key: "tiempo",
     group: "Proveedores",
     title: "Tiempo",
@@ -82,10 +158,9 @@ export const entitySections = [
     path: "/proveedores/tiempo",
     createPath: "/proveedores/tiempo/new",
     endpoint: "/api/proveedores/tiempo",
-  },
+  }),
 
-  // Gestión
-  {
+  makeSection({
     key: "agenda",
     group: "Gestión",
     title: "Agenda",
@@ -93,8 +168,8 @@ export const entitySections = [
     path: "/gestion/agenda",
     createPath: "/gestion/agenda/new",
     endpoint: "/api/gestion/agenda",
-  },
-  {
+  }),
+  makeSection({
     key: "activos",
     group: "Gestión",
     title: "Activos",
@@ -102,8 +177,8 @@ export const entitySections = [
     path: "/gestion/activos",
     createPath: "/gestion/activos/new",
     endpoint: "/api/gestion/activos",
-  },
-  {
+  }),
+  makeSection({
     key: "dominios",
     group: "Gestión",
     title: "Dominios",
@@ -111,10 +186,9 @@ export const entitySections = [
     path: "/gestion/dominios",
     createPath: "/gestion/dominios/new",
     endpoint: "/api/gestion/dominios",
-  },
+  }),
 
-  // Reportes
-  {
+  makeSection({
     key: "reportes-ventas",
     group: "Reportes",
     title: "Ventas",
@@ -122,8 +196,8 @@ export const entitySections = [
     path: "/reportes/ventas",
     createPath: null,
     endpoint: "/api/reportes/ventas",
-  },
-  {
+  }),
+  makeSection({
     key: "recurrentes-por-cuentas",
     group: "Reportes",
     title: "Recurrentes por cuentas",
@@ -131,8 +205,8 @@ export const entitySections = [
     path: "/reportes/recurrentes-por-cuentas",
     createPath: null,
     endpoint: "/api/reportes/recurrentes-por-cuentas",
-  },
-  {
+  }),
+  makeSection({
     key: "recurrentes-por-actividades",
     group: "Reportes",
     title: "Recurrentes por actividades",
@@ -140,10 +214,9 @@ export const entitySections = [
     path: "/reportes/recurrentes-por-actividades",
     createPath: null,
     endpoint: "/api/reportes/recurrentes-por-actividades",
-  },
+  }),
 
-  // Administración y Comercial
-  {
+  makeSection({
     key: "administracion-comercial-ventas",
     group: "Administración y Comercial",
     title: "Ventas",
@@ -151,8 +224,8 @@ export const entitySections = [
     path: "/administracion-comercial/ventas",
     createPath: null,
     endpoint: "/api/administracion-comercial/ventas",
-  },
-  {
+  }),
+  makeSection({
     key: "indices",
     group: "Administración y Comercial",
     title: "Índices",
@@ -160,7 +233,7 @@ export const entitySections = [
     path: "/administracion-comercial/indices",
     createPath: null,
     endpoint: "/api/administracion-comercial/indices",
-  },
+  }),
 ];
 
 export function getEntitySectionByKey(key) {
