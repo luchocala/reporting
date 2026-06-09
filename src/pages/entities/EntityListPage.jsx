@@ -405,7 +405,7 @@ function AdvancedFiltersButton({ onClick, mobile = false, showLabel = false }) {
         className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
       >
         <SlidersHorizontal className="size-4" />
-        Filtros avanzados
+        +Filtros
       </button>
     );
   }
@@ -416,16 +416,16 @@ function AdvancedFiltersButton({ onClick, mobile = false, showLabel = false }) {
         type="button"
         onClick={onClick}
         className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-ring/30"
-        title="Filtros avanzados"
+        title="+Filtros"
       >
         <SlidersHorizontal className="size-4" />
-        <span>Filtros avanzados</span>
+        <span>+Filtros</span>
       </button>
     );
   }
 
   return (
-    <IconButton onClick={onClick} title="Filtros avanzados">
+    <IconButton onClick={onClick} title="+Filtros">
       <SlidersHorizontal className="size-4" />
     </IconButton>
   );
@@ -656,7 +656,7 @@ function AdvancedFiltersPanel({ columns, rows, advancedFilters, setAdvancedFilte
     <Card className="shadow-none p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <h2 className="text-lg font-semibold">Filtros avanzados</h2>
+          <h2 className="text-lg font-semibold">Filtros Avanzados</h2>
           <p className="text-sm text-muted-foreground">
             Ajustá los filtros por columna y guardá los cambios para volver a la vista normal.
           </p>
@@ -712,7 +712,7 @@ function BulkChangesPanel({ columns, selectedCount, bulkChanges, setBulkChanges,
     <Card className="shadow-none p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h2 className="text-lg font-semibold">Cambios masivos</h2>
+          >Cambios masivos</h2>
           <p className="text-sm text-muted-foreground">
             Editá campos para aplicar cambios a {selectedCount} registro{selectedCount === 1 ? "" : "s"} seleccionado
             {selectedCount === 1 ? "" : "s"}.
@@ -798,7 +798,15 @@ function ActionButtons({
     </div>
   );
 }
-
+function RecordsCount({ count }) {
+  return (
+    <div className="flex items-center justify-start mb-3">
+      <span className="text-sm text-muted-foreground">
+        {count} registro{count === 1 ? "" : "s"}
+      </span>
+    </div>
+  );
+}
 function DesktopTable({
   section,
   columns,
@@ -814,7 +822,10 @@ function DesktopTable({
 }) {
   const isVisible = (columnKey) => visibleColumns.includes(columnKey);
 
-  return (
+return (
+  <div>
+    <RecordsCount count={items.length} />
+
     <Card className="shadow-none overflow-hidden block">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -908,7 +919,8 @@ function DesktopTable({
         </div>
       </div>
     </Card>
-  );
+</div>
+);
 }
 
 function LanesView({ section, columns, items, selectedIds, onToggleSelected, onView, onDelete, onMarkDone }) {
@@ -920,9 +932,7 @@ function LanesView({ section, columns, items, selectedIds, onToggleSelected, onV
 
   return (
     <div className="block">
-      <div className="flex items-center justify-end mb-3">
-        <span className="text-xs text-muted-foreground">{items.length} registros</span>
-      </div>
+      <RecordsCount count={items.length} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
         {lanes.map((lane) => (
@@ -1003,9 +1013,7 @@ function LanesView({ section, columns, items, selectedIds, onToggleSelected, onV
 function MobileCards({ section, columns, items, selectedIds, onToggleSelected, onView, onDelete, onMarkDone }) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>{items.length} registros</span>
-      </div>
+    <RecordsCount count={items.length} />
 
       {items.map((item) => {
         const rowId = getRowId(item);
