@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sun, Moon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useLocalAuth } from "@/lib/LocalAuthContext";
-import { useEffect, useState } from "react";
 import { isDarkTheme, toggleTheme } from "@/lib/theme";
 
 function getUserInitial(user) {
@@ -21,12 +20,11 @@ function getDisplayName(user) {
 
 export default function Header({ onMenuClick }) {
   const { user } = useLocalAuth();
-
   const [dark, setDark] = useState(isDarkTheme());
 
   useEffect(() => {
-    const syncTheme = (e) => {
-      setDark(e.detail.dark);
+    const syncTheme = (event) => {
+      setDark(event.detail.dark);
     };
 
     window.addEventListener("themechange", syncTheme);
@@ -35,17 +33,6 @@ export default function Header({ onMenuClick }) {
       window.removeEventListener("themechange", syncTheme);
     };
   }, []);
-
-  const handleThemeToggle = () => {
-    toggleTheme();
-  };
-
-  const toggleTheme = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-  };
 
   const handleMenuClick = () => {
     onMenuClick?.();
@@ -69,8 +56,8 @@ export default function Header({ onMenuClick }) {
           variant="outline"
           size="icon"
           className="size-8"
-          onClick={handleThemeToggle}
-          title={dark ? "Switch to light mode" : "Switch to dark mode"}
+          onClick={toggleTheme}
+          title={dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
         >
           {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
         </Button>
