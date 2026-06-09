@@ -2,9 +2,6 @@ import {
   LayoutDashboard,
   Users,
   User,
-  Code,
-  ShieldCheck,
-  AlertTriangle,
   CheckSquare,
   Database,
   Clock,
@@ -120,46 +117,6 @@ export const navSections = [
       { icon: Users, label: "Users", path: "/users" },
       { icon: CheckSquare, label: "Tasks", path: "/tasks" },
       { icon: User, label: "Profile", path: "/profile" },
-    ],
-  },
-  {
-    label: "Developers",
-    items: [
-      {
-        icon: Code,
-        label: "Dev Tools",
-        children: [
-          { label: "Overview", path: "/developers/overview" },
-          { label: "API Keys", path: "/developers/api-keys" },
-          { label: "Webhooks", path: "/developers/webhooks" },
-          { label: "Events & Logs", path: "/developers/events-logs" },
-        ],
-      },
-    ],
-  },
-  {
-    label: "Pages",
-    items: [
-      {
-        icon: ShieldCheck,
-        label: "Auth",
-        children: [
-          { label: "Login", path: "/login" },
-          { label: "Register", path: "/register" },
-          { label: "Forgot Password", path: "/forgot-password" },
-        ],
-      },
-      {
-        icon: AlertTriangle,
-        label: "Errors",
-        children: [
-          { label: "401 Unauthorized", path: "/errors/401" },
-          { label: "403 Forbidden", path: "/errors/403" },
-          { label: "404 Not Found", path: "/errors/404" },
-          { label: "500 Server Error", path: "/errors/500" },
-          { label: "503 Maintenance", path: "/errors/503" },
-        ],
-      },
     ],
   },
 ];
