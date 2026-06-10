@@ -43,7 +43,13 @@ async function fetchRowsForConfig(config) {
 
   if (config.dataSource === "authUsers") {
     const data = await listUsers();
-    return extractRows(data).map(mapAuthUserToEntityRow);
+    const users = Array.isArray(data?.users)
+      ? data.users
+      : Array.isArray(data)
+        ? data
+        : [];
+
+    return users.map(mapAuthUserToEntityRow);
   }
 
   if (config.endpoint) {
@@ -54,17 +60,18 @@ async function fetchRowsForConfig(config) {
   return config.rows || [];
 }
 
-export function useEntityTable(config) {
-  const safeConfig = config || {
-    key: "missing-section",
-    title: "Sección no encontrada",
-    subtitle: "No se encontró la configuración de esta sección.",
-    columns: [],
-    rows: [],
-    primaryFilters: [],
-    badgeStyles: {},
-  };
+const missingSectionConfig = {
+  key: "missing-section",
+  title: "Sección no encontrada",
+  subtitle: "No se encontró la configuración de esta sección.",
+  columns: [],
+  rows: [],
+  primaryFilters: [],
+  badgeStyles: {},
+};
 
+export function useEntityTable(config) {
+  const safeConfig = config || missingSectionConfig;
   const remoteDataSource = hasRemoteDataSource(safeConfig);
 
   const [rows, setRows] = useState(() =>
@@ -74,7 +81,16 @@ export function useEntityTable(config) {
   const [error, setError] = useState("");
 
   const fetchRows = useCallback(async () => {
-    setLoading(remoteDataSource);
+    const shouldLoadRemotely = hasRemoteDataSource(safeConfig);
+
+    if (!shouldLoadRemotely) {
+      setRows(safeConfig.rows || []);
+      setLoading(false);
+      setError("");
+      return;
+    }
+
+    setLoading(true);
     setError("");
 
     try {
@@ -86,7 +102,12 @@ export function useEntityTable(config) {
     } finally {
       setLoading(false);
     }
-  }, [remoteDataSource, safeConfig]);
+  }, [
+    safeConfig.key,
+    safeConfig.endpoint,
+    safeConfig.dataSource,
+    safeConfig.rows,
+  ]);
 
   useEffect(() => {
     fetchRows();
@@ -119,7 +140,15 @@ export function useEntityTable(config) {
         },
         rows
       ),
-    [actionHandlers.rowActions, safeConfig, error, fetchRows, loading, rows, statsCards]
+    [
+      safeConfig,
+      rows,
+      loading,
+      error,
+      fetchRows,
+      actionHandlers.rowActions,
+      statsCards,
+    ]
   );
 
   return {
