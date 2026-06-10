@@ -49,6 +49,7 @@ function hasRemoteDataSource(config) {
 }
 
 async function fetchRowsForConfig(config) {
+  console.log("[fetchRowsForConfig] config:", config);
   if (!config) return [];
 
   if (config.dataSource === "authUsers") {
@@ -86,6 +87,9 @@ export function useEntityTable(config) {
   const safeConfig = config || missingSectionConfig;
   const remoteDataSource = hasRemoteDataSource(safeConfig);
 
+ console.log("[useEntityTable] config recibida:", safeConfig);
+  console.log("[useEntityTable] remoteDataSource:", remoteDataSource);
+
   const [rows, setRows] = useState(() =>
     remoteDataSource ? [] : safeConfig.rows || []
   );
@@ -107,6 +111,7 @@ export function useEntityTable(config) {
 
     try {
       const nextRows = await fetchRowsForConfig(safeConfig);
+      
       setRows(nextRows);
     } catch (err) {
       setRows([]);
