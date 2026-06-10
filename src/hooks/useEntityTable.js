@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildEntitySectionFromRows } from "@/lib/entity-table-inference";
+import {
+  mapAuthUserToEntityRow,
+  useEntityActionHandlers,
+} from "@/lib/entityActionHandlers.jsx";
+import { getEntityStatsCards } from "@/lib/entityStatsProviders";
+import { listUsers } from "@/lib/auth-service";
 
 async function requestJson(url, options = {}) {
   const response = await fetch(url, {
@@ -28,35 +34,55 @@ function extractRows(data) {
   return [];
 }
 
+async function fetchRowsForConfig(config) {
+  if (config.dataSource === "authUsers") {
+    const data = await listUsers();
+    return extractRows(data).map(mapAuthUserToEntityRow);
+  }
+
+  if (config.endpoint) {
+    const data = await requestJson(config.endpoint, { method: "GET" });
+    return extractRows(data);
+  }
+
+  return config.rows || [];
+}
+
 export function useEntityTable(config) {
   const [rows, setRows] = useState(config.rows || []);
-  const [loading, setLoading] = useState(Boolean(config.endpoint && !config.rows));
+  const [loading, setLoading] = useState(Boolean((config.endpoint || config.dataSource) && !config.rows));
   const [error, setError] = useState("");
 
   const fetchRows = useCallback(async () => {
-    if (!config.endpoint) {
-      setRows(config.rows || []);
-      setError("");
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
+    setLoading(Boolean(config.endpoint || config.dataSource));
     setError("");
 
     try {
-      const data = await requestJson(config.endpoint, { method: "GET" });
-      setRows(extractRows(data));
+      const nextRows = await fetchRowsForConfig(config);
+      setRows(nextRows);
     } catch (err) {
       setError(err.message || "No se pudieron cargar los datos.");
     } finally {
       setLoading(false);
     }
-  }, [config.endpoint, config.rows]);
+  }, [config]);
 
   useEffect(() => {
     fetchRows();
   }, [fetchRows]);
+
+  const actionHandlers = useEntityActionHandlers(config.actionsKey, {
+    rows,
+    setRows,
+    setError,
+    refresh: fetchRows,
+    config,
+  });
+
+  const statsCards = useMemo(
+    () => config.statsCards || getEntityStatsCards(config.statsKey, rows),
+    [config.statsCards, config.statsKey, rows]
+  );
 
   const section = useMemo(
     () =>
@@ -66,10 +92,12 @@ export function useEntityTable(config) {
           loading,
           error,
           onRefresh: fetchRows,
+          rowActions: actionHandlers.rowActions,
+          statsCards,
         },
         rows
       ),
-    [config, error, fetchRows, loading, rows]
+    [actionHandlers.rowActions, config, error, fetchRows, loading, rows, statsCards]
   );
 
   return {
@@ -78,6 +106,8 @@ export function useEntityTable(config) {
     setRows,
     loading,
     error,
+    setError,
     refresh: fetchRows,
+    extraContent: actionHandlers.extraContent,
   };
 }
