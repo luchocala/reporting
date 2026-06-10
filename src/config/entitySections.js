@@ -554,7 +554,6 @@ export const entitySections = [
     statsKey: "users",
     emptyMessage: "No hay usuarios para mostrar.",
     columns: usersColumns,
-    rows: [],
     primaryFilters: ["status", "role"],
     laneField: "status",
     badgeStyles: usersBadgeStyles,
