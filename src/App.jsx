@@ -13,7 +13,6 @@ import EntityCreatePage from './pages/entities/EntityCreatePage';
 import { entitySections } from './config/entitySections';
 
 import Dashboard from './pages/ecommerce/dashboard/Dashboard';
-import Users from './pages/configuracion/Users';
 import SettingsLayout from './pages/original/settings/SettingsLayout';
 import SettingsGeneral from './pages/original/settings/General';
 import SettingsBilling from './pages/original/settings/Billing';
@@ -130,14 +129,9 @@ const ProtectedApp = () => {
           ))}
 
         {/* Configuración */}
+        
         <Route path="/configuracion/users" element={<Users />} />
-        
         <Route path="/configuracion/profile" element={<Profile />} />
-
-        {/* Rutas heredadas de configuración */}
-        <Route path="/users" element={<Users />} />
-        
-        <Route path="/profile" element={<Profile />} />
 
         {/* Original - Settings */}
         <Route path="/settings" element={<SettingsLayout />}>

@@ -544,23 +544,7 @@ export const entitySections = [
     badgeStyles: ordenesFacturacionBadgeStyles,
   }),
 
-   makeSection({
-    key: "configuracion-users",
-    group: "Configuración",
-    title: "User List",
-    subtitle: "Gestión de usuarios del sistema.",
-    path: "/configuracion/users",
-    createPath: null,
-    endpoint: null,
-    dataSource: "authUsers",
-    actionsKey: "users",
-    statsKey: "users",
-    emptyMessage: "No hay usuarios para mostrar.",
-    columns: usersColumns,
-    primaryFilters: ["status", "role"],
-    laneField: "status",
-    badgeStyles: usersBadgeStyles,
-  }),
+  
 
   makeSection({
     key: "configuracion-tasks",
