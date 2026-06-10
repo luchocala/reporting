@@ -302,6 +302,9 @@ const defaultActions = {
   confirmLabel: "Confirmar",
 };
 
+const hasRemoteDataSource = Boolean(endpoint || dataSource);
+const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
+
 function makeSection({
   key,
   group,
@@ -321,8 +324,7 @@ function makeSection({
   badgeStyles = defaultBadgeStyles,
   actions = {},
 }) {
-  const hasRemoteDataSource = Boolean(endpoint || dataSource);
-  const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
+
 
   return {
     key,
@@ -544,7 +546,22 @@ export const entitySections = [
     badgeStyles: ordenesFacturacionBadgeStyles,
   }),
 
-  
+  makeSection({
+  key: "configuracion-users",
+  group: "Configuración",
+  title: "User List",
+  subtitle: "Gestión de usuarios del sistema.",
+  path: "/configuracion/users",
+  createPath: null,
+  dataSource: "authUsers",
+  actionsKey: "users",
+  statsKey: "users",
+  emptyMessage: "No hay usuarios para mostrar.",
+  columns: usersColumns,
+  primaryFilters: ["status", "role"],
+  laneField: "status",
+  badgeStyles: usersBadgeStyles,
+}),
 
   makeSection({
     key: "configuracion-tasks",

@@ -54,6 +54,10 @@ async function fetchRowsForConfig(config) {
 
   if (config.dataSource === "authUsers") {
   const data = await listUsers();
+  const users = extractRows(data);
+  return users.map(mapAuthUserToEntityRow);
+  }
+  const data = await listUsers();
 
   console.log("[authUsers] respuesta cruda:", data);
 

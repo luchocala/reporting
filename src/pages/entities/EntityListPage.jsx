@@ -1,3 +1,4 @@
+import { useEntityTable } from "@/hooks/useEntityTable";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -1392,8 +1393,14 @@ function HeaderActionButton({ action }) {
 }
 
 export default function EntityListPage({ section }) {
-  const rows = section.rows || [];
-  const columns = section.columns || [];
+  const {
+  section: runtimeSection,
+  extraContent,
+} = useEntityTable(section);
+
+const currentSection = runtimeSection || section;
+  const rows = currentSection.rows || [];
+  const columns = currentSection.columns || [];
   const previousIsDesktopRef = useRef(typeof window !== "undefined" ? window.innerWidth >= 1280 : true);
   const userSelectedViewRef = useRef(false);
 
@@ -1418,8 +1425,8 @@ export default function EntityListPage({ section }) {
     setSelectedIds([]);
     setAdvancedFiltersOpen(false);
     setBulkChangesOpen(false);
-    setVisibleColumns(getAllColumnKeys(section.columns || []));
-  }, [section.key, section.columns]);
+    setVisibleColumns(getAllColumnKeys(currentSection.columns || []));
+  }, [currentSection.key, currentSection.columns]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1534,8 +1541,8 @@ export default function EntityListPage({ section }) {
   };
 
   const handleView = (item) => {
-    if (typeof section.onView === "function") {
-      section.onView(item);
+    if (typeof currentSection.onView === "function") {
+      currentSection.onView(item);
       return;
     }
 
@@ -1543,8 +1550,8 @@ export default function EntityListPage({ section }) {
   };
 
   const handleDelete = (item) => {
-    if (typeof section.onDelete === "function") {
-      section.onDelete(item);
+    if (typeof currentSection.onDelete === "function") {
+      currentSection.onDelete(item);
       return;
     }
 
@@ -1552,8 +1559,8 @@ export default function EntityListPage({ section }) {
   };
 
   const handleMarkDone = (item) => {
-    if (typeof section.onMarkDone === "function") {
-      section.onMarkDone(item);
+    if (typeof currentSection.onMarkDone === "function") {
+      currentSection.onMarkDone(item);
       return;
     }
 
@@ -1571,11 +1578,11 @@ export default function EntityListPage({ section }) {
     setSelectedIds([]);
     setAdvancedFiltersOpen(false);
     setBulkChangesOpen(false);
-    setVisibleColumns(getAllColumnKeys(section.columns || []));
+    setVisibleColumns(getAllColumnKeys(currentSection.columns || []));
 
     try {
-      if (typeof section.onRefresh === "function") {
-        await section.onRefresh();
+      if (typeof currentSection.onRefresh === "function") {
+        await currentSection.onRefresh();
       }
     } finally {
       window.setTimeout(() => {
@@ -1585,7 +1592,7 @@ export default function EntityListPage({ section }) {
   };
 
   const selectedCount = selectedIds.length;
-  const headerActions = Array.isArray(section.headerActions) ? section.headerActions : [];
+  const headerActions = Array.isArray(currentSection.headerActions) ? currentSection.headerActions : [];
 
   return (
     <div className="space-y-4">
@@ -1593,18 +1600,18 @@ export default function EntityListPage({ section }) {
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold">{section.title}</h1>
-          <p className="text-sm text-muted-foreground">{section.subtitle}</p>
+          <h1 className="text-2xl font-bold">{currentSection.title}</h1>
+          <p className="text-sm text-muted-foreground">{currentSection.subtitle}</p>
         </div>
 
         <div className="flex items-center gap-2">
-          {section.createPath && (
+          {currentSection.createPath && (
             <Link
-              to={section.createPath}
+              to={currentSection.createPath}
               className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-foreground px-2.5 text-sm text-background transition-opacity hover:opacity-90 xl:px-3"
             >
               <Plus className="size-4" />
-              <span className="hidden xl:inline">Nuevo {section.title.toLowerCase()}</span>
+              <span className="hidden xl:inline">Nuevo {currentSection.title.toLowerCase()}</span>
             </Link>
           )}
 
@@ -1615,21 +1622,21 @@ export default function EntityListPage({ section }) {
           <button
             type="button"
             onClick={handleRefresh}
-            disabled={refreshing || section.loading}
+            disabled={refreshing || currentSection.loading}
             className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-70 xl:px-3"
             title="Refresh"
           >
-            <RefreshCw className={`size-4 ${refreshing || section.loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`size-4 ${refreshing || currentSection.loading ? "animate-spin" : ""}`} />
             <span className="hidden xl:inline">Refresh</span>
           </button>
         </div>
       </div>
 
-      <StatsCards cards={section.statsCards} />
+      <StatsCards cards={currentSection.statsCards} />
 
-      {section.error && (
+      {currentSection.error && (
         <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {section.error}
+          {currentSection.error}
         </div>
       )}
 
@@ -1643,7 +1650,7 @@ export default function EntityListPage({ section }) {
             <div className="relative w-full">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
               <input
-                placeholder={`Buscar ${section.title.toLowerCase()}...`}
+                placeholder={`Buscar ${currentSection.title.toLowerCase()}...`}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-3 text-base focus:outline-none"
@@ -1674,7 +1681,7 @@ export default function EntityListPage({ section }) {
       {!advancedFiltersOpen && !bulkChangesOpen && (
         <FiltersToolbar
           section={section}
-          sectionKey={section.key}
+          sectionKey={currentSection.key}
           rows={rows}
           columns={columns}
           configuredPrimaryFilters={configuredPrimaryFilters}
@@ -1706,7 +1713,7 @@ export default function EntityListPage({ section }) {
           advancedFilters={advancedFilters}
           setAdvancedFilters={setAdvancedFilters}
           onClose={() => setAdvancedFiltersOpen(false)}
-          resetKey={section.key}
+          resetKey={currentSection.key}
         />
       )}
 
@@ -1779,6 +1786,7 @@ export default function EntityListPage({ section }) {
               onMarkDone={handleMarkDone}
             />
           </div>
+          {extraContent}
         </>
       )}
     </div>
