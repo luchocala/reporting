@@ -201,11 +201,20 @@ export function buildBadgeStyles(columns = [], rows = [], options = {}) {
   }, {});
 }
 
-export function buildEntitySectionFromRows(config, rows = []) {
-  const columns = inferColumns(rows, config);
-  const primaryFilters = inferPrimaryFilters(columns, rows, config);
+export function buildEntitySectionFromRows(config = {}, rows = []) {
+  const effectiveRows = Array.isArray(rows) ? rows : [];
+  const columns =
+    Array.isArray(config.columns) && config.columns.length > 0
+      ? config.columns
+      : inferColumns(effectiveRows, config);
+
+  const primaryFilters =
+    Array.isArray(config.primaryFilters) && config.primaryFilters.length > 0
+      ? config.primaryFilters
+      : inferPrimaryFilters(columns, effectiveRows, config);
 
   return {
+    ...config,
     key: config.key,
     group: config.group,
     title: config.title,
@@ -214,11 +223,21 @@ export function buildEntitySectionFromRows(config, rows = []) {
     createPath: config.createPath,
     endpoint: config.endpoint,
     tableName: config.tableName,
+    dataSource: config.dataSource,
+    actionsKey: config.actionsKey,
+    statsKey: config.statsKey,
+    emptyMessage: config.emptyMessage,
     columns,
-    rows,
+    rows: effectiveRows,
     primaryFilters,
-    laneField: config.laneField || columns.find((column) => column.type === "status")?.key || "estado",
-    badgeStyles: buildBadgeStyles(columns, rows, config),
+    laneField:
+      config.laneField ||
+      columns.find((column) => column.type === "status")?.key ||
+      "estado",
+    badgeStyles: {
+      ...buildBadgeStyles(columns, effectiveRows, config),
+      ...(config.badgeStyles || {}),
+    },
     actions: config.actions || {},
     headerActions: config.headerActions || [],
     statsCards: config.statsCards || [],
