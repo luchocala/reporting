@@ -224,6 +224,22 @@ const tasksRows = [
   },
 ];
 
+const usersColumns = [
+  { key: "id", label: "ID", type: "text", locked: true },
+  {
+    key: "name",
+    label: "Name",
+    type: "text",
+    primary: true,
+    cellLayout: "stacked",
+  },
+  { key: "email", label: "Email", type: "text" },
+  { key: "username", label: "Username", type: "text" },
+  { key: "status", label: "Status", type: "status" },
+  { key: "role", label: "Role", type: "badge" },
+  { key: "acciones", label: "Actions", type: "actions", locked: true },
+];
+
 const defaultBadgeStyles = {
   estado: {
     ACTIVO: "green",
@@ -262,6 +278,22 @@ const tasksBadgeStyles = {
   },
 };
 
+const usersBadgeStyles = {
+  status: {
+    Pending: "yellow",
+    Approved: "green",
+    Suspended: "red",
+  },
+  role: {
+    admin: "blue",
+    user: "slate",
+    Superadmin: "blue",
+    Admin: "blue",
+    Manager: "yellow",
+    Cashier: "slate",
+  },
+};
+
 const defaultActions = {
   view: true,
   edit: true,
@@ -278,6 +310,10 @@ function makeSection({
   path,
   createPath,
   endpoint,
+  dataSource,
+  actionsKey,
+  statsKey,
+  emptyMessage,
   columns = commonColumns,
   rows = commonRows,
   primaryFilters = ["estado", "tipo", "moneda"],
@@ -293,6 +329,10 @@ function makeSection({
     path,
     createPath,
     endpoint,
+    dataSource,
+    actionsKey,
+    statsKey,
+    emptyMessage,
     columns,
     rows,
     primaryFilters,
@@ -499,6 +539,25 @@ export const entitySections = [
     ],
     laneField: "estado",
     badgeStyles: ordenesFacturacionBadgeStyles,
+  }),
+
+  makeSection({
+    key: "configuracion-users",
+    group: "Configuración",
+    title: "User List",
+    subtitle: "Gestión de usuarios del sistema.",
+    path: "/configuracion/users",
+    createPath: null,
+    endpoint: null,
+    dataSource: "authUsers",
+    actionsKey: "users",
+    statsKey: "users",
+    emptyMessage: "No hay usuarios para mostrar.",
+    columns: usersColumns,
+    rows: [],
+    primaryFilters: ["status", "role"],
+    laneField: "status",
+    badgeStyles: usersBadgeStyles,
   }),
 
   makeSection({
