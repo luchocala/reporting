@@ -315,12 +315,15 @@ function makeSection({
   statsKey,
   emptyMessage,
   columns = commonColumns,
-  rows = commonRows,
+  rows,
   primaryFilters = ["estado", "tipo", "moneda"],
   laneField = "estado",
   badgeStyles = defaultBadgeStyles,
   actions = {},
 }) {
+  const hasRemoteDataSource = Boolean(endpoint || dataSource);
+  const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
+
   return {
     key,
     group,
@@ -334,7 +337,7 @@ function makeSection({
     statsKey,
     emptyMessage,
     columns,
-    rows,
+    rows: resolvedRows,
     primaryFilters,
     laneField,
     badgeStyles,
@@ -541,7 +544,7 @@ export const entitySections = [
     badgeStyles: ordenesFacturacionBadgeStyles,
   }),
 
-  makeSection({
+   makeSection({
     key: "configuracion-users",
     group: "Configuración",
     title: "User List",
