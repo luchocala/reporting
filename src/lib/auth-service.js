@@ -64,6 +64,7 @@ export async function registerUser({
 }
 
 export async function listUsers() {
+  console.log("[auth-service] listUsers ejecutado");
   return requestJson("/api/users", {
     method: "GET",
   });
