@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import EntityListPage from "@/pages/entities/EntityListPage";
-import { getEntitySectionByKey } from "@/config/entitySections";
 import { listUsers } from "@/lib/auth-service";
 import {
   mapAuthUserToEntityRow,
@@ -9,6 +8,53 @@ import {
 } from "@/lib/entityActionHandlers.jsx";
 import { getEntityStatsCards } from "@/lib/entityStatsProviders";
 import { buildEntitySectionFromRows } from "@/lib/entity-table-inference";
+
+const usersConfig = {
+  key: "configuracion-users",
+  group: "Configuración",
+  title: "User List",
+  subtitle: "Gestión de usuarios del sistema.",
+  path: "/configuracion/users",
+  createPath: null,
+  endpoint: null,
+  dataSource: "authUsers",
+  actionsKey: "users",
+  statsKey: "users",
+  emptyMessage: "No hay usuarios para mostrar.",
+  columns: [
+    { key: "id", label: "ID", type: "text", locked: true },
+    {
+      key: "name",
+      label: "Name",
+      type: "text",
+      primary: true,
+      cellLayout: "stacked",
+    },
+    { key: "email", label: "Email", type: "text" },
+    { key: "username", label: "Username", type: "text" },
+    { key: "status", label: "Status", type: "status" },
+    { key: "role", label: "Role", type: "badge" },
+    { key: "acciones", label: "Actions", type: "actions", locked: true },
+  ],
+  rows: [],
+  primaryFilters: ["status", "role"],
+  laneField: "status",
+  badgeStyles: {
+    status: {
+      Pending: "yellow",
+      Approved: "green",
+      Suspended: "red",
+    },
+    role: {
+      admin: "blue",
+      user: "slate",
+      Superadmin: "blue",
+      Admin: "blue",
+      Manager: "yellow",
+      Cashier: "slate",
+    },
+  },
+};
 
 function extractUsers(data) {
   if (Array.isArray(data)) return data;
@@ -26,31 +72,20 @@ function extractUsers(data) {
 }
 
 export default function Users() {
-  const usersConfig = getEntitySectionByKey("configuracion-users");
-
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchUsers = useCallback(async () => {
-    console.log("[Users] fetchUsers ejecutado");
     setLoading(true);
     setError("");
 
     try {
-const data = await listUsers();
+      const data = await listUsers();
+      const users = extractUsers(data);
+      const mappedRows = users.map(mapAuthUserToEntityRow);
 
-console.log("[Users] respuesta /api/users:", data);
-
-const users = extractUsers(data);
-
-console.log("[Users] usuarios extraídos:", users);
-
-const mappedRows = users.map(mapAuthUserToEntityRow);
-
-console.log("[Users] rows mapeadas:", mappedRows);
-
-setRows(mappedRows);
+      setRows(mappedRows);
     } catch (err) {
       setRows([]);
       setError(err.message || "No se pudieron cargar los usuarios.");
@@ -71,31 +106,23 @@ setRows(mappedRows);
     config: usersConfig,
   });
 
-  const statsCards = useMemo(
-    () => getEntityStatsCards("users", rows),
-    [rows]
-  );
+  const statsCards = useMemo(() => getEntityStatsCards("users", rows), [rows]);
 
   const section = useMemo(
     () =>
       buildEntitySectionFromRows(
         {
           ...usersConfig,
-          dataSource: "authUsers",
-          actionsKey: "users",
-          statsKey: "users",
           rows,
           loading,
           error,
           onRefresh: fetchUsers,
           rowActions: actionHandlers.rowActions,
           statsCards,
-          emptyMessage: "No hay usuarios para mostrar.",
         },
         rows
       ),
     [
-      usersConfig,
       rows,
       loading,
       error,
