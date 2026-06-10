@@ -1,6 +1,6 @@
 import EntityListPage from "@/pages/entities/EntityListPage";
-import { useEntityTable } from "@/hooks/useEntityTable";
 import { getEntitySectionByKey } from "@/config/entitySections";
+import { useEntityTable } from "@/hooks/useEntityTable";
 
 export default function Users() {
   const usersConfig = getEntitySectionByKey("configuracion-users");
