@@ -37,11 +37,19 @@ export default function Users() {
     setError("");
 
     try {
-      const data = await listUsers();
-      const users = extractUsers(data);
-      const mappedRows = users.map(mapAuthUserToEntityRow);
+const data = await listUsers();
 
-      setRows(mappedRows);
+console.log("[Users] respuesta /api/users:", data);
+
+const users = extractUsers(data);
+
+console.log("[Users] usuarios extraídos:", users);
+
+const mappedRows = users.map(mapAuthUserToEntityRow);
+
+console.log("[Users] rows mapeadas:", mappedRows);
+
+setRows(mappedRows);
     } catch (err) {
       setRows([]);
       setError(err.message || "No se pudieron cargar los usuarios.");
