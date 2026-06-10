@@ -33,6 +33,7 @@ export default function Users() {
   const [error, setError] = useState("");
 
   const fetchUsers = useCallback(async () => {
+    console.log("[Users] fetchUsers ejecutado");
     setLoading(true);
     setError("");
 
