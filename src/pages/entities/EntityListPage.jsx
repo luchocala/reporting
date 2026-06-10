@@ -1393,14 +1393,12 @@ function HeaderActionButton({ action }) {
 }
 
 export default function EntityListPage({ section }) {
-  const {
-  section: runtimeSection,
-  extraContent,
-} = useEntityTable(section);
+  const { section: runtimeSection, extraContent } = useEntityTable(section);
 
-const currentSection = runtimeSection || section;
+  const currentSection = runtimeSection || section;
   const rows = currentSection.rows || [];
   const columns = currentSection.columns || [];
+  
   const previousIsDesktopRef = useRef(typeof window !== "undefined" ? window.innerWidth >= 1280 : true);
   const userSelectedViewRef = useRef(false);
 
@@ -1408,7 +1406,7 @@ const currentSection = runtimeSection || section;
   const [desktopView, setDesktopView] = useState(getInitialView);
   const [primaryFilters, setPrimaryFilters] = useState({});
   const [dateRangeFilters, setDateRangeFilters] = useState({});
-  const [visibleColumns, setVisibleColumns] = useState(() => getAllColumnKeys(section.columns || []));
+  const [visibleColumns, setVisibleColumns] = useState(() => getAllColumnKeys(currentSection.columns || []));
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({});
   const [bulkChangesOpen, setBulkChangesOpen] = useState(false);
@@ -1451,7 +1449,7 @@ const currentSection = runtimeSection || section;
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const configuredPrimaryFilters = getConfiguredPrimaryFilters(section, columns);
+  const configuredPrimaryFilters = getConfiguredPrimaryFilters(currentSection, columns);
   const searchableColumns = columns.filter((column) => column.type !== "actions");
 
   const setPrimaryFilter = (filterKey, nextValue) => {
@@ -1596,7 +1594,7 @@ const currentSection = runtimeSection || section;
 
   return (
     <div className="space-y-4">
-      <PageBreadcrumb section={section} />
+      <PageBreadcrumb section={currentSection} />
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
@@ -1680,7 +1678,7 @@ const currentSection = runtimeSection || section;
 
       {!advancedFiltersOpen && !bulkChangesOpen && (
         <FiltersToolbar
-          section={section}
+          section={currentSection}
           sectionKey={currentSection.key}
           rows={rows}
           columns={columns}
@@ -1733,7 +1731,7 @@ const currentSection = runtimeSection || section;
           <div className="hidden sm:block">
             {desktopView === "table" && (
               <DesktopTable
-                section={section}
+                section={currentSection}
                 columns={columns}
                 items={filtered}
                 visibleColumns={visibleColumns}
@@ -1749,7 +1747,7 @@ const currentSection = runtimeSection || section;
 
             {desktopView === "lanes" && (
               <LanesView
-                section={section}
+                section={currentSection}
                 columns={columns}
                 items={filtered}
                 selectedIds={selectedIds}
@@ -1762,7 +1760,7 @@ const currentSection = runtimeSection || section;
 
             {desktopView === "cards" && (
               <MobileCards
-                section={section}
+                section={currentSection}
                 columns={columns}
                 items={filtered}
                 selectedIds={selectedIds}
@@ -1776,7 +1774,7 @@ const currentSection = runtimeSection || section;
 
           <div className="sm:hidden">
             <MobileCards
-              section={section}
+              section={currentSection}
               columns={columns}
               items={filtered}
               selectedIds={selectedIds}
@@ -1786,9 +1784,10 @@ const currentSection = runtimeSection || section;
               onMarkDone={handleMarkDone}
             />
           </div>
-          {extraContent}
+          
         </>
       )}
+      {extraContent}
     </div>
   );
 }

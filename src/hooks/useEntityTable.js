@@ -50,24 +50,26 @@ function hasRemoteDataSource(config) {
 
 async function fetchRowsForConfig(config) {
   console.log("[fetchRowsForConfig] config:", config);
+
   if (!config) return [];
 
   if (config.dataSource === "authUsers") {
-  const data = await listUsers();
-  const users = extractRows(data);
-  return users.map(mapAuthUserToEntityRow);
+    console.log("[fetchRowsForConfig] entrando a authUsers");
+
+    const data = await listUsers();
+
+    console.log("[authUsers] respuesta cruda:", data);
+
+    const users = extractRows(data);
+
+    console.log("[authUsers] usuarios extraídos:", users);
+
+    const mappedRows = users.map(mapAuthUserToEntityRow);
+
+    console.log("[authUsers] filas mapeadas:", mappedRows);
+
+    return mappedRows;
   }
-  const data = await listUsers();
-
-  console.log("[authUsers] respuesta cruda:", data);
-
-  const users = extractRows(data);
-
-  console.log("[authUsers] usuarios extraídos:", users);
-  console.log("[authUsers] filas mapeadas:", users.map(mapAuthUserToEntityRow));
-
-  return users.map(mapAuthUserToEntityRow);
-}
 
   if (config.endpoint) {
     const data = await requestJson(config.endpoint, { method: "GET" });
