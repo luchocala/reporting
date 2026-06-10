@@ -302,8 +302,7 @@ const defaultActions = {
   confirmLabel: "Confirmar",
 };
 
-const hasRemoteDataSource = Boolean(endpoint || dataSource);
-const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
+
 
 function makeSection({
   key,
@@ -325,6 +324,8 @@ function makeSection({
   actions = {},
 }) {
 
+const hasRemoteDataSource = Boolean(endpoint || dataSource);
+const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
 
   return {
     key,
