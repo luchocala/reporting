@@ -553,7 +553,7 @@ export const entitySections = [
   title: "User List",
   subtitle: "Gestión de usuarios del sistema.",
   path: "/configuracion/users",
-  createPath: null,
+  createPath: "/configuracion/users/new",
   dataSource: "authUsers",
   actionsKey: "users",
   statsKey: "users",
