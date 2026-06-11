@@ -525,9 +525,7 @@ export const entitySections = [
     subtitle: "Seguimiento de órdenes emitidas, estado de pago y datos fiscales.",
     path: "/administracion-comercial/ordenes-facturacion",
     createPath: "/administracion-comercial/ordenes-facturacion/new",
-    endpoint: "/api/administracion-comercial/ordenes-facturacion",
-    columns: ordenesFacturacionColumns,
-    rows: ordenesFacturacionRows,
+    tableName: "ordenes_facturacion",
     primaryFilters: [
       {
         key: "periodo",
