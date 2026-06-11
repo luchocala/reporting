@@ -528,7 +528,7 @@ makeSection({
   createPath: "/administracion-comercial/ordenes-facturacion/new",
   tableName: "ordenes_facturacion",
   laneField: "estado_id",
-})
+}),
 
   makeSection({
   key: "configuracion-users",
