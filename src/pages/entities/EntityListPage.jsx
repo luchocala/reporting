@@ -1414,17 +1414,17 @@ export default function EntityListPage({ section }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    setSearch("");
-    setPrimaryFilters({});
-    setDateRangeFilters({});
-    setAdvancedFilters({});
-    setBulkChanges({});
-    setSelectedIds([]);
-    setAdvancedFiltersOpen(false);
-    setBulkChangesOpen(false);
-    setVisibleColumns(getAllColumnKeys(currentSection.columns || []));
-  }, [currentSection.key, currentSection.columns]);
+useEffect(() => {
+  setSearch("");
+  setPrimaryFilters({});
+  setDateRangeFilters({});
+  setAdvancedFilters({});
+  setBulkChanges({});
+  setSelectedIds([]);
+  setAdvancedFiltersOpen(false);
+  setBulkChangesOpen(false);
+  setVisibleColumns(getAllColumnKeys(currentSection.columns || []));
+}, [currentSection.key, currentSection.columns]);
 
   useEffect(() => {
     const handleResize = () => {
