@@ -526,6 +526,8 @@ export const entitySections = [
     path: "/administracion-comercial/ordenes-facturacion",
     createPath: "/administracion-comercial/ordenes-facturacion/new",
     tableName: "ordenes_facturacion",
+    actionsKey: "ordenes-facturacion",
+    statsKey: "ordenes-facturacion",    
     primaryFilters: [
       {
         key: "periodo",

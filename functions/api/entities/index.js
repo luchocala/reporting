@@ -9,7 +9,7 @@ function jsonResponse(body, status = 200) {
 
 const allowedTables = {
   users: "users",
-
+  ordenes_facturacion: "ordenes_facturacion",
   // Futuras tablas reales
   personas: "personas",
   razones_sociales: "razones_sociales",
