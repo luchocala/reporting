@@ -318,15 +318,16 @@ function makeSection({
   actionsKey,
   statsKey,
   emptyMessage,
-  columns = commonColumns,
+  columns,
   rows,
-  primaryFilters = ["estado", "tipo", "moneda"],
-  laneField = "estado",
-  badgeStyles = defaultBadgeStyles,
+  primaryFilters,
+  laneField,
+  badgeStyles,
   actions = {},
 }) {
   const hasRemoteDataSource = Boolean(endpoint || tableName || dataSource);
   const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
+  const resolvedColumns = columns ?? (hasRemoteDataSource ? [] : commonColumns);
 
   return {
     key,
@@ -342,16 +343,16 @@ function makeSection({
     actionsKey,
     statsKey,
     emptyMessage,
-    columns,
+    columns: resolvedColumns,
     rows: resolvedRows,
     primaryFilters,
     laneField,
-    badgeStyles,
+    badgeStyles: badgeStyles || defaultBadgeStyles,
     actions: {
       ...defaultActions,
       ...actions,
     },
-    defaultVisibleColumns: columns.map((column) => column.key),
+    defaultVisibleColumns: resolvedColumns.map((column) => column.key),
   };
 }
 
