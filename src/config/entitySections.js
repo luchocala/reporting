@@ -519,39 +519,14 @@ export const entitySections = [
     endpoint: "/api/administracion-comercial/indices",
   }),
   makeSection({
-    key: "ordenes-facturacion",
-    group: "Administración y Comercial",
-    title: "Órdenes de Facturación",
-    subtitle: "Seguimiento de órdenes emitidas, estado de pago y datos fiscales.",
-    path: "/administracion-comercial/ordenes-facturacion",
-    createPath: "/administracion-comercial/ordenes-facturacion/new",
-    tableName: "ordenes_facturacion",
-    primaryFilters: [
-      {
-        key: "periodo",
-        label: "Período",
-        type: "dateRange",
-        sourceKey: "fecha",
-        options: [
-          { value: "currentMonth", label: "Mes actual" },
-          { value: "previousMonth", label: "Mes anterior" },
-          { value: "custom", label: "Personalizado" },
-        ],
-      },
-      {
-        key: "emisora",
-        label: "Emisora",
-        type: "select",
-      },
-      {
-        key: "estado",
-        label: "Estado",
-        type: "select",
-      },
-    ],
-    laneField: "estado",
-    badgeStyles: ordenesFacturacionBadgeStyles,
-  }),
+  key: "ordenes-facturacion",
+  group: "Administración y Comercial",
+  title: "Órdenes de Facturación",
+  subtitle: "Seguimiento de órdenes emitidas, estado de pago y datos fiscales.",
+  path: "/administracion-comercial/ordenes-facturacion",
+  createPath: "/administracion-comercial/ordenes-facturacion/new",
+  tableName: "ordenes_facturacion",
+}),
 
   makeSection({
   key: "configuracion-users",
