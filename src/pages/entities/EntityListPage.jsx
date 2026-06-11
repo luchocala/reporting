@@ -191,6 +191,10 @@ function renderCell(row, column, section) {
     return <StatusBadge value={value} columnKey={column.key} section={section} />;
   }
 
+  if (column.key === "id" || column.key.endsWith("_id") || column.key === "rowid") {
+    return value === null || value === undefined || value === "" ? "-" : String(value);
+  }
+
   if (column.type === "money") {
     return formatMoney(value, row.moneda || "ARS");
   }
