@@ -519,7 +519,7 @@ export const entitySections = [
     createPath: "/administracion-comercial/indices/new",
     endpoint: "/api/administracion-comercial/indices",
   }),
-  makeSection({
+makeSection({
   key: "ordenes-facturacion",
   group: "Administración y Comercial",
   title: "Órdenes de Facturación",
@@ -527,7 +527,8 @@ export const entitySections = [
   path: "/administracion-comercial/ordenes-facturacion",
   createPath: "/administracion-comercial/ordenes-facturacion/new",
   tableName: "ordenes_facturacion",
-}),
+  laneField: "estado_id",
+})
 
   makeSection({
   key: "configuracion-users",
