@@ -1,3 +1,4 @@
+import { extractRows, listEntityRows } from "@/lib/entity-service";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildEntitySectionFromRows } from "@/lib/entity-table-inference";
 import {
@@ -43,9 +44,8 @@ function extractRows(data) {
 
   return [];
 }
-
 function hasRemoteDataSource(config) {
-  return Boolean(config?.endpoint || config?.dataSource);
+  return Boolean(config?.endpoint || config?.dataSource || config?.tableName);
 }
 
 async function fetchRowsForConfig(config) {
@@ -54,21 +54,13 @@ async function fetchRowsForConfig(config) {
   if (!config) return [];
 
   if (config.dataSource === "authUsers") {
-    console.log("[fetchRowsForConfig] entrando a authUsers");
-
     const data = await listUsers();
-
-    console.log("[authUsers] respuesta cruda:", data);
-
     const users = extractRows(data);
+    return users.map(mapAuthUserToEntityRow);
+  }
 
-    console.log("[authUsers] usuarios extraídos:", users);
-
-    const mappedRows = users.map(mapAuthUserToEntityRow);
-
-    console.log("[authUsers] filas mapeadas:", mappedRows);
-
-    return mappedRows;
+  if (config.tableName) {
+    return listEntityRows(config.tableName);
   }
 
   if (config.endpoint) {
