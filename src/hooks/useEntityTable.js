@@ -1,4 +1,5 @@
 import { extractRows, listEntityRows } from "@/lib/entity-service";
+import { mapEntityRows } from "@/lib/entity-mappers";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildEntitySectionFromRows } from "@/lib/entity-table-inference";
 import {
@@ -35,15 +36,16 @@ async function fetchRowsForConfig(config) {
 
   if (!config) return [];
 
-  if (config.dataSource === "authUsers") {
-    const data = await listUsers();
-    const users = extractRows(data);
-    return users.map(mapAuthUserToEntityRow);
-  }
+if (config.dataSource === "authUsers") {
+  const data = await listUsers();
+  const users = extractRows(data);
+  return mapEntityRows(users, "authUsers");
+}
 
-  if (config.tableName) {
-    return listEntityRows(config.tableName);
-  }
+if (config.tableName) {
+  const rows = await listEntityRows(config.tableName);
+  return mapEntityRows(rows, config.mapperKey);
+}
 
   if (config.endpoint) {
     const data = await requestJson(config.endpoint, { method: "GET" });
