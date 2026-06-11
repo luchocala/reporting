@@ -1420,23 +1420,37 @@ export default function EntityListPage({ section }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (previousSectionKeyRef.current === currentSection.key) {
-      return;
+ useEffect(() => {
+  if (previousSectionKeyRef.current === currentSection.key) {
+    return;
+  }
+
+  previousSectionKeyRef.current = currentSection.key;
+
+  setSearch("");
+  setPrimaryFilters({});
+  setDateRangeFilters({});
+  setAdvancedFilters({});
+  setBulkChanges({});
+  setSelectedIds([]);
+  setAdvancedFiltersOpen(false);
+  setBulkChangesOpen(false);
+  setVisibleColumns(getAllColumnKeys(columns));
+}, [currentSection.key, columnKeysSignature]);
+
+useEffect(() => {
+  if (columns.length === 0) {
+    return;
+  }
+
+  setVisibleColumns((current) => {
+    if (current.length > 0) {
+      return current;
     }
 
-    previousSectionKeyRef.current = currentSection.key;
-
-    setSearch("");
-    setPrimaryFilters({});
-    setDateRangeFilters({});
-    setAdvancedFilters({});
-    setBulkChanges({});
-    setSelectedIds([]);
-    setAdvancedFiltersOpen(false);
-    setBulkChangesOpen(false);
-    setVisibleColumns(getAllColumnKeys(columns));
-  }, [currentSection.key, columnKeysSignature]);
+    return getAllColumnKeys(columns);
+  });
+}, [columnKeysSignature, columns]);
 
   useEffect(() => {
     if (visibleColumns.length === 0 && columns.length > 0) {
