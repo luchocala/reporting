@@ -1,9 +1,16 @@
-import { getDb } from "../../_shared/db.js";
+// functions/api/entities/index.js
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
 
 const allowedTables = {
   users: "users",
 
-  // futuras tablas reales
+  // Futuras tablas reales
   personas: "personas",
   razones_sociales: "razones_sociales",
   cbus: "cbus",
@@ -18,28 +25,18 @@ const allowedTables = {
   dominios: "dominios",
 };
 
-function json(data, init = {}) {
-  return new Response(JSON.stringify(data), {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init.headers || {}),
-    },
-  });
-}
-
 function getAllowedTable(request) {
   const url = new URL(request.url);
   const tableKey = url.searchParams.get("table");
 
   if (!tableKey || !allowedTables[tableKey]) {
     return {
-      error: json(
+      error: jsonResponse(
         {
           success: false,
           error: "Tabla no permitida o no especificada.",
         },
-        { status: 400 }
+        400
       ),
     };
   }
@@ -52,35 +49,44 @@ function getAllowedTable(request) {
 
 export async function onRequestGet({ request, env }) {
   try {
+    if (!env.DB) {
+      return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
+    }
+
     const resolvedTable = getAllowedTable(request);
 
     if (resolvedTable.error) {
       return resolvedTable.error;
     }
 
-    const db = getDb(env);
     const { tableName } = resolvedTable;
 
-    const rows = await db.prepare(`SELECT * FROM ${tableName}`).all();
+    const { results } = await env.DB
+      .prepare(`SELECT * FROM ${tableName}`)
+      .all();
 
-    return json({
+    return jsonResponse({
       success: true,
       table: tableName,
-      rows: rows.results || [],
+      rows: results || [],
     });
   } catch (error) {
-    return json(
+    return jsonResponse(
       {
         success: false,
         error: error.message || "No se pudieron obtener los registros.",
       },
-      { status: 500 }
+      500
     );
   }
 }
 
 export async function onRequestPost({ request, env }) {
   try {
+    if (!env.DB) {
+      return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
+    }
+
     const resolvedTable = getAllowedTable(request);
 
     if (resolvedTable.error) {
@@ -92,23 +98,23 @@ export async function onRequestPost({ request, env }) {
       ([key, value]) =>
         key &&
         value !== undefined &&
+        value !== null &&
         key !== "id" &&
+        key !== "rowid" &&
         key !== "acciones"
     );
 
     if (entries.length === 0) {
-      return json(
+      return jsonResponse(
         {
           success: false,
           error: "No hay campos para insertar.",
         },
-        { status: 400 }
+        400
       );
     }
 
-    const db = getDb(env);
     const { tableName } = resolvedTable;
-
     const columns = entries.map(([key]) => key);
     const placeholders = columns.map(() => "?").join(", ");
     const values = entries.map(([, value]) => value);
@@ -118,20 +124,20 @@ export async function onRequestPost({ request, env }) {
       VALUES (${placeholders})
     `;
 
-    const result = await db.prepare(statement).bind(...values).run();
+    const result = await env.DB.prepare(statement).bind(...values).run();
 
-    return json({
+    return jsonResponse({
       success: true,
       table: tableName,
       result,
     });
   } catch (error) {
-    return json(
+    return jsonResponse(
       {
         success: false,
         error: error.message || "No se pudo crear el registro.",
       },
-      { status: 500 }
+      500
     );
   }
 }
