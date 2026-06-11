@@ -68,6 +68,7 @@ export function detectColumnType({ key, values = [], enumOptions }) {
   const uniqueValues = Array.from(new Set(sampleValues.map(String)));
 
   if (enumOptions?.[key]) return "badge";
+  if (hasAnyHint(key, ID_NAME_HINTS)) return "text";
   if (hasAnyHint(key, DATE_NAME_HINTS)) return "date";
   if (hasAnyHint(key, STATUS_NAME_HINTS)) return "status";
 
