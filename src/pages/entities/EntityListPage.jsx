@@ -1418,7 +1418,15 @@ export default function EntityListPage({ section }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
+const previousSectionKeyRef = useRef(currentSection.key);
+
 useEffect(() => {
+  if (previousSectionKeyRef.current === currentSection.key) {
+    return;
+  }
+
+  previousSectionKeyRef.current = currentSection.key;
+
   setSearch("");
   setPrimaryFilters({});
   setDateRangeFilters({});
@@ -1427,8 +1435,8 @@ useEffect(() => {
   setSelectedIds([]);
   setAdvancedFiltersOpen(false);
   setBulkChangesOpen(false);
-  setVisibleColumns(getAllColumnKeys(currentSection.columns || []));
-}, [currentSection.key, currentSection.columns]);
+  setVisibleColumns(getAllColumnKeys(columns));
+}, [currentSection.key, columns]);
 
   useEffect(() => {
     const handleResize = () => {
