@@ -312,6 +312,7 @@ function makeSection({
   path,
   createPath,
   endpoint,
+  tableName,
   dataSource,
   actionsKey,
   statsKey,
@@ -323,9 +324,8 @@ function makeSection({
   badgeStyles = defaultBadgeStyles,
   actions = {},
 }) {
-
-const hasRemoteDataSource = Boolean(endpoint || dataSource);
-const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
+  const hasRemoteDataSource = Boolean(endpoint || tableName || dataSource);
+  const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
 
   return {
     key,
@@ -335,6 +335,7 @@ const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
     path,
     createPath,
     endpoint,
+    tableName,
     dataSource,
     actionsKey,
     statsKey,
@@ -360,7 +361,11 @@ export const entitySections = [
     subtitle: "Gestión estructural de personas.",
     path: "/estructural/personas",
     createPath: "/estructural/personas/new",
-    endpoint: "/api/estructural/personas",
+    tableName: "users",
+    columns: usersColumns,
+    primaryFilters: ["status", "role"],
+    laneField: "status",
+    badgeStyles: usersBadgeStyles,
   }),
   makeSection({
     key: "razones-sociales",
