@@ -26,24 +26,6 @@ async function requestJson(url, options = {}) {
   return data;
 }
 
-function extractRows(data) {
-  if (Array.isArray(data)) return data;
-
-  if (Array.isArray(data?.rows)) return data.rows;
-  if (Array.isArray(data?.items)) return data.items;
-  if (Array.isArray(data?.users)) return data.users;
-  if (Array.isArray(data?.data)) return data.data;
-
-  if (Array.isArray(data?.data?.rows)) return data.data.rows;
-  if (Array.isArray(data?.data?.items)) return data.data.items;
-  if (Array.isArray(data?.data?.users)) return data.data.users;
-  if (Array.isArray(data?.result)) return data.result;
-  if (Array.isArray(data?.result?.users)) return data.result.users;
-  if (Array.isArray(data?.payload)) return data.payload;
-  if (Array.isArray(data?.payload?.users)) return data.payload.users;
-
-  return [];
-}
 function hasRemoteDataSource(config) {
   return Boolean(config?.endpoint || config?.dataSource || config?.tableName);
 }
