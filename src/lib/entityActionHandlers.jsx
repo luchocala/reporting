@@ -243,8 +243,10 @@ function useUsersEntityActions({ rows, setRows, setError }) {
 }
 
 export function useEntityActionHandlers(actionKey, context) {
+  const usersActions = useUsersEntityActions(context);
+
   if (actionKey === "users") {
-    return useUsersEntityActions(context);
+    return usersActions;
   }
 
   return {
