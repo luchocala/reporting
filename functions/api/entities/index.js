@@ -38,6 +38,45 @@ function getAllowedTable(request) {
   };
 }
 
+function getIdFromRequest(request) {
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+
+  if (!id) {
+    return {
+      error: jsonResponse(
+        {
+          success: false,
+          error: "ID no especificado.",
+        },
+        400
+      ),
+    };
+  }
+
+  return { id };
+}
+
+function sanitizeEntries(body) {
+  return Object.entries(body || {}).filter(
+    ([key, value]) =>
+      key &&
+      value !== undefined &&
+      key !== "id" &&
+      key !== "rowid" &&
+      key !== "acciones" &&
+      key !== "actions" &&
+      key !== "_select" &&
+      key !== "select" &&
+      key !== "_checkbox" &&
+      key !== "checkbox"
+  );
+}
+
+function quoteIdentifier(identifier) {
+  return `"${String(identifier).replace(/"/g, '""')}"`;
+}
+
 export async function onRequestGet({ request, env }) {
   try {
     if (!env.DB) {
@@ -53,7 +92,7 @@ export async function onRequestGet({ request, env }) {
     const { tableName } = resolvedTable;
 
     const { results } = await env.DB
-      .prepare(`SELECT * FROM ${tableName}`)
+      .prepare(`SELECT * FROM ${quoteIdentifier(tableName)}`)
       .all();
 
     return jsonResponse({
@@ -85,15 +124,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const entries = Object.entries(body).filter(
-      ([key, value]) =>
-        key &&
-        value !== undefined &&
-        value !== null &&
-        key !== "id" &&
-        key !== "rowid" &&
-        key !== "acciones"
-    );
+    const entries = sanitizeEntries(body).filter(([, value]) => value !== null);
 
     if (entries.length === 0) {
       return jsonResponse(
@@ -111,7 +142,7 @@ export async function onRequestPost({ request, env }) {
     const values = entries.map(([, value]) => value);
 
     const statement = `
-      INSERT INTO ${tableName} (${columns.join(", ")})
+      INSERT INTO ${quoteIdentifier(tableName)} (${columns.map(quoteIdentifier).join(", ")})
       VALUES (${placeholders})
     `;
 
@@ -127,6 +158,116 @@ export async function onRequestPost({ request, env }) {
       {
         success: false,
         error: error.message || "No se pudo crear el registro.",
+      },
+      500
+    );
+  }
+}
+
+export async function onRequestPatch({ request, env }) {
+  try {
+    if (!env.DB) {
+      return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
+    }
+
+    const resolvedTable = getAllowedTable(request);
+
+    if (resolvedTable.error) {
+      return resolvedTable.error;
+    }
+
+    const resolvedId = getIdFromRequest(request);
+
+    if (resolvedId.error) {
+      return resolvedId.error;
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const entries = sanitizeEntries(body);
+
+    if (entries.length === 0) {
+      return jsonResponse(
+        {
+          success: false,
+          error: "No hay campos para actualizar.",
+        },
+        400
+      );
+    }
+
+    const { tableName } = resolvedTable;
+    const { id } = resolvedId;
+
+    const setClause = entries
+      .map(([key]) => `${quoteIdentifier(key)} = ?`)
+      .join(", ");
+
+    const values = entries.map(([, value]) => value);
+
+    const statement = `
+      UPDATE ${quoteIdentifier(tableName)}
+      SET ${setClause}
+      WHERE ${quoteIdentifier("id")} = ?
+    `;
+
+    const result = await env.DB.prepare(statement).bind(...values, id).run();
+
+    return jsonResponse({
+      success: true,
+      table: tableName,
+      id,
+      result,
+    });
+  } catch (error) {
+    return jsonResponse(
+      {
+        success: false,
+        error: error.message || "No se pudo actualizar el registro.",
+      },
+      500
+    );
+  }
+}
+
+export async function onRequestDelete({ request, env }) {
+  try {
+    if (!env.DB) {
+      return jsonResponse({ error: "D1 binding DB no configurado" }, 500);
+    }
+
+    const resolvedTable = getAllowedTable(request);
+
+    if (resolvedTable.error) {
+      return resolvedTable.error;
+    }
+
+    const resolvedId = getIdFromRequest(request);
+
+    if (resolvedId.error) {
+      return resolvedId.error;
+    }
+
+    const { tableName } = resolvedTable;
+    const { id } = resolvedId;
+
+    const statement = `
+      DELETE FROM ${quoteIdentifier(tableName)}
+      WHERE ${quoteIdentifier("id")} = ?
+    `;
+
+    const result = await env.DB.prepare(statement).bind(id).run();
+
+    return jsonResponse({
+      success: true,
+      table: tableName,
+      id,
+      result,
+    });
+  } catch (error) {
+    return jsonResponse(
+      {
+        success: false,
+        error: error.message || "No se pudo eliminar el registro.",
       },
       500
     );
