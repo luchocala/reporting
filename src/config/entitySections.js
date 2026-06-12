@@ -250,11 +250,14 @@ const defaultBadgeStyles = {
 };
 
 const ordenesFacturacionBadgeStyles = {
-  estado: {
-    "ESPERANDO PAGO": "blue",
-    PAGADO: "green",
-    BORRADOR: "yellow",
-    ANULADO: "red",
+  estado_id: {
+    "ESPERANDO PAGO": "yellow",
+    "EMITIR": "blue",
+    "FACTURADA": "slate",
+    "COBRADA": "green",
+    "TODAVIA NO": "red",
+    "CANCELADA": "red",
+    "PAUSA": "red",
   },
 };
 
@@ -550,27 +553,29 @@ makeSection({
   createPath: "/administracion-comercial/ordenes-facturacion/new",
   tableName: "ordenes_facturacion",
   laneField: "estado_id",
+  badgeStyles: ordenesFacturacionBadgeStyles,
 
   columnOrder: [
     "id",
     "fecha_comprobante",
-    "fecha_cobro",
-    "numero_comprobante",
+    "estado_id",    
     "tipo_comprobante_id",
+    "razon_social_id",    
     "leyenda",
-    "razon_social_id",
-    "razon_social_emisora_id",
-    "moneda_id",
     "importe_neto",
     "iva_porcentaje",
     "iva",
     "importe_total",
+    "moneda_id",
+    "razon_social_emisora_id",
+    "emails",
+    "acciones",
+    "fecha_cobro",
     "cae",
     "cae_vencimiento",
-    "estado_id",
-    "qr_url_data",
+    "numero_comprobante",
+    "qr_url_data",    
     "url_documento",
-    "acciones",
   ],
 
   defaultSort: [
