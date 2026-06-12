@@ -550,6 +550,7 @@ makeSection({
   createPath: "/administracion-comercial/ordenes-facturacion/new",
   tableName: "ordenes_facturacion",
   laneField: "estado_id",
+
   columnOrder: [
     "id",
     "fecha_comprobante",
@@ -569,6 +570,20 @@ makeSection({
     "estado_id",
     "qr_url_data",
     "url_documento",
+  ],
+
+  defaultSort: [
+    {
+      key: "fecha_comprobante",
+      direction: "desc",
+      type: "date",
+    },
+    {
+      key: "razon_social_id",
+      direction: "asc",
+      type: "text",
+      useDisplayValue: true,
+    },
   ],
 
   columnLabels: {
@@ -600,7 +615,7 @@ makeSection({
     {
       key: "leyenda",
       label: "Leyenda",
-      insertBefore: "estado_id",
+      insertAfter: "tipo_comprobante_id",
       render: (_, row) =>
         [
           row.leyenda_1,
@@ -609,6 +624,7 @@ makeSection({
           row.leyenda_4,
         ]
           .filter((value) => value !== null && value !== undefined && String(value).trim() !== "")
+          .map((value) => String(value).trim())
           .join(" ") || "-",
     },
   ],
