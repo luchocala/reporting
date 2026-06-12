@@ -139,11 +139,44 @@ export function inferColumns(rows = [], options = {}) {
 };
   });
 
-  const normalizedVirtualColumns = virtualColumns
-    .filter((column) => column?.key && !hiddenColumns.has(column.key))
-    .map(normalizeVirtualColumn);
+const normalizedVirtualColumns = virtualColumns
+  .filter((column) => column?.key && !hiddenColumns.has(column.key))
+  .map(normalizeVirtualColumn);
 
-  const allColumns = [...columns, ...normalizedVirtualColumns];
+const allColumns = [...columns];
+
+normalizedVirtualColumns.forEach((virtualColumn) => {
+  const existingIndex = allColumns.findIndex((column) => column.key === virtualColumn.key);
+
+  if (existingIndex >= 0) {
+    allColumns[existingIndex] = virtualColumn;
+    return;
+  }
+
+  if (virtualColumn.insertBefore) {
+    const beforeIndex = allColumns.findIndex(
+      (column) => column.key === virtualColumn.insertBefore
+    );
+
+    if (beforeIndex >= 0) {
+      allColumns.splice(beforeIndex, 0, virtualColumn);
+      return;
+    }
+  }
+
+  if (virtualColumn.insertAfter) {
+    const afterIndex = allColumns.findIndex(
+      (column) => column.key === virtualColumn.insertAfter
+    );
+
+    if (afterIndex >= 0) {
+      allColumns.splice(afterIndex + 1, 0, virtualColumn);
+      return;
+    }
+  }
+
+  allColumns.push(virtualColumn);
+});
 
   if (!allColumns.some((column) => column.primary)) {
     const firstTextColumn = allColumns.find(

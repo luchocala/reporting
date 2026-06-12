@@ -1437,19 +1437,19 @@ useEffect(() => {
   }
 
   setVisibleColumns((current) => {
-    if (current.length > 0) {
-      return current;
-    }
+    const allColumnKeys = getAllColumnKeys(columns);
 
-    return getAllColumnKeys(columns);
+    const currentValidColumns = current.filter((columnKey) =>
+      allColumnKeys.includes(columnKey)
+    );
+
+    const missingColumns = allColumnKeys.filter(
+      (columnKey) => !currentValidColumns.includes(columnKey)
+    );
+
+    return [...currentValidColumns, ...missingColumns];
   });
 }, [columnKeysSignature, columns]);
-
-  useEffect(() => {
-    if (visibleColumns.length === 0 && columns.length > 0) {
-      setVisibleColumns(getAllColumnKeys(columns));
-    }
-  }, [columnKeysSignature, visibleColumns.length]);
 
   useEffect(() => {
     const handleResize = () => {

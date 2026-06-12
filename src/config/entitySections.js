@@ -576,6 +576,7 @@ makeSection({
     {
       key: "leyenda",
       label: "Leyenda",
+      insertBefore: "estado_id",
       render: (_, row) =>
         [
           row.leyenda_1,
@@ -584,7 +585,7 @@ makeSection({
           row.leyenda_4,
         ]
           .filter((value) => value !== null && value !== undefined && String(value).trim() !== "")
-          .join(" / ") || "-",
+          .join(" ") || "-",
     },
   ],
 
