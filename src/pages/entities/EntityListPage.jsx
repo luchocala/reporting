@@ -313,6 +313,10 @@ function getDateRangeFromFilterValue(value, customRange) {
 function renderCell(row, column, section) {
   const value = row[column.key];
 
+  if (column.type === "actions") {
+    return null;  
+  }
+
   if (typeof column.render === "function") {
     return column.render(value, row, section);
   }
@@ -1261,7 +1265,7 @@ column.type === "actions" ? "text-right" : "text-left"
                           className="size-3.5"
                           aria-label={`Seleccionar ${rowId}`}
                         />
-                      </td>
+                      </td> 
 
                       {columns.filter((column) => isVisible(column.key)).map((column) => (
                         <td
@@ -1270,16 +1274,16 @@ column.type === "actions" ? "text-right" : "text-left"
 column.type === "actions" ? "text-right" : "text-left"
                           }`}
                         >
-                          {column.type === "actions" ? (
-                            <ActionButtons
-                              item={item}
-                              section={section}
-                              compact
-                              onView={onView}
-                              onDelete={onDelete}
-                              onMarkDone={onMarkDone}
-                            />
-                          ) : column.cellLayout === "stacked" ? (
+{column.type === "actions" || column.key === "acciones" ? (
+  <ActionButtons
+    item={item}
+    section={section}
+    compact
+    onView={onView}
+    onDelete={onDelete}
+    onMarkDone={onMarkDone}
+  />
+) : column.cellLayout === "stacked" ? (
                             <div>
                               <p className="font-medium text-xs">{renderCell(item, column, section)}</p>
                               <p className="text-xs text-muted-foreground truncate max-w-sm">{getSecondaryText(item)}</p>
@@ -1678,18 +1682,30 @@ useEffect(() => {
 
     if (!Array.isArray(values) || values.length === 0) return true;
 
-    if (filter.type === "dateRange") {
-      const itemDate = parseDate(item[filter.sourceKey || filter.key]);
-      if (!itemDate) return false;
+if (filter.type === "dateRange") {
+  const selectableOptions = (filter.options || [])
+    .map((option) => String(option.value))
+    .filter((value) => value !== "custom");
 
-      const ranges = values
-        .map((value) => getDateRangeFromFilterValue(value, dateRangeFilters[filter.key]))
-        .filter(Boolean);
+  const allDateOptionsSelected =
+    selectableOptions.length > 0 &&
+    selectableOptions.every((optionValue) => values.includes(optionValue));
 
-      if (ranges.length === 0) return true;
+  if (allDateOptionsSelected) {
+    return true;
+  }
 
-      return ranges.some((range) => isDateInRange(itemDate, range));
-    }
+  const itemDate = parseDate(item[filter.sourceKey || filter.key]);
+  if (!itemDate) return false;
+
+  const ranges = values
+    .map((value) => getDateRangeFromFilterValue(value, dateRangeFilters[filter.key]))
+    .filter(Boolean);
+
+  if (ranges.length === 0) return true;
+
+  return ranges.some((range) => isDateInRange(itemDate, range));
+}
 
     return values.includes(getRawValue(item, filter.key));
   });

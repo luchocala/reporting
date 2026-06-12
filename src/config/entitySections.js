@@ -605,8 +605,8 @@ makeSection({
     type: "select",
   },
   {
-    key: "razon_social_id",
-    label: "Cliente",
+    key: "razon_social_emisora_id",
+    label: "Emisor",
     type: "select",
   },
 ],
@@ -627,6 +627,13 @@ makeSection({
     iva_porcentaje: "IVA %",
     iva: "IVA",
     importe_total: "Importe total",
+  },
+
+    columnOverrides: {
+    estado_id: {
+      type: "badge",
+      label: "Estado",
+    },
   },
 
   hiddenColumns: [
