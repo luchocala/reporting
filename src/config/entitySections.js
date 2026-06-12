@@ -652,7 +652,7 @@ makeSection({
     {
       key: "leyenda",
       label: "Leyenda",
-      insertAfter: "tipo_comprobante_id",
+      insertBefore: "importe_neto",
       render: (_, row) =>
         [
           row.leyenda_1,
