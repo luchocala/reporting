@@ -2,10 +2,7 @@ import { extractRows, listEntityRows } from "@/lib/entity-service";
 import { mapEntityRows } from "@/lib/entity-mappers";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildEntitySectionFromRows } from "@/lib/entity-table-inference";
-import {
-  mapAuthUserToEntityRow,
-  useEntityActionHandlers,
-} from "@/lib/entityActionHandlers.jsx";
+import { useEntityActionHandlers } from "@/lib/entityActionHandlers.jsx";
 import { getEntityStatsCards } from "@/lib/entityStatsProviders";
 import { listUsers } from "@/lib/auth-service";
 

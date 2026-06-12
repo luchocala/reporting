@@ -97,8 +97,139 @@ function getUniqueValues(items, key) {
   );
 }
 
-function getOptionsForColumn(items, columnKey) {
-  return getUniqueValues(items, columnKey).map((value) => ({ value, label: value }));
+function getDisplayValue(row, column, section) {
+  const value = row[column.key];
+
+  if (typeof column.getDisplayValue === "function") {
+    return column.getDisplayValue(value, row, section);
+  }
+
+  if (typeof column.render === "function") {
+    const rendered = column.render(value, row, section);
+
+    if (
+      typeof rendered === "string" ||
+      typeof rendered === "number" ||
+      typeof rendered === "boolean"
+    ) {
+      return String(rendered);
+    }
+
+    if (value === null || value === undefined || value === "") {
+      return "-";
+    }
+
+    return String(value);
+  }
+
+  if (column.lookup) {
+    const lookupValue = section.lookupMaps?.[column.key]?.[String(value)];
+
+    if (lookupValue !== null && lookupValue !== undefined && lookupValue !== "") {
+      return String(lookupValue);
+    }
+  }
+
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+
+  return String(value);
+}
+
+function getRawValue(row, columnKey) {
+  const value = row?.[columnKey];
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value);
+}
+
+function getOptionsForColumn(items, column, section) {
+  if (!column) return [];
+
+  const optionsMap = new Map();
+
+  (items || []).forEach((item) => {
+    const rawValue = getRawValue(item, column.key);
+
+    if (rawValue === "") return;
+
+    if (!optionsMap.has(rawValue)) {
+      optionsMap.set(rawValue, {
+        value: rawValue,
+        label: getDisplayValue(item, column, section),
+      });
+    }
+  });
+
+  return Array.from(optionsMap.values()).sort((a, b) =>
+    String(a.label).localeCompare(String(b.label), "es", {
+      sensitivity: "base",
+      numeric: true,
+    })
+  );
+}
+
+function compareValues(a, b, type = "text") {
+  if (type === "date") {
+    const dateA = parseDate(a);
+    const dateB = parseDate(b);
+
+    if (!dateA && !dateB) return 0;
+    if (!dateA) return 1;
+    if (!dateB) return -1;
+
+    return dateA.getTime() - dateB.getTime();
+  }
+
+  if (type === "number") {
+    const numberA = Number(a);
+    const numberB = Number(b);
+
+    if (Number.isNaN(numberA) && Number.isNaN(numberB)) return 0;
+    if (Number.isNaN(numberA)) return 1;
+    if (Number.isNaN(numberB)) return -1;
+
+    return numberA - numberB;
+  }
+
+  return String(a ?? "").localeCompare(String(b ?? ""), "es", {
+    sensitivity: "base",
+    numeric: true,
+  });
+}
+
+function sortRows(rows, sortConfig = [], columns = [], section) {
+  if (!Array.isArray(sortConfig) || sortConfig.length === 0) {
+    return rows;
+  }
+
+  return [...rows].sort((rowA, rowB) => {
+    for (const sortRule of sortConfig) {
+      const column = columns.find((item) => item.key === sortRule.key);
+
+      if (!column) continue;
+
+      const valueA = sortRule.useDisplayValue
+        ? getDisplayValue(rowA, column, section)
+        : rowA?.[sortRule.key];
+
+      const valueB = sortRule.useDisplayValue
+        ? getDisplayValue(rowB, column, section)
+        : rowB?.[sortRule.key];
+
+      const result = compareValues(valueA, valueB, sortRule.type);
+
+      if (result !== 0) {
+        return sortRule.direction === "desc" ? -result : result;
+      }
+    }
+
+    return 0;
+  });
 }
 
 function parseDate(value) {
@@ -172,35 +303,21 @@ function getDateRangeFromFilterValue(value, customRange) {
 function renderCell(row, column, section) {
   const value = row[column.key];
 
-  // 1) Render manual por columna.
-  // Acá entran transforms, virtualColumns, título/subtítulo, estilos especiales, etc.
   if (typeof column.render === "function") {
     return column.render(value, row, section);
   }
 
-  // 2) Lookup manual.
-  // Si la página definió que esta columna apunta a otra tabla,
-  // mostramos el valor resuelto en lugar del ID.
-  if (column.lookup) {
-    const lookupValue = section.lookupMaps?.[column.key]?.[String(value)];
-
-    if (lookupValue !== null && lookupValue !== undefined && lookupValue !== "") {
-      return String(lookupValue);
-    }
-  }
-
-  // 3) Badge/status manual.
-  // Esto solo debería usarse si la página lo define explícitamente.
   if (column.type === "status" || column.type === "badge") {
-    return <StatusBadge value={value} columnKey={column.key} section={section} />;
+    return (
+      <StatusBadge
+        value={getDisplayValue(row, column, section)}
+        columnKey={column.key}
+        section={section}
+      />
+    );
   }
 
-  // 4) Regla general: todo como texto plano.
-  if (value === null || value === undefined || value === "") {
-    return "-";
-  }
-
-  return String(value);
+  return getDisplayValue(row, column, section);
 }
 
 function StatusBadge({ value, columnKey = "estado", section }) {
@@ -601,9 +718,12 @@ function getConfiguredPrimaryFilters(section, columns) {
     .slice(0, 3);
 }
 
-function getFilterOptions(filter, rows) {
+function getFilterOptions(filter, rows, columns, section) {
   if (filter.options) return filter.options;
-  return getOptionsForColumn(rows, filter.key);
+
+  const column = columns.find((item) => item.key === filter.key);
+
+  return getOptionsForColumn(rows, column, section);
 }
 
 function FiltersToolbar({
@@ -648,7 +768,7 @@ function FiltersToolbar({
               onChange={(nextValue) => setPrimaryFilter(filter.key, nextValue)}
               placeholder={filter.label}
               className="min-w-0"
-              options={getFilterOptions(filter, rows)}
+              options={getFilterOptions(filter, rows, columns, section)}
               resetKey={sectionKey}
               customDateRange={dateRangeFilters[filter.key]}
               onCustomDateRangeChange={
@@ -688,9 +808,12 @@ function getBulkFieldType(column) {
   return "text";
 }
 
-function BulkFieldInput({ column, rows, value, onChange }) {
+function BulkFieldInput({ section, column, rows, value, onChange }) {
   const fieldType = getBulkFieldType(column);
-  const options = column.bulkOptions || column.options || getOptionsForColumn(rows, column.key);
+  const options =
+    column.bulkOptions ||
+    column.options ||
+    getOptionsForColumn(rows, column, section);
 
   if (column.locked || column.autoGenerated || column.key === "id" || column.key === "orderId") {
     return (
@@ -712,6 +835,7 @@ function BulkFieldInput({ column, rows, value, onChange }) {
         <option value="">Sin cambios</option>
         {options.map((option) => {
           const normalizedOption = typeof option === "string" ? { value: option, label: option } : option;
+
           return (
             <option key={String(normalizedOption.value)} value={normalizedOption.value}>
               {normalizedOption.label}
@@ -734,7 +858,15 @@ function BulkFieldInput({ column, rows, value, onChange }) {
   );
 }
 
-function AdvancedFiltersPanel({ columns, rows, advancedFilters, setAdvancedFilters, onClose, resetKey }) {
+function AdvancedFiltersPanel({
+  section,
+  columns,
+  rows,
+  advancedFilters,
+  setAdvancedFilters,
+  onClose,
+  resetKey,
+}) {
   const advancedColumns = columns.filter((column) => column.type !== "actions" && !column.locked);
 
   const updateFilter = (columnKey, nextValue) => {
@@ -770,7 +902,7 @@ function AdvancedFiltersPanel({ columns, rows, advancedFilters, setAdvancedFilte
               onChange={(nextValue) => updateFilter(column.key, nextValue)}
               placeholder={column.label}
               className="min-w-0"
-              options={getOptionsForColumn(rows, column.key)}
+              options={getOptionsForColumn(rows, column, section)}
               resetKey={resetKey}
             />
           </div>
@@ -790,7 +922,15 @@ function AdvancedFiltersPanel({ columns, rows, advancedFilters, setAdvancedFilte
   );
 }
 
-function BulkChangesPanel({ columns, rows, selectedCount, bulkChanges, setBulkChanges, onClose }) {
+function BulkChangesPanel({
+  section,
+  columns,
+  rows,
+  selectedCount,
+  bulkChanges,
+  setBulkChanges,
+  onClose,
+}) {
   const editableColumns = columns.filter((column) => column.type !== "actions");
 
   const updateChange = (columnKey, value) => {
@@ -807,6 +947,15 @@ function BulkChangesPanel({ columns, rows, selectedCount, bulkChanges, setBulkCh
             {selectedCount === 1 ? "" : "s"}.
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex shrink-0 items-center gap-2 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted"
+        >
+          <ArrowLeft className="size-4" />
+          Volver
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-3">
@@ -814,6 +963,7 @@ function BulkChangesPanel({ columns, rows, selectedCount, bulkChanges, setBulkCh
           <div key={column.key} className="grid grid-cols-1 gap-1.5 sm:grid-cols-[180px_1fr] sm:items-center">
             <span className="text-sm font-medium text-muted-foreground">{column.label}</span>
             <BulkFieldInput
+              section={section}
               column={column}
               rows={rows}
               value={bulkChanges[column.key] || ""}
@@ -1504,40 +1654,50 @@ useEffect(() => {
     Object.entries(advancedFilters).filter(([, values]) => Array.isArray(values) && values.length > 0)
   );
 
-  const filtered = rows.filter((item) => {
-    const matchesSearch =
-      !normalizedSearch ||
-      searchableColumns.some((column) =>
-        String(item[column.key] || "").toLowerCase().includes(normalizedSearch)
-      );
-
-    const matchesPrimaryFilters = configuredPrimaryFilters.every((filter) => {
-      const values = primaryFilters[filter.key];
-
-      if (!Array.isArray(values) || values.length === 0) return true;
-
-      if (filter.type === "dateRange") {
-        const itemDate = parseDate(item[filter.sourceKey || filter.key]);
-        if (!itemDate) return false;
-
-        const ranges = values
-          .map((value) => getDateRangeFromFilterValue(value, dateRangeFilters[filter.key]))
-          .filter(Boolean);
-
-        if (ranges.length === 0) return true;
-
-        return ranges.some((range) => isDateInRange(itemDate, range));
-      }
-
-      return values.includes(String(item[filter.key]));
-    });
-
-    const matchesAdvancedFilters = Object.entries(normalizedAdvancedFilters).every(
-      ([columnKey, selectedValues]) => selectedValues.includes(String(item[columnKey]))
+  const filteredRows = rows.filter((item) => {
+  const matchesSearch =
+    !normalizedSearch ||
+    searchableColumns.some((column) =>
+      getDisplayValue(item, column, currentSection)
+        .toLowerCase()
+        .includes(normalizedSearch)
     );
 
-    return matchesSearch && matchesPrimaryFilters && matchesAdvancedFilters;
+  const matchesPrimaryFilters = configuredPrimaryFilters.every((filter) => {
+    const values = primaryFilters[filter.key];
+
+    if (!Array.isArray(values) || values.length === 0) return true;
+
+    if (filter.type === "dateRange") {
+      const itemDate = parseDate(item[filter.sourceKey || filter.key]);
+      if (!itemDate) return false;
+
+      const ranges = values
+        .map((value) => getDateRangeFromFilterValue(value, dateRangeFilters[filter.key]))
+        .filter(Boolean);
+
+      if (ranges.length === 0) return true;
+
+      return ranges.some((range) => isDateInRange(itemDate, range));
+    }
+
+    return values.includes(getRawValue(item, filter.key));
   });
+
+  const matchesAdvancedFilters = Object.entries(normalizedAdvancedFilters).every(
+    ([columnKey, selectedValues]) =>
+      selectedValues.includes(getRawValue(item, columnKey))
+  );
+
+  return matchesSearch && matchesPrimaryFilters && matchesAdvancedFilters;
+});
+
+const filtered = sortRows(
+  filteredRows,
+  currentSection.defaultSort,
+  columns,
+  currentSection
+);
 
   const visibleIds = filtered.map((item) => getRowId(item));
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
@@ -1730,25 +1890,27 @@ useEffect(() => {
       )}
 
       {advancedFiltersOpen && (
-        <AdvancedFiltersPanel
-          columns={columns}
-          rows={rows}
-          advancedFilters={advancedFilters}
-          setAdvancedFilters={setAdvancedFilters}
-          onClose={() => setAdvancedFiltersOpen(false)}
-          resetKey={currentSection.key}
-        />
+<AdvancedFiltersPanel
+  section={currentSection}
+  columns={columns}
+  rows={rows}
+  advancedFilters={advancedFilters}
+  setAdvancedFilters={setAdvancedFilters}
+  onClose={() => setAdvancedFiltersOpen(false)}
+  resetKey={currentSection.key}
+/>
       )}
 
       {bulkChangesOpen && (
-        <BulkChangesPanel
-          columns={columns}
-          rows={rows}
-          selectedCount={selectedCount}
-          bulkChanges={bulkChanges}
-          setBulkChanges={setBulkChanges}
-          onClose={() => setBulkChangesOpen(false)}
-        />
+<BulkChangesPanel
+  section={currentSection}
+  columns={columns}
+  rows={rows}
+  selectedCount={selectedCount}
+  bulkChanges={bulkChanges}
+  setBulkChanges={setBulkChanges}
+  onClose={() => setBulkChangesOpen(false)}
+/>
       )}
 
       {!advancedFiltersOpen && !bulkChangesOpen && (
