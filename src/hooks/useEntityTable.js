@@ -1,4 +1,9 @@
-import { extractRows, listEntityRows } from "@/lib/entity-service";
+import {
+  deleteEntityRow,
+  extractRows,
+  listEntityRows,
+  updateEntityRow,
+} from "@/lib/entity-service";
 import { mapEntityRows } from "@/lib/entity-mappers";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildEntitySectionFromRows } from "@/lib/entity-table-inference";
@@ -62,7 +67,18 @@ function getUniqueLookupIds(rows, sourceColumn) {
     )
   );
 }
+function getRowId(row, primaryKey = "id") {
+  return row?.[primaryKey] ?? row?.id ?? row?.orderId ?? row?.key;
+}
 
+function shouldUseGenericEntityActions(config) {
+  if (!config?.tableName) return false;
+
+  // Importante: no pisar lógicas especiales como usuarios.
+  if (config.actionsKey) return false;
+
+  return true;
+}
 async function fetchLookupMapsForConfig(config, rows) {
   const lookups = config?.lookups || {};
   const lookupEntries = Object.entries(lookups);
@@ -179,6 +195,78 @@ export function useEntityTable(config) {
     fetchRows();
   }, [fetchRows]);
 
+  const genericActionsEnabled = shouldUseGenericEntityActions(safeConfig);
+
+  const handleGenericDelete = useCallback(
+    async (row) => {
+      if (!genericActionsEnabled) return;
+
+      const rowId = getRowId(row, safeConfig.primaryKey);
+
+      if (!rowId) {
+        setError("No se pudo identificar el registro a eliminar.");
+        return;
+      }
+
+      const previousRows = rows;
+
+      setRows((currentRows) =>
+        currentRows.filter((currentRow) => String(getRowId(currentRow, safeConfig.primaryKey)) !== String(rowId))
+      );
+
+      try {
+        await deleteEntityRow(safeConfig.tableName, rowId);
+      } catch (err) {
+        setRows(previousRows);
+        setError(err.message || "No se pudo eliminar el registro.");
+      }
+    },
+    [genericActionsEnabled, rows, safeConfig.primaryKey, safeConfig.tableName]
+  );
+
+  const handleGenericUpdate = useCallback(
+    async (row, values) => {
+      if (!genericActionsEnabled) return;
+
+      const rowId = getRowId(row, safeConfig.primaryKey);
+
+      if (!rowId) {
+        setError("No se pudo identificar el registro a actualizar.");
+        return;
+      }
+
+      const previousRows = rows;
+
+      setRows((currentRows) =>
+        currentRows.map((currentRow) =>
+          String(getRowId(currentRow, safeConfig.primaryKey)) === String(rowId)
+            ? {
+                ...currentRow,
+                ...values,
+              }
+            : currentRow
+        )
+      );
+
+      try {
+        await updateEntityRow(safeConfig.tableName, rowId, values);
+      } catch (err) {
+        setRows(previousRows);
+        setError(err.message || "No se pudo actualizar el registro.");
+      }
+    },
+    [genericActionsEnabled, rows, safeConfig.primaryKey, safeConfig.tableName]
+  );
+
+  const handleGenericConfirm = useCallback(
+    async (row) => {
+      if (!genericActionsEnabled) return;
+
+      await handleGenericUpdate(row, { estado_id: 5 });
+    },
+    [genericActionsEnabled, handleGenericUpdate]
+  );
+
   const actionHandlers = useEntityActionHandlers(safeConfig.actionsKey, {
     rows,
     setRows,
@@ -192,7 +280,7 @@ export function useEntityTable(config) {
     [safeConfig.statsCards, safeConfig.statsKey, rows]
   );
 
-  const section = useMemo(
+    const section = useMemo(
     () =>
       buildEntitySectionFromRows(
         {
@@ -203,6 +291,9 @@ export function useEntityTable(config) {
           error,
           onRefresh: fetchRows,
           rowActions: actionHandlers.rowActions,
+          onDelete: genericActionsEnabled ? handleGenericDelete : safeConfig.onDelete,
+          onUpdate: genericActionsEnabled ? handleGenericUpdate : safeConfig.onUpdate,
+          onMarkDone: genericActionsEnabled ? handleGenericConfirm : safeConfig.onMarkDone,
           statsCards,
         },
         rows
@@ -215,6 +306,10 @@ export function useEntityTable(config) {
       error,
       fetchRows,
       actionHandlers.rowActions,
+      genericActionsEnabled,
+      handleGenericDelete,
+      handleGenericUpdate,
+      handleGenericConfirm,
       statsCards,
     ]
   );

@@ -936,30 +936,30 @@ function AdvancedFiltersPanel({
   );
 }
 
-function BulkChangesPanel({
+function ChangesPanel({
+  title,
+  description,
   section,
   columns,
   rows,
-  selectedCount,
-  bulkChanges,
-  setBulkChanges,
+  changes,
+  setChanges,
   onClose,
+  onSave,
+  saveLabel = "Guardar cambios",
 }) {
   const editableColumns = columns.filter((column) => column.type !== "actions");
 
   const updateChange = (columnKey, value) => {
-    setBulkChanges((current) => ({ ...current, [columnKey]: value }));
+    setChanges((current) => ({ ...current, [columnKey]: value }));
   };
 
   return (
     <Card className="shadow-none p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h2 className="text-lg font-semibold">Cambios masivos</h2>
-          <p className="text-sm text-muted-foreground">
-            Editá campos para aplicar cambios a {selectedCount} registro{selectedCount === 1 ? "" : "s"} seleccionado
-            {selectedCount === 1 ? "" : "s"}.
-          </p>
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
 
         <button
@@ -980,7 +980,7 @@ function BulkChangesPanel({
               section={section}
               column={column}
               rows={rows}
-              value={bulkChanges[column.key] || ""}
+              value={changes[column.key] || ""}
               onChange={(nextValue) => updateChange(column.key, nextValue)}
             />
           </div>
@@ -990,13 +990,65 @@ function BulkChangesPanel({
       <div className="mt-5 flex justify-end">
         <button
           type="button"
-          onClick={onClose}
+          onClick={onSave}
           className="inline-flex h-10 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90"
         >
-          Guardar cambios
+          {saveLabel}
         </button>
       </div>
     </Card>
+  );
+}
+
+function BulkChangesPanel({
+  section,
+  columns,
+  rows,
+  selectedCount,
+  bulkChanges,
+  setBulkChanges,
+  onClose,
+  onSave,
+}) {
+  return (
+    <ChangesPanel
+      title="Cambios masivos"
+      description={`Editá campos para aplicar cambios a ${selectedCount} registro${selectedCount === 1 ? "" : "s"} seleccionado${selectedCount === 1 ? "" : "s"}.`}
+      section={section}
+      columns={columns}
+      rows={rows}
+      changes={bulkChanges}
+      setChanges={setBulkChanges}
+      onClose={onClose}
+      onSave={onSave}
+      saveLabel="Guardar cambios"
+    />
+  );
+}
+
+function SingleChangesPanel({
+  section,
+  columns,
+  rows,
+  item,
+  changes,
+  setChanges,
+  onClose,
+  onSave,
+}) {
+  return (
+    <ChangesPanel
+      title="Editar registro"
+      description={`Editá uno o más campos del registro #${getRowId(item)}.`}
+      section={section}
+      columns={columns}
+      rows={rows}
+      changes={changes}
+      setChanges={setChanges}
+      onClose={onClose}
+      onSave={onSave}
+      saveLabel="Guardar cambios"
+    />
   );
 }
 
@@ -1575,6 +1627,8 @@ export default function EntityListPage({ section }) {
   const [bulkChangesOpen, setBulkChangesOpen] = useState(false);
   const [bulkChanges, setBulkChanges] = useState({});
   const [selectedIds, setSelectedIds] = useState([]);
+  const [editingRow, setEditingRow] = useState(null);
+const [singleChanges, setSingleChanges] = useState({});
   const [refreshing, setRefreshing] = useState(false);
 
  useEffect(() => {
@@ -1592,6 +1646,8 @@ export default function EntityListPage({ section }) {
   setSelectedIds([]);
   setAdvancedFiltersOpen(false);
   setBulkChangesOpen(false);
+  setEditingRow(null);
+setSingleChanges({});
   setVisibleColumns(getAllColumnKeys(columns));
 }, [currentSection.key, columnKeysSignature]);
 
@@ -1749,32 +1805,35 @@ const filtered = sortRows(
     setDesktopView(nextView);
   };
 
-  const handleView = (item) => {
-    if (typeof currentSection.onView === "function") {
-      currentSection.onView(item);
-      return;
-    }
+const handleView = (item) => {
+  if (typeof currentSection.onView === "function") {
+    currentSection.onView(item);
+    return;
+  }
 
-    console.log("Ver detalle", item);
-  };
+  setEditingRow(item);
+  setSingleChanges({});
+  setAdvancedFiltersOpen(false);
+  setBulkChangesOpen(false);
+};
 
-  const handleDelete = (item) => {
-    if (typeof currentSection.onDelete === "function") {
-      currentSection.onDelete(item);
-      return;
-    }
+const handleDelete = async (item) => {
+  if (typeof currentSection.onDelete === "function") {
+    await currentSection.onDelete(item);
+    return;
+  }
 
-    console.log("Eliminar", item);
-  };
+  console.log("Eliminar", item);
+};
 
-  const handleMarkDone = (item) => {
-    if (typeof currentSection.onMarkDone === "function") {
-      currentSection.onMarkDone(item);
-      return;
-    }
+const handleMarkDone = async (item) => {
+  if (typeof currentSection.onMarkDone === "function") {
+    await currentSection.onMarkDone(item);
+    return;
+  }
 
-    console.log("Confirmar", item);
-  };
+  console.log("Confirmar", item);
+};
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -1787,6 +1846,8 @@ const filtered = sortRows(
     setSelectedIds([]);
     setAdvancedFiltersOpen(false);
     setBulkChangesOpen(false);
+    setEditingRow(null);
+setSingleChanges({});
     setVisibleColumns(getAllColumnKeys(currentSection.columns || []));
 
     try {
@@ -1802,6 +1863,51 @@ const filtered = sortRows(
 
   const selectedCount = selectedIds.length;
   const headerActions = Array.isArray(currentSection.headerActions) ? currentSection.headerActions : [];
+
+  const handleSaveSingleChanges = async () => {
+    if (!editingRow) return;
+
+    const payload = Object.fromEntries(
+      Object.entries(singleChanges).filter(([, value]) => value !== "")
+    );
+
+    if (Object.keys(payload).length === 0) {
+      setEditingRow(null);
+      setSingleChanges({});
+      return;
+    }
+
+    if (typeof currentSection.onUpdate === "function") {
+      await currentSection.onUpdate(editingRow, payload);
+    }
+
+    setEditingRow(null);
+    setSingleChanges({});
+  };
+
+  const handleSaveBulkChanges = async () => {
+    const payload = Object.fromEntries(
+      Object.entries(bulkChanges).filter(([, value]) => value !== "")
+    );
+
+    if (Object.keys(payload).length === 0) {
+      setBulkChangesOpen(false);
+      setBulkChanges({});
+      return;
+    }
+
+    if (typeof currentSection.onUpdate === "function") {
+      const selectedRows = rows.filter((row) => selectedIds.includes(getRowId(row)));
+
+      await Promise.all(
+        selectedRows.map((row) => currentSection.onUpdate(row, payload))
+      );
+    }
+
+    setBulkChangesOpen(false);
+    setBulkChanges({});
+    setSelectedIds([]);
+  };
 
   return (
     <div className="space-y-4">
@@ -1849,7 +1955,7 @@ const filtered = sortRows(
         </div>
       )}
 
-      {!advancedFiltersOpen && !bulkChangesOpen && (
+      {!advancedFiltersOpen && !bulkChangesOpen && !editingRow && (
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="hidden sm:flex items-center gap-2">
             <ViewSwitcher value={desktopView} onChange={handleViewChange} />
@@ -1869,7 +1975,7 @@ const filtered = sortRows(
         </div>
       )}
 
-      {!advancedFiltersOpen && !bulkChangesOpen && (
+      {!advancedFiltersOpen && !bulkChangesOpen && !editingRow && (
         <div className="sm:hidden space-y-2">
           <AdvancedFiltersButton mobile onClick={() => setAdvancedFiltersOpen(true)} />
 
@@ -1887,7 +1993,7 @@ const filtered = sortRows(
         </div>
       )}
 
-      {!advancedFiltersOpen && !bulkChangesOpen && (
+      {!advancedFiltersOpen && !bulkChangesOpen && !editingRow && (
         <FiltersToolbar
           section={currentSection}
           sectionKey={currentSection.key}
@@ -1914,7 +2020,21 @@ const filtered = sortRows(
           <BulkChangesButton selectedCount={selectedCount} onClick={() => setBulkChangesOpen(true)} />
         </div>
       )}
-
+      {editingRow && (
+        <SingleChangesPanel
+          section={currentSection}
+          columns={columns}
+          rows={rows}
+          item={editingRow}
+          changes={singleChanges}
+          setChanges={setSingleChanges}
+          onClose={() => {
+            setEditingRow(null);
+            setSingleChanges({});
+          }}
+          onSave={handleSaveSingleChanges}
+        />
+      )}
       {advancedFiltersOpen && (
 <AdvancedFiltersPanel
   section={currentSection}
@@ -1928,18 +2048,19 @@ const filtered = sortRows(
       )}
 
       {bulkChangesOpen && (
-<BulkChangesPanel
-  section={currentSection}
-  columns={columns}
-  rows={rows}
-  selectedCount={selectedCount}
-  bulkChanges={bulkChanges}
-  setBulkChanges={setBulkChanges}
-  onClose={() => setBulkChangesOpen(false)}
-/>
+        <BulkChangesPanel
+          section={currentSection}
+          columns={columns}
+          rows={rows}
+          selectedCount={selectedCount}
+          bulkChanges={bulkChanges}
+          setBulkChanges={setBulkChanges}
+          onClose={() => setBulkChangesOpen(false)}
+          onSave={handleSaveBulkChanges}
+        />
       )}
 
-      {!advancedFiltersOpen && !bulkChangesOpen && (
+      {!advancedFiltersOpen && !bulkChangesOpen && !editingRow && (
         <>
           <div className="hidden sm:block">
             {desktopView === "table" && (

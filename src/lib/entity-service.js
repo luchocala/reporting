@@ -57,3 +57,22 @@ export async function createEntityRow(tableName, values) {
     body: JSON.stringify(values),
   });
 }
+
+export async function updateEntityRow(tableName, id, values) {
+  return requestJson(
+    `/api/entities?table=${encodeURIComponent(tableName)}&id=${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(values),
+    }
+  );
+}
+
+export async function deleteEntityRow(tableName, id) {
+  return requestJson(
+    `/api/entities?table=${encodeURIComponent(tableName)}&id=${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+    }
+  );
+}
