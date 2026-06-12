@@ -271,6 +271,15 @@ function getPreviousMonthRange() {
   };
 }
 
+function getBeforePreviousMonthRange() {
+  const today = new Date();
+
+  return {
+    start: new Date(0),
+    end: new Date(today.getFullYear(), today.getMonth() - 1, 0),
+  };
+}
+
 function normalizeDate(date) {
   if (!date) return null;
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -289,6 +298,7 @@ function isDateInRange(date, range) {
 function getDateRangeFromFilterValue(value, customRange) {
   if (value === "currentMonth") return getCurrentMonthRange();
   if (value === "previousMonth") return getPreviousMonthRange();
+  if (value === "beforePreviousMonth") return getBeforePreviousMonthRange();
 
   if (value === "custom" && customRange?.from && customRange?.to) {
     return {

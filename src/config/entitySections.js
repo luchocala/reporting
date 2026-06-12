@@ -570,6 +570,7 @@ makeSection({
     "estado_id",
     "qr_url_data",
     "url_documento",
+    "acciones",
   ],
 
   defaultSort: [
@@ -585,6 +586,30 @@ makeSection({
       useDisplayValue: true,
     },
   ],
+
+  primaryFilters: [
+  {
+    key: "fecha_comprobante",
+    label: "Fecha",
+    type: "dateRange",
+    options: [
+      { value: "currentMonth", label: "Mes actual" },
+      { value: "previousMonth", label: "Mes anterior" },
+      { value: "beforePreviousMonth", label: "Previo al mes anterior" },
+      { value: "custom", label: "Personalizado" },
+    ],
+  },
+  {
+    key: "estado_id",
+    label: "Estado",
+    type: "select",
+  },
+  {
+    key: "razon_social_id",
+    label: "Cliente",
+    type: "select",
+  },
+],
 
   columnLabels: {
     id: "ID",
