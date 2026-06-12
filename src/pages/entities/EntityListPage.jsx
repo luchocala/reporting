@@ -183,27 +183,24 @@ function getDateRangeFromFilterValue(value, customRange) {
 function renderCell(row, column, section) {
   const value = row[column.key];
 
+  // 1) Excepción manual por columna/página.
+  // Acá entran: porcentaje, concatenaciones, título/subtítulo, negritas, tamaños, etc.
   if (typeof column.render === "function") {
     return column.render(value, row, section);
   }
 
+  // 2) Excepción manual para badges/status.
+  // Solo se aplica si vos definiste manualmente column.type = "status" o "badge".
   if (column.type === "status" || column.type === "badge") {
     return <StatusBadge value={value} columnKey={column.key} section={section} />;
   }
 
-  if (column.key === "id" || column.key.endsWith("_id") || column.key === "rowid") {
-    return value === null || value === undefined || value === "" ? "-" : String(value);
+  // 3) Regla general: mostrar todo como texto plano.
+  if (value === null || value === undefined || value === "") {
+    return "-";
   }
 
-  if (column.type === "money") {
-    return formatMoney(value, row.moneda || "ARS");
-  }
-
-  if (column.type === "number") {
-    return formatAmount(value);
-  }
-
-  return value === null || value === undefined || value === "" ? "-" : String(value);
+  return String(value);
 }
 
 function StatusBadge({ value, columnKey = "estado", section }) {

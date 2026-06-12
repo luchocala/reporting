@@ -114,8 +114,7 @@ export function inferColumns(rows = [], options = {}) {
     .map((key) => {
       const values = getSampleValues(rows, key);
       const override = overrides[key] || {};
-      const detectedType = detectColumnType({ key, values, enumOptions });
-      const type = override.type || detectedType;
+      const type = override.type || "text";
       const uniqueValues = enumOptions[key] || getUniqueValues(rows, key);
 
       return {
