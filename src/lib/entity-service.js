@@ -27,9 +27,11 @@ export function extractRows(data) {
   if (Array.isArray(data?.data?.rows)) return data.data.rows;
   if (Array.isArray(data?.data?.items)) return data.data.items;
   if (Array.isArray(data?.data?.users)) return data.data.users;
+
   if (Array.isArray(data?.result)) return data.result;
   if (Array.isArray(data?.result?.rows)) return data.result.rows;
   if (Array.isArray(data?.result?.items)) return data.result.items;
+
   if (Array.isArray(data?.payload)) return data.payload;
   if (Array.isArray(data?.payload?.rows)) return data.payload.rows;
 
@@ -43,6 +45,10 @@ export async function listEntityRows(tableName) {
   );
 
   return extractRows(data);
+}
+
+export async function listLookupRows(tableName) {
+  return listEntityRows(tableName);
 }
 
 export async function createEntityRow(tableName, values) {

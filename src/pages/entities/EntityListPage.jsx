@@ -101,17 +101,6 @@ function getOptionsForColumn(items, columnKey) {
   return getUniqueValues(items, columnKey).map((value) => ({ value, label: value }));
 }
 
-function formatAmount(value) {
-  return new Intl.NumberFormat("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
-}
-
-function formatMoney(value, moneda = "ARS") {
-  return `${moneda} ${formatAmount(value)}`;
-}
-
 function parseDate(value) {
   if (!value) return null;
 
@@ -183,19 +172,30 @@ function getDateRangeFromFilterValue(value, customRange) {
 function renderCell(row, column, section) {
   const value = row[column.key];
 
-  // 1) Excepción manual por columna/página.
-  // Acá entran: porcentaje, concatenaciones, título/subtítulo, negritas, tamaños, etc.
+  // 1) Render manual por columna.
+  // Acá entran transforms, virtualColumns, título/subtítulo, estilos especiales, etc.
   if (typeof column.render === "function") {
     return column.render(value, row, section);
   }
 
-  // 2) Excepción manual para badges/status.
-  // Solo se aplica si vos definiste manualmente column.type = "status" o "badge".
+  // 2) Lookup manual.
+  // Si la página definió que esta columna apunta a otra tabla,
+  // mostramos el valor resuelto en lugar del ID.
+  if (column.lookup) {
+    const lookupValue = section.lookupMaps?.[column.key]?.[String(value)];
+
+    if (lookupValue !== null && lookupValue !== undefined && lookupValue !== "") {
+      return String(lookupValue);
+    }
+  }
+
+  // 3) Badge/status manual.
+  // Esto solo debería usarse si la página lo define explícitamente.
   if (column.type === "status" || column.type === "badge") {
     return <StatusBadge value={value} columnKey={column.key} section={section} />;
   }
 
-  // 3) Regla general: mostrar todo como texto plano.
+  // 4) Regla general: todo como texto plano.
   if (value === null || value === undefined || value === "") {
     return "-";
   }
@@ -1065,9 +1065,7 @@ function DesktopTable({
                   <th
                     key={column.key}
                     className={`px-4 py-3 text-xs font-medium text-muted-foreground ${
-                      column.type === "money" || column.type === "number" || column.type === "actions"
-                        ? "text-right"
-                        : "text-left"
+column.type === "actions" ? "text-right" : "text-left"
                     }`}
                   >
                     {column.label}
@@ -1109,9 +1107,7 @@ function DesktopTable({
                         <td
                           key={column.key}
                           className={`px-4 py-3 text-xs align-top ${
-                            column.type === "money" || column.type === "number" || column.type === "actions"
-                              ? "text-right"
-                              : "text-left"
+column.type === "actions" ? "text-right" : "text-left"
                           }`}
                         >
                           {column.type === "actions" ? (
@@ -1212,22 +1208,22 @@ function LanesView({ section, columns, items, selectedIds, onToggleSelected, onV
                       <span>
                         ID: <span className="font-semibold text-foreground text-sm">#{rowId}</span>
                       </span>
-                      {item.importeTotal !== undefined && (
-                        <span className="text-right">
-                          Total{" "}
-                          <span className="font-semibold text-foreground">
-                            {formatMoney(item.importeTotal, item.moneda)}
-                          </span>
-                        </span>
-                      )}
-                      {item.total !== undefined && item.importeTotal === undefined && (
-                        <span className="text-right">
-                          Total{" "}
-                          <span className="font-semibold text-foreground">
-                            {formatMoney(item.total, item.moneda)}
-                          </span>
-                        </span>
-                      )}
+{item.importeTotal !== undefined && (
+  <span className="text-right">
+    Total{" "}
+    <span className="font-semibold text-foreground">
+      {String(item.importeTotal)}
+    </span>
+  </span>
+)}
+{item.total !== undefined && item.importeTotal === undefined && (
+  <span className="text-right">
+    Total{" "}
+    <span className="font-semibold text-foreground">
+      {String(item.total)}
+    </span>
+  </span>
+)}
                     </div>
 
                     <p className="text-xs font-medium leading-tight break-words">
@@ -1319,12 +1315,12 @@ function MobileCards({ section, columns, items, selectedIds, onToggleSelected, o
               </div>
 
               <div className="flex flex-col items-end gap-2 shrink-0">
-                {item.importeTotal !== undefined && (
-                  <span className="text-lg font-bold text-right">{formatMoney(item.importeTotal, item.moneda)}</span>
-                )}
-                {item.total !== undefined && item.importeTotal === undefined && (
-                  <span className="text-lg font-bold text-right">{formatMoney(item.total, item.moneda)}</span>
-                )}
+{item.importeTotal !== undefined && (
+  <span className="text-lg font-bold text-right">{String(item.importeTotal)}</span>
+)}
+{item.total !== undefined && item.importeTotal === undefined && (
+  <span className="text-lg font-bold text-right">{String(item.total)}</span>
+)}
                 <button className="p-1 hover:bg-muted rounded">
                   <MoreHorizontal className="size-4 text-muted-foreground" />
                 </button>

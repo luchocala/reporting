@@ -36,16 +36,16 @@ async function fetchRowsForConfig(config) {
 
   if (!config) return [];
 
-if (config.dataSource === "authUsers") {
-  const data = await listUsers();
-  const users = extractRows(data);
-  return mapEntityRows(users, "authUsers");
-}
+  if (config.dataSource === "authUsers") {
+    const data = await listUsers();
+    const users = extractRows(data);
+    return mapEntityRows(users, "authUsers");
+  }
 
-if (config.tableName) {
-  const rows = await listEntityRows(config.tableName);
-  return mapEntityRows(rows, config.mapperKey);
-}
+  if (config.tableName) {
+    const rows = await listEntityRows(config.tableName);
+    return mapEntityRows(rows, config.mapperKey);
+  }
 
   if (config.endpoint) {
     const data = await requestJson(config.endpoint, { method: "GET" });
@@ -53,6 +53,65 @@ if (config.tableName) {
   }
 
   return config.rows || [];
+}
+
+function getUniqueLookupIds(rows, sourceColumn) {
+  return Array.from(
+    new Set(
+      (rows || [])
+        .map((row) => row?.[sourceColumn])
+        .filter((value) => value !== null && value !== undefined && value !== "")
+        .map(String)
+    )
+  );
+}
+
+async function fetchLookupMapsForConfig(config, rows) {
+  const lookups = config?.lookups || {};
+  const lookupEntries = Object.entries(lookups);
+
+  if (lookupEntries.length === 0) {
+    return {};
+  }
+
+  const lookupMaps = {};
+
+  await Promise.all(
+    lookupEntries.map(async ([sourceColumn, lookupConfig]) => {
+      const targetTable = lookupConfig.targetTable;
+      const targetIdColumn = lookupConfig.targetIdColumn || "id";
+      const targetDisplayColumn = lookupConfig.targetDisplayColumn;
+
+      if (!targetTable || !targetDisplayColumn) {
+        console.warn("[fetchLookupMapsForConfig] lookup incompleto:", {
+          sourceColumn,
+          lookupConfig,
+        });
+        return;
+      }
+
+      const ids = getUniqueLookupIds(rows, sourceColumn);
+
+      if (ids.length === 0) {
+        lookupMaps[sourceColumn] = {};
+        return;
+      }
+
+      const targetRows = await listEntityRows(targetTable);
+
+      lookupMaps[sourceColumn] = Object.fromEntries(
+        (targetRows || [])
+          .filter((targetRow) => ids.includes(String(targetRow?.[targetIdColumn])))
+          .map((targetRow) => [
+            String(targetRow?.[targetIdColumn]),
+            targetRow?.[targetDisplayColumn],
+          ])
+          .filter(([, displayValue]) => displayValue !== null && displayValue !== undefined)
+      );
+    })
+  );
+
+  return lookupMaps;
 }
 
 const missingSectionConfig = {
@@ -69,12 +128,13 @@ export function useEntityTable(config) {
   const safeConfig = config || missingSectionConfig;
   const remoteDataSource = hasRemoteDataSource(safeConfig);
 
- console.log("[useEntityTable] config recibida:", safeConfig);
+  console.log("[useEntityTable] config recibida:", safeConfig);
   console.log("[useEntityTable] remoteDataSource:", remoteDataSource);
 
   const [rows, setRows] = useState(() =>
     remoteDataSource ? [] : safeConfig.rows || []
   );
+  const [lookupMaps, setLookupMaps] = useState({});
   const [loading, setLoading] = useState(remoteDataSource);
   const [error, setError] = useState("");
 
@@ -82,7 +142,11 @@ export function useEntityTable(config) {
     const shouldLoadRemotely = hasRemoteDataSource(safeConfig);
 
     if (!shouldLoadRemotely) {
-      setRows(safeConfig.rows || []);
+      const localRows = safeConfig.rows || [];
+      const nextLookupMaps = await fetchLookupMapsForConfig(safeConfig, localRows);
+
+      setRows(localRows);
+      setLookupMaps(nextLookupMaps);
       setLoading(false);
       setError("");
       return;
@@ -93,10 +157,13 @@ export function useEntityTable(config) {
 
     try {
       const nextRows = await fetchRowsForConfig(safeConfig);
-      
+      const nextLookupMaps = await fetchLookupMapsForConfig(safeConfig, nextRows);
+
       setRows(nextRows);
+      setLookupMaps(nextLookupMaps);
     } catch (err) {
       setRows([]);
+      setLookupMaps({});
       setError(err.message || "No se pudieron cargar los datos.");
     } finally {
       setLoading(false);
@@ -105,7 +172,10 @@ export function useEntityTable(config) {
     safeConfig.key,
     safeConfig.endpoint,
     safeConfig.dataSource,
+    safeConfig.tableName,
+    safeConfig.mapperKey,
     safeConfig.rows,
+    safeConfig.lookups,
   ]);
 
   useEffect(() => {
@@ -131,6 +201,7 @@ export function useEntityTable(config) {
         {
           ...safeConfig,
           rows,
+          lookupMaps,
           loading,
           error,
           onRefresh: fetchRows,
@@ -142,6 +213,7 @@ export function useEntityTable(config) {
     [
       safeConfig,
       rows,
+      lookupMaps,
       loading,
       error,
       fetchRows,

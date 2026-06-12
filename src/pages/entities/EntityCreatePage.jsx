@@ -55,6 +55,15 @@ function getUniqueValues(rows, key) {
 }
 
 function getOptionsFromSection(section, column) {
+  if (column.lookup) {
+    const lookupMap = section.lookupMaps?.[column.key] || {};
+
+    return Object.entries(lookupMap).map(([value, label]) => ({
+      value,
+      label: String(label),
+    }));
+  }
+
   if (Array.isArray(column.formOptions)) {
     return column.formOptions.map((option) =>
       typeof option === "string" ? { value: option, label: option } : option
@@ -124,6 +133,8 @@ function getOptionsFromSection(section, column) {
 
 function getFormType(section, column) {
   if (column.formType) return column.formType;
+
+  if (column.lookup) return "select";
 
   const options = getOptionsFromSection(section, column);
 

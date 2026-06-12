@@ -324,36 +324,54 @@ function makeSection({
   laneField,
   badgeStyles,
   actions = {},
+
+  columnLabels,
+  hiddenColumns,
+  virtualColumns,
+  lookups,
+  transforms,
+  columnOverrides,
+  defaultVisibleColumns,
 }) {
   const hasRemoteDataSource = Boolean(endpoint || tableName || dataSource);
   const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
   const resolvedColumns = columns ?? (hasRemoteDataSource ? [] : commonColumns);
 
-  return {
-    key,
-    group,
-    title,
-    subtitle,
-    path,
-    createPath,
-    endpoint,
-    tableName,
-    mapperKey,
-    dataSource,
-    actionsKey,
-    statsKey,
-    emptyMessage,
-    columns: resolvedColumns,
-    rows: resolvedRows,
-    primaryFilters,
-    laneField,
-    badgeStyles: badgeStyles || defaultBadgeStyles,
-    actions: {
-      ...defaultActions,
-      ...actions,
-    },
-    defaultVisibleColumns: resolvedColumns.map((column) => column.key),
-  };
+return {
+  key,
+  group,
+  title,
+  subtitle,
+  path,
+  createPath,
+  endpoint,
+  tableName,
+  mapperKey,
+  dataSource,
+  actionsKey,
+  statsKey,
+  emptyMessage,
+  columns: resolvedColumns,
+  rows: resolvedRows,
+  primaryFilters,
+  laneField,
+  badgeStyles: badgeStyles || defaultBadgeStyles,
+  actions: {
+    ...defaultActions,
+    ...actions,
+  },
+
+  columnLabels,
+  hiddenColumns,
+  virtualColumns,
+  lookups,
+  transforms,
+  columnOverrides,
+
+  defaultVisibleColumns:
+    defaultVisibleColumns ||
+    (resolvedColumns.length > 0 ? resolvedColumns.map((column) => column.key) : undefined),
+};
 }
 
 export const entitySections = [
@@ -528,6 +546,150 @@ makeSection({
   createPath: "/administracion-comercial/ordenes-facturacion/new",
   tableName: "ordenes_facturacion",
   laneField: "estado_id",
+
+  columnLabels: {
+    id: "ID",
+    cae: "CAE",
+    cae_vencimiento: "Vencimiento CAE",
+    numero_comprobante: "N° comprobante",
+    fecha_comprobante: "Fecha comprobante",
+    fecha_cobro: "Fecha cobro",
+    razon_social_id: "Cliente",
+    razon_social_emisora_id: "Emisor",
+    moneda_id: "Moneda",
+    estado_id: "Estado",
+    tipo_comprobante_id: "Tipo comprobante",
+    importe_neto: "Importe neto",
+    iva_porcentaje: "IVA %",
+    iva: "IVA",
+    importe_total: "Importe total",
+  },
+
+  hiddenColumns: [
+    "leyenda_1",
+    "leyenda_2",
+    "leyenda_3",
+    "leyenda_4",
+  ],
+
+  virtualColumns: [
+    {
+      key: "leyenda",
+      label: "Leyenda",
+      render: (_, row) =>
+        [
+          row.leyenda_1,
+          row.leyenda_2,
+          row.leyenda_3,
+          row.leyenda_4,
+        ]
+          .filter((value) => value !== null && value !== undefined && String(value).trim() !== "")
+          .join(" / ") || "-",
+    },
+  ],
+
+  transforms: {
+    iva_porcentaje: {
+      label: "IVA %",
+      render: (value) => {
+        if (value === null || value === undefined || value === "") return "-";
+
+        const numberValue = Number(value);
+        if (Number.isNaN(numberValue)) return String(value);
+
+        if (numberValue >= 1) {
+          return `${Math.round((numberValue - 1) * 100)}%`;
+        }
+
+        return `${Math.round(numberValue * 100)}%`;
+      },
+    },
+
+    fecha_comprobante: {
+      label: "Fecha comprobante",
+      render: (value) => {
+        if (!value) return "-";
+
+        const numberValue = Number(value);
+
+        if (Number.isNaN(numberValue)) {
+          return String(value);
+        }
+
+        const milliseconds =
+          numberValue < 10000000000 ? numberValue * 1000 : numberValue;
+
+        const date = new Date(milliseconds);
+
+        if (Number.isNaN(date.getTime())) {
+          return String(value);
+        }
+
+        return date.toLocaleDateString("es-AR");
+      },
+    },
+
+    fecha_cobro: {
+      label: "Fecha cobro",
+      render: (value) => {
+        if (!value) return "-";
+
+        const numberValue = Number(value);
+
+        if (Number.isNaN(numberValue)) {
+          return String(value);
+        }
+
+        const milliseconds =
+          numberValue < 10000000000 ? numberValue * 1000 : numberValue;
+
+        const date = new Date(milliseconds);
+
+        if (Number.isNaN(date.getTime())) {
+          return String(value);
+        }
+
+        return date.toLocaleDateString("es-AR");
+      },
+    },
+  },
+
+  lookups: {
+    razon_social_id: {
+      label: "Cliente",
+      targetTable: "razones_sociales",
+      targetIdColumn: "id",
+      targetDisplayColumn: "razon_social",
+    },
+
+    razon_social_emisora_id: {
+      label: "Emisor",
+      targetTable: "razones_sociales",
+      targetIdColumn: "id",
+      targetDisplayColumn: "razon_social",
+    },
+
+    moneda_id: {
+      label: "Moneda",
+      targetTable: "monedas",
+      targetIdColumn: "id",
+      targetDisplayColumn: "moneda",
+    },
+
+    estado_id: {
+      label: "Estado",
+      targetTable: "ordenes_facturacion_estados",
+      targetIdColumn: "id",
+      targetDisplayColumn: "estado",
+    },
+
+    tipo_comprobante_id: {
+      label: "Tipo comprobante",
+      targetTable: "ordenes_facturacion_tipos_comprobantes",
+      targetIdColumn: "id",
+      targetDisplayColumn: "tipo",
+    },
+  },
 }),
 
   makeSection({
