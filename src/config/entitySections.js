@@ -659,14 +659,14 @@ makeSection({
       label: "Cliente",
       targetTable: "razones_sociales",
       targetIdColumn: "id",
-      targetDisplayColumn: "razon_social",
+      targetDisplayColumn: "denominacion",
     },
 
     razon_social_emisora_id: {
       label: "Emisor",
       targetTable: "razones_sociales",
       targetIdColumn: "id",
-      targetDisplayColumn: "razon_social",
+      targetDisplayColumn: "denominacion",
     },
 
     moneda_id: {

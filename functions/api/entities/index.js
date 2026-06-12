@@ -9,20 +9,11 @@ function jsonResponse(body, status = 200) {
 
 const allowedTables = {
   users: "users",
+  monedas: "monedas",
   ordenes_facturacion: "ordenes_facturacion",
-  // Futuras tablas reales
-  personas: "personas",
+  ordenes_facturacion_estados: "ordenes_facturacion_estados",
+  ordenes_facturacion_tipos_comprobantes: "ordenes_facturacion_tipos_comprobantes",
   razones_sociales: "razones_sociales",
-  cbus: "cbus",
-  cuentas: "cuentas",
-  colaboradores: "colaboradores",
-  proyectos: "proyectos",
-  recurrentes: "recurrentes",
-  facturacion: "facturacion",
-  tiempo: "tiempo",
-  agenda: "agenda",
-  activos: "activos",
-  dominios: "dominios",
 };
 
 function getAllowedTable(request) {
