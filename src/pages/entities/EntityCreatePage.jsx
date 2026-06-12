@@ -1,5 +1,5 @@
 import { useEntityTable } from "@/hooks/useEntityTable";
-import { useMemo, useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, ChevronRight, Save } from "lucide-react";
 import { Card } from "@/components/ui/card";
