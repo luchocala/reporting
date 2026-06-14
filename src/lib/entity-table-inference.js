@@ -321,6 +321,7 @@ export function buildEntitySectionFromRows(config = {}, rows = []) {
     hiddenColumns: config.hiddenColumns || [],
     formExtraColumns: config.formExtraColumns || [],
     virtualColumns: config.virtualColumns || [],
+    exports: config.exports || {},
     lookups: config.lookups || {},
     transforms: config.transforms || {},
     columnOverrides: config.columnOverrides || {},

@@ -1716,14 +1716,41 @@ function escapeExcelCell(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
+function getColumnByKey(columns, section, key) {
+  return (
+    columns.find((column) => column.key === key) ||
+    (section.formExtraColumns || []).find((column) => column.key === key) ||
+    {
+      key,
+      label: section.columnLabels?.[key] || key,
+      type: "text",
+    }
+  );
+}
 
-function downloadExcelFile(filename, columns, rows, section) {
-  const exportColumns = columns.filter(
+function getExportColumns(exportConfig, columns, section) {
+  const configuredColumns = exportConfig?.columns;
+
+  if (Array.isArray(configuredColumns) && configuredColumns.length > 0) {
+    return configuredColumns.map((columnConfig) => {
+      if (typeof columnConfig === "string") {
+        return getColumnByKey(columns, section, columnConfig);
+      }
+
+      return {
+        ...getColumnByKey(columns, section, columnConfig.key),
+        ...columnConfig,
+      };
+    });
+  }
+
+  return columns.filter(
     (column) =>
       column.type !== "actions" &&
       column.key !== "acciones"
   );
-
+}
+function downloadExcelFile(filename, exportColumns, rows, section) {
   const headerHtml = exportColumns
     .map((column) => `<th>${escapeExcelCell(column.label)}</th>`)
     .join("");
@@ -1731,7 +1758,14 @@ function downloadExcelFile(filename, columns, rows, section) {
   const rowsHtml = rows
     .map((row) => {
       const cells = exportColumns
-        .map((column) => `<td>${escapeExcelCell(getDisplayValue(row, column, section))}</td>`)
+        .map((column) => {
+          const value =
+            typeof column.renderExport === "function"
+              ? column.renderExport(row[column.key], row, section)
+              : getDisplayValue(row, column, section);
+
+          return `<td>${escapeExcelCell(value)}</td>`;
+        })
         .join("");
 
       return `<tr>${cells}</tr>`;
@@ -1773,23 +1807,36 @@ function downloadExcelFile(filename, columns, rows, section) {
 }
 
 function ExportLinks({ section, columns, rows }) {
-  const exportItems = [
-    {
-      key: "enviador",
-      label: "Exportar Enviador",
-      filename: "enviador.xls",
-    },
-    {
-      key: "fca",
-      label: "Exportar FCA",
-      filename: "fca.xls",
-    },
-    {
-      key: "fcc",
-      label: "Exportar FCC",
-      filename: "fcc.xls",
-    },
-  ];
+  const configuredExports = section.exports || {};
+
+  const exportItems =
+    Object.keys(configuredExports).length > 0
+      ? Object.entries(configuredExports).map(([key, config]) => ({
+          key,
+          label: config.label || key,
+          filename: config.filename || `${key}.xls`,
+          config,
+        }))
+      : [
+          {
+            key: "enviador",
+            label: "Exportar Enviador",
+            filename: "enviador.xls",
+            config: {},
+          },
+          {
+            key: "fca",
+            label: "Exportar FCA",
+            filename: "fca.xls",
+            config: {},
+          },
+          {
+            key: "fcc",
+            label: "Exportar FCC",
+            filename: "fcc.xls",
+            config: {},
+          },
+        ];
 
   return (
     <div className="mb-3 flex flex-wrap items-center gap-3 text-sm">
@@ -1797,7 +1844,14 @@ function ExportLinks({ section, columns, rows }) {
         <button
           key={item.key}
           type="button"
-          onClick={() => downloadExcelFile(item.filename, columns, rows, section)}
+          onClick={() =>
+            downloadExcelFile(
+              item.filename,
+              getExportColumns(item.config, columns, section),
+              rows,
+              section
+            )
+          }
           className="text-primary underline-offset-4 hover:underline"
         >
           {item.label}

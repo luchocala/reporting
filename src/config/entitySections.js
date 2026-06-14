@@ -338,6 +338,7 @@ function makeSection({
   transforms,
   columnOverrides,
   defaultVisibleColumns,
+  exports,
 }) {
   const hasRemoteDataSource = Boolean(endpoint || tableName || dataSource);
   const resolvedRows = rows ?? (hasRemoteDataSource ? [] : commonRows);
@@ -380,6 +381,7 @@ return {
   defaultVisibleColumns:
     defaultVisibleColumns ||
     (resolvedColumns.length > 0 ? resolvedColumns.map((column) => column.key) : undefined),
+  exports,
 };
 }
 
@@ -593,6 +595,80 @@ makeSection({
       useDisplayValue: true,
     },
   ],
+
+    exports: {
+    enviador: {
+      label: "Exportar Enviador",
+      filename: "enviador.xls",
+      columns: [
+        "id",
+        "fecha_comprobante",
+        "estado_id",
+        "tipo_comprobante_id",
+        "razon_social_id",
+        "leyenda",
+        "importe_neto",
+        "iva_porcentaje",
+        "iva",
+        "importe_total",
+        "moneda_id",
+        "razon_social_emisora_id",
+        "emails",
+        "fecha_cobro",
+        "cae",
+        "cae_vencimiento",
+        "numero_comprobante",
+      ],
+    },
+
+    fca: {
+      label: "Exportar FCA",
+      filename: "fca.xls",
+      columns: [
+        "id",
+        "fecha_comprobante",
+        "estado_id",
+        "tipo_comprobante_id",
+        "razon_social_id",
+        "leyenda",
+        "importe_neto",
+        "iva_porcentaje",
+        "iva",
+        "importe_total",
+        "moneda_id",
+        "razon_social_emisora_id",
+        "emails",
+        "fecha_cobro",
+        "cae",
+        "cae_vencimiento",
+        "numero_comprobante",
+      ],
+    },
+
+    fcc: {
+      label: "Exportar FCC",
+      filename: "fcc.xls",
+      columns: [
+        "id",
+        "fecha_comprobante",
+        "estado_id",
+        "tipo_comprobante_id",
+        "razon_social_id",
+        "leyenda",
+        "importe_neto",
+        "iva_porcentaje",
+        "iva",
+        "importe_total",
+        "moneda_id",
+        "razon_social_emisora_id",
+        "emails",
+        "fecha_cobro",
+        "cae",
+        "cae_vencimiento",
+        "numero_comprobante",
+      ],
+    },
+  },
 
   primaryFilters: [
   {
