@@ -147,6 +147,7 @@ function getRawValue(row, columnKey) {
   return String(value);
 }
 
+
 function getOptionsForColumn(items, column, section) {
   if (!column) return [];
 
@@ -171,6 +172,90 @@ function getOptionsForColumn(items, column, section) {
       numeric: true,
     })
   );
+}
+
+function getUniqueColumnValues(rows, key) {
+  return Array.from(
+    new Set(
+      (rows || [])
+        .map((row) => row?.[key])
+        .filter((value) => value !== null && value !== undefined && value !== "")
+        .map(String)
+    )
+  );
+}
+
+function getOptionsFromSection(section, column) {
+  if (!column) return [];
+
+  if (column.lookup) {
+    const lookupMap = section.lookupMaps?.[column.key] || {};
+
+    return Object.entries(lookupMap).map(([value, label]) => ({
+      value: String(value),
+      label: String(label),
+    }));
+  }
+
+  if (Array.isArray(column.formOptions)) {
+    return column.formOptions.map((option) =>
+      typeof option === "string"
+        ? { value: option, label: option }
+        : {
+            value: String(option.value),
+            label: String(option.label ?? option.value),
+          }
+    );
+  }
+
+  if (Array.isArray(column.options)) {
+    return column.options.map((option) =>
+      typeof option === "string"
+        ? { value: option, label: option }
+        : {
+            value: String(option.value),
+            label: String(option.label ?? option.value),
+          }
+    );
+  }
+
+  const sectionFormOptions = section.formOptions?.[column.key];
+
+  if (Array.isArray(sectionFormOptions)) {
+    return sectionFormOptions.map((option) =>
+      typeof option === "string"
+        ? { value: option, label: option }
+        : {
+            value: String(option.value),
+            label: String(option.label ?? option.value),
+          }
+    );
+  }
+
+  const badgeOptions = section.badgeStyles?.[column.key];
+
+  if (badgeOptions && typeof badgeOptions === "object") {
+    return Object.keys(badgeOptions).map((value) => ({
+      value: String(value),
+      label: String(value),
+    }));
+  }
+
+  const rowValues = getUniqueColumnValues(section.rows || [], column.key);
+
+  if (
+    column.type === "status" ||
+    column.type === "badge" ||
+    column.formType === "select" ||
+    column.formType === "combobox"
+  ) {
+    return rowValues.map((value) => ({
+      value: String(value),
+      label: String(value),
+    }));
+  }
+
+  return [];
 }
 
 function compareValues(a, b, type = "text") {
