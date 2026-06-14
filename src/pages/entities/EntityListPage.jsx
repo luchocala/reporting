@@ -348,24 +348,6 @@ function parseDateForStorage(value) {
   return Math.floor(date.getTime() / 1000);
 }
 
-function parseDateForStorage(value) {
-  if (!value) return null;
-
-  const [year, month, day] = String(value).split("-").map(Number);
-
-  if (!year || !month || !day) {
-    return value;
-  }
-
-  const date = new Date(year, month - 1, day);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return Math.floor(date.getTime() / 1000);
-}
-
 function formatDateLabel(value) {
   if (!value) return "";
 
