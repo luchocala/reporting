@@ -113,6 +113,39 @@ function formatMoneyValue(value) {
   }).format(numberValue);
 }
 
+function getColumnDisplayValue(row, columns, section, key) {
+  const column = columns.find((item) => item.key === key);
+
+  if (!column) {
+    const value = row?.[key];
+    return value === null || value === undefined || value === "" ? "" : String(value);
+  }
+
+  return getDisplayValue(row, column, section);
+}
+
+function getStatusDisplayValue(row, columns, section) {
+  const laneField = section.laneField || "estado";
+  return getColumnDisplayValue(row, columns, section, laneField) || "SIN ESTADO";
+}
+
+function getCustomerText(row, columns, section) {
+  return (
+    getColumnDisplayValue(row, columns, section, "razon_social_id") ||
+    getColumnDisplayValue(row, columns, section, "cliente") ||
+    getColumnDisplayValue(row, columns, section, "razonSocial") ||
+    getPrimaryText(row, columns, section)
+  );
+}
+
+function getLeyendaText(row, columns, section) {
+  return (
+    getColumnDisplayValue(row, columns, section, "leyenda") ||
+    getColumnDisplayValue(row, columns, section, "descripcion") ||
+    ""
+  );
+}
+
 function getTotalText(row, columns, section) {
   const totalColumn =
     columns.find((column) => column.key === "importe_total") ||
@@ -1993,9 +2026,16 @@ column.type === "actions" ? "text-right" : "text-left"
 
 function LanesView({ section, columns, items, selectedIds, onToggleSelected, onView, onDelete, onMarkDone }) {
   const laneField = section.laneField || "estado";
+  const laneColumn = columns.find((column) => column.key === laneField);
+
   const lanes = getUniqueValues(items, laneField).map((value) => {
     const laneItems = items.filter((item) => String(item[laneField]) === String(value));
-    return { id: value, label: value, count: laneItems.length, items: laneItems };
+    const label =
+      laneColumn && laneItems[0]
+        ? getDisplayValue(laneItems[0], laneColumn, section)
+        : String(value);
+
+    return { id: value, label, count: laneItems.length, items: laneItems };
   });
 
   if (section.loading) {
@@ -2033,38 +2073,47 @@ function LanesView({ section, columns, items, selectedIds, onToggleSelected, onV
               {lane.items.map((item) => {
                 const rowId = getRowId(item);
                 const selected = selectedIds.includes(rowId);
+                const statusLabel = getStatusDisplayValue(item, columns, section);
+                const customer = getCustomerText(item, columns, section);
+                const leyenda = getLeyendaText(item, columns, section);
+                const total = getTotalText(item, columns, section);
 
                 return (
                   <Card
                     key={rowId}
-                    className={`shadow-none p-3 space-y-2 cursor-pointer hover:shadow-sm transition-shadow ${
+                    className={`shadow-none p-3 space-y-3 cursor-pointer hover:shadow-sm transition-shadow ${
                       selected ? "bg-muted/40 ring-1 ring-border" : ""
                     }`}
                   >
-                    <div className="flex items-start justify-between text-xs text-muted-foreground gap-2">
-                      <span>
-                        ID: <span className="font-semibold text-foreground text-sm">#{rowId}</span>
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        ID: <span className="font-semibold text-foreground">#{rowId}</span>
                       </span>
-{getTotalText(item, columns, section) && (
-  <span className="text-right">
-    Total{" "}
-    <span className="font-semibold text-foreground">
-      {getTotalText(item, columns, section)}
-    </span>
-  </span>
-)}
+
+                      <StatusBadge
+                        value={statusLabel}
+                        columnKey={laneField}
+                        section={section}
+                      />
                     </div>
 
-                    <p className="text-xs font-medium leading-tight break-words">
-                      {getPrimaryText(item, columns, section)}
-                    </p>
-                    <p className="text-xs text-muted-foreground break-words">
-                      {getSecondaryText(item)}
-                    </p>
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold leading-tight break-words text-foreground">
+                        {customer}
+                      </p>
 
-                    <div className="flex flex-wrap gap-1">
-                      <StatusBadge value={getStatus(item, laneField)} columnKey={laneField} section={section} />
+                      {leyenda && leyenda !== "-" && (
+                        <p className="text-xs text-muted-foreground break-words">
+                          {leyenda}
+                        </p>
+                      )}
                     </div>
+
+                    {total && (
+                      <div className="text-sm font-semibold text-foreground">
+                        {total}
+                      </div>
+                    )}
 
                     <ActionButtons
                       item={item}
@@ -2088,6 +2137,8 @@ function LanesView({ section, columns, items, selectedIds, onToggleSelected, onV
 }
 
 function MobileCards({ section, columns, items, selectedIds, onToggleSelected, onView, onDelete, onMarkDone }) {
+  const laneField = section.laneField || "estado";
+
   if (section.loading) {
     return (
       <Card className="shadow-none p-8 text-center text-sm text-muted-foreground">
@@ -2111,6 +2162,10 @@ function MobileCards({ section, columns, items, selectedIds, onToggleSelected, o
       {items.map((item) => {
         const rowId = getRowId(item);
         const selected = selectedIds.includes(rowId);
+        const statusLabel = getStatusDisplayValue(item, columns, section);
+        const customer = getCustomerText(item, columns, section);
+        const leyenda = getLeyendaText(item, columns, section);
+        const total = getTotalText(item, columns, section);
 
         return (
           <Card
@@ -2119,43 +2174,47 @@ function MobileCards({ section, columns, items, selectedIds, onToggleSelected, o
               selected ? "bg-muted/40 ring-1 ring-border" : ""
             }`}
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold">#{rowId}</span>
-                  <StatusBadge value={getStatus(item, section.laneField)} columnKey={section.laneField} section={section} />
-                </div>
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-xs text-muted-foreground">
+                  ID: <span className="font-semibold text-foreground">#{rowId}</span>
+                </span>
 
-                <p className="text-base font-semibold mt-1 break-words">{getPrimaryText(item, columns, section)}</p>
-                <p className="text-xs text-muted-foreground break-words">{getSecondaryText(item)}</p>
-
-                <div className="mt-3">
-                  <ActionButtons
-                    item={item}
-                    section={section}
-                    onView={onView}
-                    onDelete={onDelete}
-                    onMarkDone={onMarkDone}
-                    showSelectionButton
-                    selected={selected}
-                    onToggleSelected={onToggleSelected}
-                  />
-                </div>
+                <StatusBadge
+                  value={statusLabel}
+                  columnKey={laneField}
+                  section={section}
+                />
               </div>
 
-              <div className="flex flex-col items-end gap-2 shrink-0">
-{getTotalText(item, columns, section) && (
-  <span className="text-right">
-    Total{" "}
-    <span className="font-semibold text-foreground">
-      {getTotalText(item, columns, section)}
-    </span>
-  </span>
-)}
-                <button className="p-1 hover:bg-muted rounded">
-                  <MoreHorizontal className="size-4 text-muted-foreground" />
-                </button>
+              <div className="space-y-1">
+                <p className="text-base font-semibold leading-tight break-words text-foreground">
+                  {customer}
+                </p>
+
+                {leyenda && leyenda !== "-" && (
+                  <p className="text-xs text-muted-foreground break-words">
+                    {leyenda}
+                  </p>
+                )}
               </div>
+
+              {total && (
+                <div className="text-lg font-bold text-foreground">
+                  {total}
+                </div>
+              )}
+
+              <ActionButtons
+                item={item}
+                section={section}
+                onView={onView}
+                onDelete={onDelete}
+                onMarkDone={onMarkDone}
+                showSelectionButton
+                selected={selected}
+                onToggleSelected={onToggleSelected}
+              />
             </div>
           </Card>
         );
