@@ -260,6 +260,175 @@ function FormSelect({ value, onChange, options, placeholder, disabled = false })
   );
 }
 
+function formatDateLabel(value) {
+  if (!value) return "";
+
+  const [year, month, day] = String(value).split("-").map(Number);
+
+  if (!year || !month || !day) return value;
+
+  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+}
+
+function getMonthLabel(date) {
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function toDateInputValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function DatePickerInput({ value, onChange, disabled = false, placeholder = "dd/mm/aaaa" }) {
+  const [open, setOpen] = useState(false);
+  const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
+  const [viewDate, setViewDate] = useState(selectedDate || new Date());
+
+  useEffect(() => {
+    if (value) {
+      setViewDate(new Date(`${value}T00:00:00`));
+    }
+  }, [value]);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  const firstDayOfMonth = new Date(year, month, 1);
+  const firstVisibleDate = new Date(firstDayOfMonth);
+  firstVisibleDate.setDate(firstVisibleDate.getDate() - firstVisibleDate.getDay());
+
+  const days = Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(firstVisibleDate);
+    date.setDate(firstVisibleDate.getDate() + index);
+    return date;
+  });
+
+  const selectedValue = selectedDate ? toDateInputValue(selectedDate) : "";
+
+  const goToPreviousMonth = () => {
+    setViewDate((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1));
+  };
+
+  const goToNextMonth = () => {
+    setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1));
+  };
+
+  const handleSelectDate = (date) => {
+    onChange(toDateInputValue(date));
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((current) => !current)}
+        className={`inline-flex h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-4 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring/30 ${
+          disabled
+            ? "cursor-not-allowed bg-muted/40 text-muted-foreground opacity-80"
+            : "hover:bg-muted/40"
+        }`}
+      >
+        <span className={value ? "text-foreground" : "text-muted-foreground"}>
+          {value ? formatDateLabel(value) : placeholder}
+        </span>
+
+        <svg
+          viewBox="0 0 24 24"
+          className="size-4 text-muted-foreground"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <path d="M16 2v4" />
+          <path d="M8 2v4" />
+          <path d="M3 10h18" />
+        </svg>
+      </button>
+
+      {open && !disabled && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-20 cursor-default"
+            onClick={() => setOpen(false)}
+            tabIndex={-1}
+            aria-label="Cerrar calendario"
+          />
+
+          <div className="absolute left-0 top-full z-30 mt-2 w-[340px] rounded-xl border border-border bg-popover p-6 text-popover-foreground shadow-xl">
+            <div className="mb-7 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={goToPreviousMonth}
+                className="inline-flex size-8 items-center justify-center rounded-full text-foreground hover:bg-muted"
+                aria-label="Mes anterior"
+              >
+                ‹
+              </button>
+
+              <div className="text-lg font-semibold">
+                {getMonthLabel(viewDate)}
+              </div>
+
+              <button
+                type="button"
+                onClick={goToNextMonth}
+                className="inline-flex size-8 items-center justify-center rounded-full text-foreground hover:bg-muted"
+                aria-label="Mes siguiente"
+              >
+                ›
+              </button>
+            </div>
+
+            <div className="mb-3 grid grid-cols-7 gap-2 text-center text-sm font-medium text-muted-foreground">
+              {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+                <div key={day}>{day}</div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 text-center">
+              {days.map((date) => {
+                const dateValue = toDateInputValue(date);
+                const isCurrentMonth = date.getMonth() === month;
+                const isSelected = dateValue === selectedValue;
+
+                return (
+                  <button
+                    key={dateValue}
+                    type="button"
+                    onClick={() => handleSelectDate(date)}
+                    className={`inline-flex size-9 items-center justify-center rounded-xl text-base transition-colors ${
+                      isSelected
+                        ? "bg-muted text-foreground font-semibold"
+                        : isCurrentMonth
+                          ? "text-foreground hover:bg-muted"
+                          : "text-muted-foreground/30 hover:bg-muted/40"
+                    }`}
+                  >
+                    {date.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function FormField({ section, column, value, onChange }) {
   const formType = getFormType(section, column);
   const disabled = isAutoGeneratedColumn(column, section);
@@ -273,15 +442,22 @@ function FormField({ section, column, value, onChange }) {
         {column.required && <span className="text-destructive"> *</span>}
       </label>
 
-      {formType === "select" ? (
-        <FormSelect
-          value={value}
-          onChange={onChange}
-          options={options}
-          placeholder={placeholder}
-          disabled={disabled}
-        />
-      ) : formType === "textarea" ? (
+{formType === "select" ? (
+  <FormSelect
+    value={value}
+    onChange={onChange}
+    options={options}
+    placeholder={placeholder}
+    disabled={disabled}
+  />
+) : formType === "date" ? (
+  <DatePickerInput
+    value={value}
+    onChange={onChange}
+    disabled={disabled}
+    placeholder="dd/mm/aaaa"
+  />
+) : formType === "textarea" ? (
         <textarea
           rows={4}
           value={value}
