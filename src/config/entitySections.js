@@ -635,10 +635,22 @@ makeSection({
   },
 
     columnOverrides: {
-    estado_id: {
-      type: "badge",
-      label: "Estado",
-    },
+  fecha_comprobante: {
+    type: "date",
+    formType: "date",
+    label: "Fecha de comprobante",
+  },
+  fecha_cobro: {
+    type: "date",
+    formType: "date",
+    label: "Fecha de cobro",
+  },
+  estado_id: {
+    type: "badge",
+    formType: "select",
+    label: "Estado",
+  },
+},
   },
 
   hiddenColumns: [
