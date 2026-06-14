@@ -319,6 +319,7 @@ export function buildEntitySectionFromRows(config = {}, rows = []) {
     defaultSort: config.defaultSort || [],
     columnLabels: config.columnLabels || {},
     hiddenColumns: config.hiddenColumns || [],
+    formExtraColumns: config.formExtraColumns || [],
     virtualColumns: config.virtualColumns || [],
     lookups: config.lookups || {},
     transforms: config.transforms || {},

@@ -332,6 +332,7 @@ function makeSection({
   defaultSort,
   columnLabels,
   hiddenColumns,
+  formExtraColumns,
   virtualColumns,
   lookups,
   transforms,
@@ -370,6 +371,7 @@ return {
   defaultSort,
   columnLabels,
   hiddenColumns,
+  formExtraColumns,
   virtualColumns,
   lookups,
   transforms,
@@ -674,6 +676,29 @@ makeSection({
     "leyenda_3",
     "leyenda_4",
   ],
+
+  formExtraColumns: [
+  {
+    key: "leyenda_1",
+    label: "Leyenda 1",
+    type: "text",
+  },
+  {
+    key: "leyenda_2",
+    label: "Leyenda 2",
+    type: "text",
+  },
+  {
+    key: "leyenda_3",
+    label: "Leyenda 3",
+    type: "text",
+  },
+  {
+    key: "leyenda_4",
+    label: "Leyenda 4",
+    type: "text",
+  },
+],
 
   virtualColumns: [
     {

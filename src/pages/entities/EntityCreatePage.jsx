@@ -194,7 +194,15 @@ function getPlaceholder(section, column, formType) {
 }
 
 function buildFormColumns(section) {
-  return (section.columns || []).filter((column) => !shouldHideColumn(column));
+  const baseColumns = (section.columns || []).filter((column) => !shouldHideColumn(column));
+
+  const extraColumns = (section.formExtraColumns || []).filter(
+    (column) =>
+      column.key &&
+      !baseColumns.some((baseColumn) => baseColumn.key === column.key)
+  );
+
+  return [...baseColumns, ...extraColumns];
 }
 
 function FormSelect({ value, onChange, options, placeholder, disabled = false }) {
