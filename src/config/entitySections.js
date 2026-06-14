@@ -650,6 +650,22 @@ makeSection({
     formType: "select",
     label: "Estado",
   },
+  razon_social_id: {
+    formType: "select",
+    label: "Cliente",
+  },
+  razon_social_emisora_id: {
+    formType: "select",
+    label: "Emisor",
+  },
+  moneda_id: {
+    formType: "select",
+    label: "Moneda",
+  },
+  tipo_comprobante_id: {
+    formType: "select",
+    label: "Tipo comprobante",
+  },
 },
 
   hiddenColumns: [
@@ -744,41 +760,37 @@ makeSection({
   },
 
   lookups: {
-    razon_social_id: {
-      label: "Cliente",
-      targetTable: "razones_sociales",
-      targetIdColumn: "id",
-      targetDisplayColumn: "denominacion",
-    },
-
-    razon_social_emisora_id: {
-      label: "Emisor",
-      targetTable: "razones_sociales",
-      targetIdColumn: "id",
-      targetDisplayColumn: "denominacion",
-    },
-
-    moneda_id: {
-      label: "Moneda",
-      targetTable: "monedas",
-      targetIdColumn: "id",
-      targetDisplayColumn: "moneda",
-    },
-
-    estado_id: {
-      label: "Estado",
-      targetTable: "ordenes_facturacion_estados",
-      targetIdColumn: "id",
-      targetDisplayColumn: "estado",
-    },
-
-    tipo_comprobante_id: {
-      label: "Tipo comprobante",
-      targetTable: "ordenes_facturacion_tipos_comprobantes",
-      targetIdColumn: "id",
-      targetDisplayColumn: "tipo",
-    },
+  razon_social_id: {
+    label: "Cliente",
+    targetTable: "razones_sociales",
+    targetIdColumn: "id",
+    targetDisplayColumn: "denominacion",
   },
+  razon_social_emisora_id: {
+    label: "Emisor",
+    targetTable: "razones_sociales",
+    targetIdColumn: "id",
+    targetDisplayColumn: "denominacion",
+  },
+  moneda_id: {
+    label: "Moneda",
+    targetTable: "monedas",
+    targetIdColumn: "id",
+    targetDisplayColumn: "moneda",
+  },
+  estado_id: {
+    label: "Estado",
+    targetTable: "ordenes_facturacion_estados",
+    targetIdColumn: "id",
+    targetDisplayColumn: "estado",
+  },
+  tipo_comprobante_id: {
+    label: "Tipo comprobante",
+    targetTable: "ordenes_facturacion_tipos_comprobantes",
+    targetIdColumn: "id",
+    targetDisplayColumn: "tipo",
+  },
+},
 }),
 
   makeSection({

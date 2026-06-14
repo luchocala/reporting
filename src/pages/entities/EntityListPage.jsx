@@ -317,11 +317,49 @@ function sortRows(rows, sortConfig = [], columns = [], section) {
   });
 }
 
+function formatDateForInput(value) {
+  const date = parseDate(value);
+
+  if (!date) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateForStorage(value) {
+  if (!value) return null;
+
+  const [year, month, day] = String(value).split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return value;
+  }
+
+  const date = new Date(year, month - 1, day);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return Math.floor(date.getTime() / 1000);
+}
+
 function parseDate(value) {
   if (!value) return null;
 
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     return value;
+  }
+
+  if (typeof value === "number" || /^\d+$/.test(String(value))) {
+    const numberValue = Number(value);
+    const milliseconds = numberValue < 10000000000 ? numberValue * 1000 : numberValue;
+    const parsed = new Date(milliseconds);
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
   const stringValue = String(value);
@@ -910,12 +948,56 @@ function getEditableColumns(columns) {
   );
 }
 
+function getEditInputValue(row, column) {
+  const value = row?.[column.key];
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  const fieldType = getBulkFieldType(column);
+
+  if (fieldType === "date") {
+    return formatDateForInput(value);
+  }
+
+  return String(value);
+}
+
+function normalizeEditableValue(column, value, { emptyAsNull = true } = {}) {
+  if (value === "") {
+    return emptyAsNull ? null : "";
+  }
+
+  const fieldType = getBulkFieldType(column);
+
+  if (column.lookup) {
+    const numericValue = Number(value);
+    return Number.isNaN(numericValue) ? value : numericValue;
+  }
+
+  if (fieldType === "date") {
+    return parseDateForStorage(value);
+  }
+
+  if (fieldType === "number") {
+    const numericValue = Number(value);
+    return Number.isNaN(numericValue) ? value : numericValue;
+  }
+
+  return value;
+}
+
 function getBulkFieldType(column) {
   if (column.bulkType) return column.bulkType;
   if (column.formType) return column.formType;
+
+  if (column.lookup) return "select";
+
   if (column.type === "date") return "date";
   if (column.type === "number" || column.type === "money") return "number";
   if (column.type === "status" || column.type === "badge") return "select";
+
   return "text";
 }
 
@@ -1928,9 +2010,7 @@ const handleView = (item) => {
 const initialChanges = Object.fromEntries(
   getEditableColumns(columns).map((column) => [
     column.key,
-    item[column.key] === null || item[column.key] === undefined
-      ? ""
-      : String(item[column.key]),
+    getEditInputValue(item, column),
   ])
 );
 
@@ -1990,19 +2070,15 @@ setSingleChanges({});
 const handleSaveSingleChanges = async () => {
   if (!editingRow) return;
 
-  const editableColumnKeys = new Set(getEditableColumns(columns).map((column) => column.key));
+  const editableColumns = getEditableColumns(columns);
+  const columnMap = new Map(editableColumns.map((column) => [column.key, column]));
 
   const payload = Object.fromEntries(
     Object.entries(singleChanges)
-      .filter(([key]) => editableColumnKeys.has(key))
+      .filter(([key]) => columnMap.has(key))
       .map(([key, value]) => {
-        const column = columns.find((item) => item.key === key);
-
-        if (column?.lookup && value !== "") {
-          return [key, Number(value)];
-        }
-
-        return [key, value === "" ? null : value];
+        const column = columnMap.get(key);
+        return [key, normalizeEditableValue(column, value, { emptyAsNull: true })];
       })
   );
 
@@ -2015,19 +2091,15 @@ const handleSaveSingleChanges = async () => {
 };
 
   const handleSaveBulkChanges = async () => {
-  const editableColumnKeys = new Set(getEditableColumns(columns).map((column) => column.key));
+  const editableColumns = getEditableColumns(columns);
+  const columnMap = new Map(editableColumns.map((column) => [column.key, column]));
 
   const payload = Object.fromEntries(
     Object.entries(bulkChanges)
-      .filter(([key, value]) => editableColumnKeys.has(key) && value !== "")
+      .filter(([key, value]) => columnMap.has(key) && value !== "")
       .map(([key, value]) => {
-        const column = columns.find((item) => item.key === key);
-
-        if (column?.lookup && value !== "") {
-          return [key, Number(value)];
-        }
-
-        return [key, value];
+        const column = columnMap.get(key);
+        return [key, normalizeEditableValue(column, value, { emptyAsNull: false })];
       })
   );
 
