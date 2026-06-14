@@ -95,6 +95,7 @@ function getOptionsFromSection(section, column) {
     }));
   }
 
+if (column.type !== "date" && column.formType !== "date") {
   const primaryFilter = (section.primaryFilters || []).find((filter) => {
     if (typeof filter === "string") return filter === column.key;
     return filter?.key === column.key;
@@ -108,6 +109,7 @@ function getOptionsFromSection(section, column) {
         label: option.label || option.value,
       }));
   }
+}
 
   const rowValues = getUniqueValues(section.rows || [], column.key);
 
@@ -338,6 +340,20 @@ function parseDateForStorage(value) {
   return Math.floor(date.getTime() / 1000);
 }
 
+function isIvaPercentageColumn(column) {
+  return column?.key === "iva_porcentaje";
+}
+
+function normalizeIvaPercentageForStorage(value) {
+  if (value === "" || value === null || value === undefined) return null;
+
+  const numberValue = Number(String(value).replace(",", "."));
+
+  if (Number.isNaN(numberValue)) return value;
+
+  return 1 + numberValue / 100;
+}
+
 function normalizeFormValue(column, value) {
   if (value === "" || value === undefined) {
     return null;
@@ -350,6 +366,10 @@ function normalizeFormValue(column, value) {
 
   if (column.formType === "date" || column.type === "date") {
     return parseDateForStorage(value);
+  }
+
+  if (isIvaPercentageColumn(column)) {
+    return normalizeIvaPercentageForStorage(value);
   }
 
   if (column.formType === "number" || column.type === "number" || column.type === "money") {

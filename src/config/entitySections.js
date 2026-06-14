@@ -695,68 +695,85 @@ makeSection({
 
   transforms: {
     iva_porcentaje: {
+      type: "number",
       label: "IVA %",
       render: (value) => {
         if (value === null || value === undefined || value === "") return "-";
 
         const numberValue = Number(value);
-        if (Number.isNaN(numberValue)) return String(value);
+        if (Number.isNaN(numberValue)) return value;
 
-        if (numberValue >= 1) {
-          return `${Math.round((numberValue - 1) * 100)}%`;
+        if (numberValue > 2) {
+          return `${Math.round(numberValue * 100) / 100}%`;
         }
 
-        return `${Math.round(numberValue * 100)}%`;
+        if (numberValue >= 1) {
+          return `${Math.round((numberValue - 1) * 10000) / 100}%`;
+        }
+
+        return `${Math.round(numberValue * 10000) / 100}%`;
       },
     },
 
     fecha_comprobante: {
-      label: "Fecha comprobante",
-      render: (value) => {
-        if (!value) return "-";
+  type: "date",
+  label: "Fecha comprobante",
+  render: (value) => {
+    if (!value) return "-";
 
-        const numberValue = Number(value);
+    const stringValue = String(value);
 
-        if (Number.isNaN(numberValue)) {
-          return String(value);
-        }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
+      const [year, month, day] = stringValue.split("-").map(Number);
+      return new Date(year, month - 1, day).toLocaleDateString("es-AR");
+    }
 
-        const milliseconds =
-          numberValue < 10000000000 ? numberValue * 1000 : numberValue;
+    const numberValue = Number(value);
 
-        const date = new Date(milliseconds);
+    if (Number.isNaN(numberValue)) {
+      return String(value);
+    }
 
-        if (Number.isNaN(date.getTime())) {
-          return String(value);
-        }
+    const milliseconds =
+      numberValue < 10000000000 ? numberValue * 1000 : numberValue;
 
-        return date.toLocaleDateString("es-AR");
-      },
-    },
+    const date = new Date(milliseconds);
+
+    return Number.isNaN(date.getTime())
+      ? String(value)
+      : date.toLocaleDateString("es-AR");
+  },
+},
 
     fecha_cobro: {
-      label: "Fecha cobro",
-      render: (value) => {
-        if (!value) return "-";
+  type: "date",
+  label: "Fecha cobro",
+  render: (value) => {
+    if (!value) return "-";
 
-        const numberValue = Number(value);
+    const stringValue = String(value);
 
-        if (Number.isNaN(numberValue)) {
-          return String(value);
-        }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
+      const [year, month, day] = stringValue.split("-").map(Number);
+      return new Date(year, month - 1, day).toLocaleDateString("es-AR");
+    }
 
-        const milliseconds =
-          numberValue < 10000000000 ? numberValue * 1000 : numberValue;
+    const numberValue = Number(value);
 
-        const date = new Date(milliseconds);
+    if (Number.isNaN(numberValue)) {
+      return String(value);
+    }
 
-        if (Number.isNaN(date.getTime())) {
-          return String(value);
-        }
+    const milliseconds =
+      numberValue < 10000000000 ? numberValue * 1000 : numberValue;
 
-        return date.toLocaleDateString("es-AR");
-      },
-    },
+    const date = new Date(milliseconds);
+
+    return Number.isNaN(date.getTime())
+      ? String(value)
+      : date.toLocaleDateString("es-AR");
+  },
+},
   },
 
   lookups: {

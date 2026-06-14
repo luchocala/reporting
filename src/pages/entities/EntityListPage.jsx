@@ -154,16 +154,17 @@ function getOptionsForColumn(items, column, section) {
   const optionsMap = new Map();
 
   (items || []).forEach((item) => {
-    const rawValue = getRawValue(item, column.key);
+const displayValue = getDisplayValue(item, column, section);
+const rawValue = column.virtual ? displayValue : getRawValue(item, column.key);
 
-    if (rawValue === "") return;
+if (rawValue === "" || rawValue === "-") return;
 
-    if (!optionsMap.has(rawValue)) {
-      optionsMap.set(rawValue, {
-        value: rawValue,
-        label: getDisplayValue(item, column, section),
-      });
-    }
+if (!optionsMap.has(rawValue)) {
+  optionsMap.set(rawValue, {
+    value: rawValue,
+    label: displayValue,
+  });
+}
   });
 
   return Array.from(optionsMap.values()).sort((a, b) =>
@@ -955,6 +956,10 @@ function getEditInputValue(row, column) {
     return "";
   }
 
+  if (isIvaPercentageColumn(column)) {
+    return formatIvaPercentageForInput(value);
+  }
+
   const fieldType = getBulkFieldType(column);
 
   if (fieldType === "date") {
@@ -964,9 +969,42 @@ function getEditInputValue(row, column) {
   return String(value);
 }
 
+function isIvaPercentageColumn(column) {
+  return column?.key === "iva_porcentaje";
+}
+
+function formatIvaPercentageForInput(value) {
+  if (value === null || value === undefined || value === "") return "";
+
+  const numberValue = Number(value);
+
+  if (Number.isNaN(numberValue)) return "";
+
+  if (numberValue >= 1) {
+    return String(Math.round((numberValue - 1) * 10000) / 100);
+  }
+
+  return String(Math.round(numberValue * 10000) / 100);
+}
+
+function normalizeIvaPercentageForStorage(value) {
+  if (value === "" || value === null || value === undefined) return null;
+
+  const numberValue = Number(String(value).replace(",", "."));
+
+  if (Number.isNaN(numberValue)) return value;
+
+  return 1 + numberValue / 100;
+}
+
+
 function normalizeEditableValue(column, value, { emptyAsNull = true } = {}) {
   if (value === "") {
     return emptyAsNull ? null : "";
+  }
+
+  if (isIvaPercentageColumn(column)) {
+    return normalizeIvaPercentageForStorage(value);
   }
 
   const fieldType = getBulkFieldType(column);
@@ -1801,6 +1839,50 @@ function HeaderActionButton({ action }) {
   );
 }
 
+function ConfirmActionModal({
+  open,
+  title,
+  description,
+  confirmLabel,
+  variant = "default",
+  onCancel,
+  onConfirm,
+}) {
+  if (!open) return null;
+
+  const buttonClass =
+    variant === "danger"
+      ? "bg-red-600 text-white hover:bg-red-700"
+      : "bg-foreground text-background hover:opacity-90";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <Card className="w-full max-w-md p-5 shadow-lg">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-border px-4 text-sm font-medium hover:bg-muted"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            onClick={onConfirm}
+            className={`inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm font-medium ${buttonClass}`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export default function EntityListPage({ section }) {
   const { section: runtimeSection, extraContent } = useEntityTable(section);
 
@@ -1820,6 +1902,7 @@ export default function EntityListPage({ section }) {
   const [visibleColumns, setVisibleColumns] = useState(() => getAllColumnKeys(currentSection.columns || []));
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({});
+  const [bulkConfirmAction, setBulkConfirmAction] = useState(null);
   const [bulkChangesOpen, setBulkChangesOpen] = useState(false);
   const [bulkChanges, setBulkChanges] = useState({});
   const [selectedIds, setSelectedIds] = useState([]);
@@ -1962,10 +2045,16 @@ if (filter.type === "dateRange") {
     return values.includes(getRawValue(item, filter.key));
   });
 
-  const matchesAdvancedFilters = Object.entries(normalizedAdvancedFilters).every(
-    ([columnKey, selectedValues]) =>
-      selectedValues.includes(getRawValue(item, columnKey))
-  );
+const matchesAdvancedFilters = Object.entries(normalizedAdvancedFilters).every(
+  ([columnKey, selectedValues]) => {
+    const column = columns.find((item) => item.key === columnKey);
+    const value = column?.virtual
+      ? getDisplayValue(item, column, currentSection)
+      : getRawValue(item, columnKey);
+
+    return selectedValues.includes(value);
+  }
+);
 
   return matchesSearch && matchesPrimaryFilters && matchesAdvancedFilters;
 });
@@ -2021,8 +2110,12 @@ const initialChanges = Object.fromEntries(
 };
 
 const handleDelete = async (item) => {
+  const rowId = getRowId(item);
+
   if (typeof currentSection.onDelete === "function") {
     await currentSection.onDelete(item);
+
+    setSelectedIds((current) => current.filter((id) => id !== rowId));
     return;
   }
 
@@ -2088,6 +2181,26 @@ const handleSaveSingleChanges = async () => {
 
   setEditingRow(null);
   setSingleChanges({});
+};
+
+const selectedRows = rows.filter((row) => selectedIds.includes(getRowId(row)));
+
+const handleBulkConfirmSelected = async () => {
+  if (typeof currentSection.onMarkDone !== "function") return;
+
+  await Promise.all(selectedRows.map((row) => currentSection.onMarkDone(row)));
+
+  setSelectedIds([]);
+  setBulkConfirmAction(null);
+};
+
+const handleBulkDeleteSelected = async () => {
+  if (typeof currentSection.onDelete !== "function") return;
+
+  await Promise.all(selectedRows.map((row) => currentSection.onDelete(row)));
+
+  setSelectedIds([]);
+  setBulkConfirmAction(null);
 };
 
   const handleSaveBulkChanges = async () => {
@@ -2229,9 +2342,27 @@ const handleSaveSingleChanges = async () => {
       )}
 
       {!advancedFiltersOpen && !bulkChangesOpen && selectedCount > 0 && (
-        <div className="hidden sm:block">
-          <BulkChangesButton selectedCount={selectedCount} onClick={() => setBulkChangesOpen(true)} />
-        </div>
+<div className="flex items-center gap-2">
+  <BulkChangesButton selectedCount={selectedCount} onClick={() => setBulkChangesOpen(true)} />
+
+  <button
+    type="button"
+    onClick={() => setBulkConfirmAction("confirm")}
+    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+    title="Confirmar seleccionados"
+  >
+    <CheckCircle2 className="size-4" />
+  </button>
+
+  <button
+    type="button"
+    onClick={() => setBulkConfirmAction("delete")}
+    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+    title="Eliminar seleccionados"
+  >
+    <Trash2 className="size-4" />
+  </button>
+</div>
       )}
       {editingRow && (
         <SingleChangesPanel
@@ -2334,6 +2465,24 @@ const handleSaveSingleChanges = async () => {
           
         </>
       )}
+      <ConfirmActionModal
+  open={bulkConfirmAction === "confirm"}
+  title="Confirmar registros seleccionados"
+  description={`Vas a confirmar ${selectedCount} registro${selectedCount === 1 ? "" : "s"} seleccionado${selectedCount === 1 ? "" : "s"}. Esta acción cambiará el estado a COBRADO.`}
+  confirmLabel="Confirmar"
+  onCancel={() => setBulkConfirmAction(null)}
+  onConfirm={handleBulkConfirmSelected}
+/>
+
+<ConfirmActionModal
+  open={bulkConfirmAction === "delete"}
+  title="Eliminar registros seleccionados"
+  description={`Vas a eliminar ${selectedCount} registro${selectedCount === 1 ? "" : "s"} seleccionado${selectedCount === 1 ? "" : "s"}. Esta acción no se puede deshacer.`}
+  confirmLabel="Eliminar"
+  variant="danger"
+  onCancel={() => setBulkConfirmAction(null)}
+  onConfirm={handleBulkDeleteSelected}
+/>
       {extraContent}
     </div>
   );
