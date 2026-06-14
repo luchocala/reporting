@@ -651,7 +651,6 @@ makeSection({
     label: "Estado",
   },
 },
-  },
 
   hiddenColumns: [
     "leyenda_1",
